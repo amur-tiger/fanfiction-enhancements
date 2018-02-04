@@ -1,6 +1,12 @@
 language: node_js
 node_js:
   - node
+
 branches:
   only:
     - master
+
+after_success:
+  - git remote rm origin
+  - git remote add origin https://NekiCat:${GH_TOKEN}@github.com/NekiCat/fanfiction-enhancements.git
+  - npm run deploy
