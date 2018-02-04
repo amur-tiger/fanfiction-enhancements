@@ -1,0 +1,17 @@
+// ==UserScript==
+// @name         FanFiction Enhancements
+// @namespace    https://tiger.rocks/
+// @version      ${version}
+// @description  ${description}
+// @author       ${author}
+// @copyright    2018, ${author}
+// @license      MIT, ${homepage}/blob/master/LICENSE
+// @homepageURL  ${homepage}
+// @supportURL   ${bugs}
+// @updateURL    https://raw.githubusercontent.com/NekiCat/fanfiction-enhancements/master/fanfiction-enhancements.meta.js
+// @downloadURL  https://raw.githubusercontent.com/NekiCat/fanfiction-enhancements/master/fanfiction-enhancements.user.js
+// @require      https://raw.githubusercontent.com/taylorhakes/promise-polyfill/master/promise.min.js
+// @match        *://www.fanfiction.net/*
+// @grant        GM_getValue
+// @grant        GM_setValue
+// ==/UserScript==
