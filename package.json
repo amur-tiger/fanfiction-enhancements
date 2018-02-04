@@ -12,7 +12,6 @@
     "@types/jsdom": "^11.0.4",
     "@types/mocha": "^2.2.40",
     "chai": "^4.1.2",
-    "gh-pages": "^1.1.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.1",
     "gulp-replace": "^0.6.1",
@@ -27,8 +26,7 @@
   },
   "scripts": {
     "test": "tsc && mocha tests",
-    "build": "gulp build",
-    "deploy": "gulp deploy"
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",

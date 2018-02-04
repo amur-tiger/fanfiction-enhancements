@@ -7,7 +7,6 @@ const concat = require("gulp-concat");
 const merge = require("merge-stream");
 
 const typescript = require("rollup-plugin-typescript2");
-const ghPages = require("gh-pages");
 
 const pkg = require("./package.json");
 const external = Object.keys(pkg.dependencies || {});
@@ -47,12 +46,6 @@ gulp.task("build", () => {
 
 	gulp.src("./README.md").pipe(gulp.dest(OUT_FOLDER));
 	gulp.src("./LICENSE").pipe(gulp.dest(OUT_FOLDER));
-});
-
-gulp.task("deploy", ["build"], () => {
-	"use strict";
-
-	ghPages.publish(OUT_FOLDER, {}, console.error);
 });
 
 gulp.task("watch", () => {
