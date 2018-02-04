@@ -6,6 +6,9 @@ branches:
   only:
     - master
 
+deploy:
+  skip_cleanup: true
+
 after_success:
   - git remote rm origin
   - git remote add origin https://NekiCat:${GH_TOKEN}@github.com/NekiCat/fanfiction-enhancements.git
