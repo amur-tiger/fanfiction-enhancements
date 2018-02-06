@@ -16,8 +16,16 @@ const OUT_FOLDER = "target";
 gulp.task("build", () => {
 	"use strict";
 
+	const build = process.env.TRAVIS_BUILD_NUMBER;
+	const commit = process.env.TRAVIS_COMMIT;
+	const version = pkg.version +
+		(build || commit ? "+" : "") +
+		(build ? build : "") +
+		(build && commit ? "." : "") +
+		(commit ? commit.substr(0, 7) : "");
+
 	const header = gulp.src("./src/header.txt")
-		.pipe(replace(/\${version}/g, pkg.version))
+		.pipe(replace(/\${version}/g, version))
 		.pipe(replace(/\${description}/g, pkg.description))
 		.pipe(replace(/\${author}/g, pkg.author))
 		.pipe(replace(/\${homepage}/g, pkg.homepage))
