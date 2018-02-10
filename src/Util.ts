@@ -4,7 +4,7 @@ export default class Util {
 	 * @param {string} url
 	 * @returns {Promise}
 	 */
-	static loadScript(url: string): Promise<Event> {
+	public static loadScript(url: string): Promise<Event> {
 		return new Promise<Event>((resolve, reject) => {
 			const script = document.createElement("script");
 			script.addEventListener("load", resolve);
@@ -23,7 +23,7 @@ export default class Util {
 	 * @param {object} [options]
 	 * @returns {Promise}
 	 */
-	static getByAjax(url: string, options?): Promise<string> {
+	public static getByAjax(url: string, options?): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
 			xhr.addEventListener("load", () => {
@@ -51,12 +51,19 @@ export default class Util {
 	 * @param {string} rgb
 	 * @returns {string|boolean}
 	 */
-	static rgbToHex(rgb: string): string | boolean {
-		if (!rgb || rgb == "inherit" || typeof rgb != "string") return false;
+	public static rgbToHex(rgb: string): string | boolean {
+		if (!rgb || rgb == "inherit" || typeof rgb != "string") {
+			return false;
+		}
+
 		const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-		if (!match) return false;
-		const hex = x => ("0" + parseInt(x).toString(16)).slice(-2);
+		if (!match) {
+			return false;
+		}
+
+		const hex = x => ("0" + parseInt(x, 10).toString(16)).slice(-2);
 		const c = "#" + hex(match[1]) + hex(match[2]) + hex(match[3]);
+
 		return c == "#000000" ? false : c;
 	}
 
@@ -66,12 +73,21 @@ export default class Util {
 	 * @param {number} [base]
 	 * @returns {string|boolean}
 	 */
-	static ptToEm(pt: string, base?: number): string | boolean {
-		if (!pt || typeof pt !== "string" || pt.slice(-2) !== "pt") return false;
+	public static ptToEm(pt: string, base?: number): string | boolean {
+		if (!pt || typeof pt !== "string" || pt.slice(-2) !== "pt") {
+			return false;
+		}
+
 		const n = +pt.slice(0, -2);
-		if (!base && (n === 11 || n === 12)) return false;
+		if (!base && (n === 11 || n === 12)) {
+			return false;
+		}
+
 		const em = +(n / (base || 12)).toFixed(3) + "em";
-		if (em === "1em") return false;
+		if (em === "1em") {
+			return false;
+		}
+
 		return em;
 	}
 
@@ -80,7 +96,7 @@ export default class Util {
 	 * @param value
 	 * @returns {Array}
 	 */
-	static toArray<T>(value: { length: number, [i: number]: T }): T[] {
+	public static toArray<T>(value: { length: number, [i: number]: T }): T[] {
 		const result = [];
 		for (let i = 0; i < value.length; i++) {
 			result.push(value[i]);

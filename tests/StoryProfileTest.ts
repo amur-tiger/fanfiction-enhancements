@@ -7,7 +7,9 @@ describe("Story Profile", function() {
 	global["window"] = domFragment.window;
 	global["document"] = domFragment.window.document;
 
-	global["GM_addStyle"] = () => {};
+	global["GM_addStyle"] = () => {
+		// dummy function
+	};
 
 	const params = [
 		{
@@ -21,7 +23,9 @@ describe("Story Profile", function() {
 	<a><!-- message link --></a>
 	<div>description</div>
 	<span>
-		Rated: <a>M</a> - Elvish - Fantasy - Chapters: 33 - Words: 1,234 - Reviews: <a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: <span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
+		Rated: <a>M</a> - Elvish - Fantasy - Chapters: 33 - Words: 1,234 - Reviews: <a>123</a> - Favs: 345 - Follows: 
+		567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
+		<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 	</span>
 </div>`).firstChild as HTMLElement,
 			test: "With Image",
@@ -38,7 +42,7 @@ describe("Story Profile", function() {
 			follows: 567,
 			updated: 1517639271000,
 			published: 1426879324000,
-			id: 12345678
+			id: 12345678,
 		},
 		{
 			fragment: JSDOM.fragment(`<div>
@@ -50,7 +54,9 @@ describe("Story Profile", function() {
 	<a><!-- message link --></a>
 	<div>something</div>
 	<span>
-		Rated: <a>T</a> - Klingon - Sci-Fi - Chapters: 19 - Words: 3,210 - Reviews: <a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: <span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
+		Rated: <a>T</a> - Klingon - Sci-Fi - Chapters: 19 - Words: 3,210 - Reviews: <a>123</a> - Favs: 345 - Follows: 
+		567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
+		<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 	</span>
 </div>`).firstChild as HTMLElement,
 			test: "Without Image",
@@ -67,8 +73,8 @@ describe("Story Profile", function() {
 			follows: 567,
 			updated: 1517639271000,
 			published: 1426879324000,
-			id: 12345678
-		}
+			id: 12345678,
+		},
 	];
 
 	params.forEach(function(param) {

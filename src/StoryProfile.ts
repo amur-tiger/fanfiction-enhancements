@@ -1,3 +1,5 @@
+import { StoryMetaData } from "./StoryMetaData";
+
 declare function GM_addStyle(style: string): void;
 
 export default class StoryProfile {
@@ -18,57 +20,13 @@ export default class StoryProfile {
 			offset--;
 		}
 
-		this.titleElement = profile.children[2 + offset] as HTMLElement;
-		this.authorByElement = profile.children[3 + offset] as HTMLElement;
-		this.authorElement = profile.children[4 + offset] as HTMLElement;
-		this.descriptionElement = profile.children[7 + offset] as HTMLElement;
-		this.tagsElement = profile.children[8 + offset] as HTMLElement;
+		this.titleElement = profile.children[offset + 2] as HTMLElement;
+		this.authorByElement = profile.children[offset + 3] as HTMLElement;
+		this.authorElement = profile.children[offset + 4] as HTMLElement;
+		this.descriptionElement = profile.children[offset + 7] as HTMLElement;
+		this.tagsElement = profile.children[offset + 8] as HTMLElement;
 
 		this.parseTags();
-	}
-
-	private parseTags() {
-		const tagsArray = this.tagsElement.innerHTML.split(" - ");
-		const tempElement = document.createElement("div");
-
-		tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
-		this.tags.rating = (tempElement.firstElementChild as HTMLElement).textContent;
-
-		this.tags.language = tagsArray[1].trim();
-		this.tags.genre = tagsArray[2].trim();
-
-		for (let i = 3; i < tagsArray.length; i++) {
-			const tagNameMatch = tagsArray[i].match(/^(\w+):/);
-			if (!tagNameMatch) {
-				this.tags.characters = tagsArray[i].trim().split(/,\s+/);
-				continue;
-			}
-
-			const tagName = tagNameMatch[1].toLowerCase();
-			const tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/)[1];
-
-			switch (tagName) {
-				case "characters":
-					this.tags.characters = tagsArray[i].trim().split(/,\s+/);
-					break;
-				case "reviews":
-					tempElement.innerHTML = tagValue;
-					this.tags.reviews = +(tempElement.firstElementChild as HTMLElement).textContent;
-					break;
-				case "published":
-				case "updated":
-					tempElement.innerHTML = tagValue;
-					this.tags[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
-					break;
-				default:
-					if (/^[0-9,.]*$/.test(tagValue)) {
-						this.tags[tagName] = +tagValue.replace(/,/g, "");
-					} else {
-						this.tags[tagName] = tagValue;
-					}
-					break;
-			}
-		}
 	}
 
 	public enhance() {
@@ -149,19 +107,48 @@ export default class StoryProfile {
 		this.titleElement.style.fontSize = "1.5em";
 		this.authorByElement.textContent = "by";
 	}
-}
 
-export class StoryMetaData {
-	public id: number;
-	public chapters: number;
-	public favs: number;
-	public follows: number;
-	public reviews: number;
-	public genre: string;
-	public language: string;
-	public published: Date;
-	public updated: Date;
-	public rating: string;
-	public words: number;
-	public characters: string[];
+	private parseTags() {
+		const tagsArray = this.tagsElement.innerHTML.split(" - ");
+		const tempElement = document.createElement("div");
+
+		tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
+		this.tags.rating = (tempElement.firstElementChild as HTMLElement).textContent;
+
+		this.tags.language = tagsArray[1].trim();
+		this.tags.genre = tagsArray[2].trim();
+
+		for (let i = 3; i < tagsArray.length; i++) {
+			const tagNameMatch = tagsArray[i].match(/^(\w+):/);
+			if (!tagNameMatch) {
+				this.tags.characters = tagsArray[i].trim().split(/,\s+/);
+				continue;
+			}
+
+			const tagName = tagNameMatch[1].toLowerCase();
+			const tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/)[1];
+
+			switch (tagName) {
+				case "characters":
+					this.tags.characters = tagsArray[i].trim().split(/,\s+/);
+					break;
+				case "reviews":
+					tempElement.innerHTML = tagValue;
+					this.tags.reviews = +(tempElement.firstElementChild as HTMLElement).textContent;
+					break;
+				case "published":
+				case "updated":
+					tempElement.innerHTML = tagValue;
+					this.tags[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
+					break;
+				default:
+					if (/^[0-9,.]*$/.test(tagValue)) {
+						this.tags[tagName] = +tagValue.replace(/,/g, "");
+					} else {
+						this.tags[tagName] = tagValue;
+					}
+					break;
+			}
+		}
+	}
 }

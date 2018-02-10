@@ -13,6 +13,7 @@
     "@types/mocha": "^2.2.40",
     "chai": "^4.1.2",
     "gulp": "^3.9.1",
+    "gulp-clean": "^0.4.0",
     "gulp-concat": "^2.6.1",
     "gulp-replace": "^0.6.1",
     "gulp-rollup": "^2.11.0",
@@ -26,8 +27,12 @@
     "typescript": "^2.6.2"
   },
   "scripts": {
+    "pretest": "tslint --project .",
     "test": "tsc && mocha tests",
-    "build": "gulp build"
+    "posttest": "gulp clean",
+    "lint": "tslint --project .",
+    "build": "gulp build",
+    "clean": "gulp clean"
   },
   "repository": {
     "type": "git",

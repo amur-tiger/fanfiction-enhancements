@@ -1,6 +1,7 @@
 const path = require("path");
 
 const gulp = require("gulp");
+const clean = require("gulp-clean");
 const rollup = require("gulp-rollup");
 const replace = require("gulp-replace");
 const concat = require("gulp-concat");
@@ -62,4 +63,11 @@ gulp.task("watch", () => {
 	gulp.watch("./src/**/*.ts", ["build"]);
 	gulp.watch("./src/header.txt", ["build"]);
 	gulp.watch("./package.json", ["build"]);
+});
+
+gulp.task("clean", () => {
+	"use strict";
+
+	gulp.src(["src/**/*.js", "tests/**/*.js", OUT_FOLDER])
+		.pipe(clean());
 });

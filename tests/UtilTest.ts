@@ -11,7 +11,9 @@ describe("Utility Functions", function() {
 		it("should return a promise", function() {
 			const promise = Util.loadScript("some url");
 			assert.isTrue(promise instanceof Promise);
-			promise.catch(() => {});
+			promise.catch(() => {
+				// do nothing
+			});
 		});
 	});
 
@@ -19,7 +21,9 @@ describe("Utility Functions", function() {
 		it("should return a promise", function() {
 			const promise = Util.getByAjax("some url");
 			assert.isTrue(promise instanceof Promise);
-			promise.catch(() => {});
+			promise.catch(() => {
+				// do nothing
+			});
 		});
 	});
 
