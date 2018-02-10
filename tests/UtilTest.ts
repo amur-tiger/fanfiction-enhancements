@@ -3,7 +3,9 @@ import { JSDOM } from "jsdom";
 import Util from "../src/Util";
 
 describe("Utility Functions", function() {
-	global["window"] = JSDOM.fragment(`<!DOCTYPE html><html><head></head><body></body></html>`);
+	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
+	global["window"] = domFragment.window;
+	global["document"] = domFragment.window.document;
 
 	describe("Loading Scripts", function() {
 		it("should return a promise", function() {

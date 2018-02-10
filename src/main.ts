@@ -1,6 +1,5 @@
-import Util from "./Util";
+import StoryProfile from "./StoryProfile";
 
-declare function GM_getValue(key: string, std?: string): string;
-declare function GM_setValue(key: string, value: string): void;
-
-console.info("Hello World!");
+const profile = document.getElementById("profile_top");
+const storyProfile = new StoryProfile(profile);
+storyProfile.enhance();

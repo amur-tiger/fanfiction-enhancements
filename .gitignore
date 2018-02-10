@@ -122,6 +122,9 @@ typings/
 # Project-level settings
 /.tgitconfig
 
+# Visual Studio/Visual Studio Code
+.vs/
+
 ## JetBrains IDE project settings
 .idea/
 
