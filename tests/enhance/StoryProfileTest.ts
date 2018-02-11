@@ -1,15 +1,11 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
-import StoryProfile from "../src/StoryProfile";
+import StoryProfile from "../../src/enhance/StoryProfile";
 
 describe("Story Profile", function() {
 	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
 	global["window"] = domFragment.window;
 	global["document"] = domFragment.window.document;
-
-	global["GM_addStyle"] = () => {
-		// dummy function
-	};
 
 	const params = [
 		{
@@ -165,16 +161,6 @@ describe("Story Profile", function() {
 		const wrapper = document.createElement("div");
 		wrapper.appendChild(param.fragment);
 		wrapper.appendChild(document.createElement("div"));
-
-		it("should insert styles", function() {
-			let hit = false;
-			global["GM_addStyle"] = str => hit = str.length > 0;
-
-			const sut = new StoryProfile(wrapper.cloneNode(true).firstChild as HTMLElement);
-			sut.enhance();
-
-			assert.equal(hit, true);
-		});
 
 		it("should insert rating indicator", function() {
 			const fragment = wrapper.cloneNode(true) as HTMLElement;

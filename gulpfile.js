@@ -7,6 +7,7 @@ const replace = require("gulp-replace");
 const concat = require("gulp-concat");
 const merge = require("merge-stream");
 
+const postCss = require("rollup-plugin-postcss");
 const typescript = require("rollup-plugin-typescript2");
 
 const pkg = require("./package.json");
@@ -32,10 +33,11 @@ gulp.task("build", () => {
 		.pipe(replace(/\${homepage}/g, pkg.homepage))
 		.pipe(replace(/\${bugs}/g, pkg.bugs.url));
 
-	const source = gulp.src("./src/**/*.ts")
+	const source = gulp.src(["./src/**/*.ts", "./src/**/*.css"])
 		.pipe(rollup({
 			input: "src/main.ts",
 			plugins: [
+				postCss(),
 				typescript()
 			],
 			external: external,
@@ -61,6 +63,7 @@ gulp.task("watch", () => {
 	"use strict";
 
 	gulp.watch("./src/**/*.ts", ["build"]);
+	gulp.watch("./src/**/*.css", ["build"]);
 	gulp.watch("./src/header.txt", ["build"]);
 	gulp.watch("./package.json", ["build"]);
 });
