@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.0+11.3b792fa
+// @version      0.1.1+12.e572732
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -250,11 +250,18 @@ var StoryText = /** @class */ (function () {
     StoryText.prototype.fixUserSelect = function () {
         var element = this.text;
         var handle = setInterval(function () {
-            if (element.style.userSelect == "text") {
-                clearTimeout(handle);
+            var rules = ["userSelect", "msUserSelect", "mozUserSelect", "khtmlUserSelect",
+                "webkitUserSelect", "webkitTouchCallout"];
+            var isOk = true;
+            for (var _i = 0, rules_1 = rules; _i < rules_1.length; _i++) {
+                var rule = rules_1[_i];
+                if (element.style[rule] !== "inherit") {
+                    isOk = false;
+                }
+                element.style[rule] = "inherit";
             }
-            else {
-                element.style.userSelect = "text";
+            if (isOk) {
+                clearTimeout(handle);
             }
         }, 150);
     };
