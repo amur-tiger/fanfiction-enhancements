@@ -8,7 +8,7 @@ export default class StoryProfile {
 	public readonly authorElement: HTMLElement;
 	public readonly descriptionElement: HTMLElement;
 	public readonly tagsElement: HTMLElement;
-	public readonly tags: StoryMetaData = new StoryMetaData();
+	public readonly tags: StoryMetaData = {};
 
 	constructor(private profile: HTMLElement) {
 		let offset = 0;
