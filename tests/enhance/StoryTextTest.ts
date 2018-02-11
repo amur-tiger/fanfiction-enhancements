@@ -22,7 +22,7 @@ describe("Story Text", function() {
 		sut.enhance();
 
 		setTimeout(() => {
-			assert.equal(fragment.style.userSelect, "text");
+			assert.equal(fragment.style.userSelect, "inherit");
 			done();
 		}, 350);
 	});

@@ -31,10 +31,20 @@ export default class StoryText {
 	private fixUserSelect() {
 		const element = this.text;
 		const handle = setInterval(() => {
-			if (element.style.userSelect == "text") {
+			const rules = ["userSelect", "msUserSelect", "mozUserSelect", "khtmlUserSelect",
+				"webkitUserSelect", "webkitTouchCallout"];
+
+			let isOk = true;
+			for (const rule of rules) {
+				if (element.style[rule] !== "inherit") {
+					isOk = false;
+				}
+
+				element.style[rule] = "inherit";
+			}
+
+			if (isOk) {
 				clearTimeout(handle);
-			} else {
-				element.style.userSelect = "text";
 			}
 		}, 150);
 	}
