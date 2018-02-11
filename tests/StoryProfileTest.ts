@@ -162,26 +162,40 @@ describe("Story Profile", function() {
 
 	describe("HTML Insertion", function() {
 		const param = params[0];
+		const wrapper = document.createElement("div");
+		wrapper.appendChild(param.fragment);
+		wrapper.appendChild(document.createElement("div"));
 
 		it("should insert styles", function() {
 			let hit = false;
 			global["GM_addStyle"] = str => hit = str.length > 0;
 
-			const sut = new StoryProfile(param.fragment.cloneNode(true) as HTMLElement);
+			const sut = new StoryProfile(wrapper.cloneNode(true).firstChild as HTMLElement);
 			sut.enhance();
 
 			assert.equal(hit, true);
 		});
 
 		it("should insert rating indicator", function() {
-			const fragment = param.fragment.cloneNode(true) as HTMLElement;
-			const sut = new StoryProfile(fragment);
+			const fragment = wrapper.cloneNode(true) as HTMLElement;
+			const sut = new StoryProfile(fragment.firstElementChild as HTMLElement);
 			sut.enhance();
 
-			const element = fragment.children[2] as HTMLAnchorElement;
+			const element = fragment.firstElementChild.children[2] as HTMLAnchorElement;
 			assert.equal(element.href, "https://www.fictionratings.com/");
 			assert.equal(element.textContent, "M");
 			assert.equal(element.title, "Teens (16+)");
+		});
+
+		it("should insert footer", function() {
+			const fragment = wrapper.cloneNode(true) as HTMLElement;
+			const sut = new StoryProfile(fragment.firstElementChild as HTMLElement);
+			sut.enhance();
+
+			const element = (fragment.children[1] as HTMLElement);
+			assert.isTrue(element.className.indexOf("ffe-sp-footer") > -1);
+			assert.equal(element.firstElementChild.textContent, "1,234 words");
+			assert.equal((element.firstElementChild as HTMLElement).style.cssFloat, "right");
 		});
 	});
 });

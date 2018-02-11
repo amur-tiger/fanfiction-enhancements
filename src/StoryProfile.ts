@@ -63,6 +63,39 @@ export default class StoryProfile {
 				box-shadow: 0 1px 0 #e64938 inset;
 			}
 			
+			.ffe-sp-footer {
+				background: #f6f7ee;
+				border-bottom: 1px solid #cdcdcd;
+				border-top: 1px solid #cdcdcd;
+				color: #555;
+				font-size: .9em;
+				margin-left: -.5em;
+				margin-right: -.5em;
+				margin-top: 1em;
+				padding: 10px .5em;
+			}
+			
+			.ffe-sp-footer-info {
+				background: #fff;
+				border: 1px solid rgba(0, 0, 0, 0.15);
+				border-radius: 4px;
+				float: left;
+				line-height: 16px;
+				margin-top: -5px;
+				margin-right: 5px;
+				padding: 3px 8px;
+			}
+			
+			.ffe-sp-footer-complete {
+				background: #63bd40;
+				color: #fff;
+			}
+			
+			.ffe-sp-footer-incomplete {
+				background: #f7a616;
+				color: #fff;
+			}
+			
 			.storytext p {
 				color: #333;
 				text-align: justify;
@@ -106,6 +139,33 @@ export default class StoryProfile {
 		this.profile.insertBefore(rating, this.titleElement);
 		this.titleElement.style.fontSize = "1.5em";
 		this.authorByElement.textContent = "by";
+
+		const footer = document.createElement("div");
+		footer.className += " ffe-sp-footer";
+
+		let footerContent = "&nbsp;";
+		if (this.tags.words) {
+			footerContent += '<div style="float: right;"><b>' + this.tags.words.toLocaleString("en") + "</b> words</div>";
+		}
+
+		if (this.tags.status == "Complete") {
+			footerContent += '<span class="ffe-sp-footer-info ffe-sp-footer-complete">Complete</span>';
+		} else {
+			footerContent += '<span class="ffe-sp-footer-info ffe-sp-footer-incomplete">Incomplete</span>';
+		}
+
+		if (this.tags.published) {
+			footerContent += '<span class="ffe-sp-footer-info"><b>Published:</b> <time datetime="' +
+				this.tags.published.toISOString() + '">' + this.tags.published.toLocaleDateString() + "</time></span>";
+		}
+
+		if (this.tags.updated) {
+			footerContent += '<span class="ffe-sp-footer-info"><b>Updated:</b> <time datetime="' +
+				this.tags.updated.toISOString() + '">' + this.tags.updated.toLocaleDateString() + "</time></span>";
+		}
+
+		footer.innerHTML = footerContent;
+		this.profile.parentElement.insertBefore(footer, this.profile.nextElementSibling);
 	}
 
 	private parseTags() {

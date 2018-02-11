@@ -11,4 +11,5 @@ export class StoryMetaData {
 	public rating: string;
 	public words: number;
 	public characters: string[];
+	public status: string;
 }
