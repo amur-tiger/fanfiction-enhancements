@@ -62,12 +62,3 @@
 	background: #f7a616;
 	color: #fff;
 }
-
-.storytext p {
-	color: #333;
-	text-align: justify;
-}
-
-.storytext.xlight p {
-	color: #ddd;
-}

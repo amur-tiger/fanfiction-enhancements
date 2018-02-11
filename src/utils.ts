@@ -103,3 +103,47 @@ export function toArray<T>(value: { length: number, [i: number]: T }): T[] {
 
 	return result;
 }
+
+/**
+ * Reads in cookies and extracts the value of the cookie with the given name.
+ * If the cookie doesn't exist, returns false.
+ * @param {string} name
+ * @returns {string | boolean}
+ */
+export function getCookie(name: string): string | boolean {
+	const ca = document.cookie.split(";");
+	for (let i = 0; i < ca.length; i++) {
+		const c = ca[i].trimLeft();
+		if (c.indexOf(name + "=") == 0) {
+			return c.substring(name.length + 1, c.length);
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Sets the cookie with the given name to the given value. If days is not given, an expiration date is not set
+ * and the cookie will be deleted at the end of the session.
+ * @param {string} name
+ * @param {string} value
+ * @param {number} days
+ */
+export function setCookie(name: string, value: string, days?: number): void {
+	let expires = "";
+	if (days) {
+		const date = new Date();
+		date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+		expires = "; expires=" + date.toUTCString();
+	}
+
+	document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+/**
+ * Deletes the cookie with the given name.
+ * @param {string} name
+ */
+export function deleteCookie(name: string): void {
+	document.cookie = name + "=; path=/; max-age=0;";
+}
