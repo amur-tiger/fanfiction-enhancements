@@ -7,7 +7,9 @@ export interface StoryMetaData {
 	genre?: string;
 	language?: string;
 	published?: Date;
+	publishedWords?: string;
 	updated?: Date;
+	updatedWords?: string;
 	rating?: string;
 	words?: number;
 	characters?: string[];

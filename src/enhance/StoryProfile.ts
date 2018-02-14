@@ -79,12 +79,12 @@ export default class StoryProfile {
 
 		if (this.tags.published) {
 			footerContent += '<span class="ffe-sp-footer-info"><b>Published:</b> <time datetime="' +
-				this.tags.published.toISOString() + '">' + this.tags.published.toLocaleDateString() + "</time></span>";
+				this.tags.published.toISOString() + '">' + this.tags.publishedWords + "</time></span>";
 		}
 
 		if (this.tags.updated) {
 			footerContent += '<span class="ffe-sp-footer-info"><b>Updated:</b> <time datetime="' +
-				this.tags.updated.toISOString() + '">' + this.tags.updated.toLocaleDateString() + "</time></span>";
+				this.tags.updated.toISOString() + '">' + this.tags.updatedWords + "</time></span>";
 		}
 
 		footer.innerHTML = footerContent;
@@ -123,6 +123,7 @@ export default class StoryProfile {
 				case "updated":
 					tempElement.innerHTML = tagValue;
 					this.tags[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
+					this.tags[tagName + "Words"] = tempElement.firstElementChild.textContent;
 					break;
 				default:
 					if (/^[0-9,.]*$/.test(tagValue)) {

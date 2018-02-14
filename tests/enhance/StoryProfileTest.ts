@@ -37,7 +37,9 @@ describe("Story Profile", function() {
 			favs: 345,
 			follows: 567,
 			updated: 1517639271000,
+			updatedWords: "Feb 3",
 			published: 1426879324000,
+			publishedWords: "Mar 20, 2015",
 			id: 12345678,
 		},
 		{
@@ -68,7 +70,9 @@ describe("Story Profile", function() {
 			favs: 345,
 			follows: 567,
 			updated: 1517639271000,
+			updatedWords: "Feb 3",
 			published: 1426879324000,
+			publishedWords: "Mar 20, 2015",
 			id: 12345678,
 		},
 	];
@@ -136,11 +140,13 @@ describe("Story Profile", function() {
 				it("should recognize publish date", function() {
 					const sut = new StoryProfile(param.fragment);
 					assert.equal(sut.tags.published.getTime(), param.published);
+					assert.equal(sut.tags.publishedWords, param.publishedWords);
 				});
 
 				it("should recognize update date", function() {
 					const sut = new StoryProfile(param.fragment);
 					assert.equal(sut.tags.updated.getTime(), param.updated);
+					assert.equal(sut.tags.updatedWords, param.updatedWords);
 				});
 
 				it("should recognize rating", function() {
