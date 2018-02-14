@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.1+12.e572732
+// @version      0.1.2+13.b005a40
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -10,7 +10,7 @@
 // @supportURL   https://github.com/NekiCat/fanfiction-enhancements/issues
 // @updateURL    https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
 // @downloadURL  https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
-// @require      https://raw.githubusercontent.com/taylorhakes/promise-polyfill/master/promise.min.js
+// @require      https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js
 // @match        *://www.fanfiction.net/*
 // ==/UserScript==
 
@@ -112,11 +112,11 @@ var StoryProfile = /** @class */ (function () {
         }
         if (this.tags.published) {
             footerContent += '<span class="ffe-sp-footer-info"><b>Published:</b> <time datetime="' +
-                this.tags.published.toISOString() + '">' + this.tags.published.toLocaleDateString() + "</time></span>";
+                this.tags.published.toISOString() + '">' + this.tags.publishedWords + "</time></span>";
         }
         if (this.tags.updated) {
             footerContent += '<span class="ffe-sp-footer-info"><b>Updated:</b> <time datetime="' +
-                this.tags.updated.toISOString() + '">' + this.tags.updated.toLocaleDateString() + "</time></span>";
+                this.tags.updated.toISOString() + '">' + this.tags.updatedWords + "</time></span>";
         }
         footer.innerHTML = footerContent;
         this.profile.parentElement.insertBefore(footer, this.profile.nextElementSibling);
@@ -148,6 +148,7 @@ var StoryProfile = /** @class */ (function () {
                 case "updated":
                     tempElement.innerHTML = tagValue;
                     this.tags[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
+                    this.tags[tagName + "Words"] = tempElement.firstElementChild.textContent;
                     break;
                 default:
                     if (/^[0-9,.]*$/.test(tagValue)) {
@@ -268,11 +269,31 @@ var StoryText = /** @class */ (function () {
     return StoryText;
 }());
 
-var profile = document.getElementById("profile_top");
-var storyProfile = new StoryProfile(profile);
-storyProfile.enhance();
-var text = document.getElementById("storytextp");
-var storyText = new StoryText(text);
-storyText.enhance();
+var PageIdentifier = /** @class */ (function () {
+    function PageIdentifier(location) {
+        this.location = location;
+    }
+    PageIdentifier.prototype.getPage = function () {
+        if (this.location.pathname.indexOf("/u/") == 0) {
+            return 1 /* User */;
+        }
+        if (this.location.pathname.indexOf("/s/") == 0) {
+            return 2 /* Chapter */;
+        }
+        return 0 /* Other */;
+    };
+    return PageIdentifier;
+}());
+
+var identifier = new PageIdentifier(window.location);
+var page = identifier.getPage();
+if (page == 2 /* Chapter */) {
+    var profile = document.getElementById("profile_top");
+    var storyProfile = new StoryProfile(profile);
+    storyProfile.enhance();
+    var text = document.getElementById("storytextp");
+    var storyText = new StoryText(text);
+    storyText.enhance();
+}
 
 }());
