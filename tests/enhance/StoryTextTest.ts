@@ -1,6 +1,5 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
-import StoryProfile from "../../src/enhance/StoryProfile";
 import StoryText from "../../src/enhance/StoryText";
 import { setCookie } from "../../src/utils";
 
