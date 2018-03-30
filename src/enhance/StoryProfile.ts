@@ -1,3 +1,4 @@
+import Rating from "./component/Rating";
 import { StoryMetaData } from "./StoryMetaData";
 import "./StoryProfile.css";
 
@@ -29,35 +30,7 @@ export default class StoryProfile {
 	}
 
 	public enhance() {
-		const rating = document.createElement("a");
-		rating.href = "https://www.fictionratings.com/";
-		rating.className += " ffe-sp-rating";
-		rating.rel = "noreferrer";
-		rating.target = "rating";
-		rating.textContent = this.tags.rating;
-
-		switch (this.tags.rating) {
-			case "K":
-				rating.title = "General Audience (5+)";
-				rating.className += " ffe-sp-rating-k";
-				break;
-			case "K+":
-				rating.title = "Young Children (9+)";
-				rating.className += " ffe-sp-rating-kp";
-				break;
-			case "T":
-				rating.title = "Teens (13+)";
-				rating.className += " ffe-sp-rating-t";
-				break;
-			case "M":
-				rating.title = "Teens (16+)";
-				rating.className += " ffe-sp-rating-m";
-				break;
-			case "MA":
-				rating.title = "Mature (18+)";
-				rating.className += " ffe-sp-rating-ma";
-				break;
-		}
+		const rating = new Rating(document).createElement(this.tags.rating);
 
 		this.profile.insertBefore(rating, this.titleElement);
 		this.titleElement.style.fontSize = "1.5em";
