@@ -1,12 +1,10 @@
 const path = require("path");
+const fs = require("fs");
 
 const gulp = require("gulp");
 const clean = require("gulp-clean");
-const rollup = require("gulp-rollup");
-const replace = require("gulp-replace");
-const concat = require("gulp-concat");
-const merge = require("merge-stream");
 
+const rollup = require("rollup");
 const postCss = require("rollup-plugin-postcss");
 const typescript = require("rollup-plugin-typescript2");
 
@@ -15,9 +13,21 @@ const external = Object.keys(pkg.dependencies || {});
 
 const OUT_FOLDER = "target";
 
-gulp.task("build", () => {
-	"use strict";
+function asPromise(call, ...args) {
+	return new Promise((resolve, reject) => {
+		args.push(function (err, data) {
+			if (err) {
+				reject(err);
+			}
 
+			resolve(data);
+		});
+
+		call.apply(this, args);
+	});
+}
+
+function getHeader() {
 	const build = process.env.TRAVIS_BUILD_NUMBER;
 	const commit = process.env.TRAVIS_COMMIT;
 	const version = pkg.version +
@@ -26,51 +36,57 @@ gulp.task("build", () => {
 		(build && commit ? "." : "") +
 		(commit ? commit.substr(0, 7) : "");
 
-	const header = gulp.src("./src/header.txt")
-		.pipe(replace(/\${version}/g, version))
-		.pipe(replace(/\${description}/g, pkg.description))
-		.pipe(replace(/\${author}/g, pkg.author))
-		.pipe(replace(/\${homepage}/g, pkg.homepage))
-		.pipe(replace(/\${bugs}/g, pkg.bugs.url));
+	return asPromise(fs.readFile, "./src/header.txt")
+		.then(header => {
+			return header.toString()
+				.replace(/\${version}/g, version)
+				.replace(/\${description}/g, pkg.description)
+				.replace(/\${author}/g, pkg.author)
+				.replace(/\${homepage}/g, pkg.homepage)
+				.replace(/\${bugs}/g, pkg.bugs.url);
+		});
+}
 
-	const source = gulp.src(["./src/**/*.ts", "./src/**/*.css"])
-		.pipe(rollup({
-			input: "src/main.ts",
-			plugins: [
-				postCss(),
-				typescript()
-			],
-			external: external,
-			output: {
-				format: "iife"
-			}
-		}));
+gulp.task("build", ["build-source", "build-meta", "build-copy-other"]);
 
-	merge(header, source)
-		.pipe(concat(pkg.main))
-		.pipe(gulp.dest(path.join(OUT_FOLDER, "latest")));
-
-	const meta = pkg.main.replace(".user.js", ".meta.js");
-	header
-		.pipe(concat(meta))
-		.pipe(gulp.dest(path.join(OUT_FOLDER, "latest")));
-
-	gulp.src("./README.md").pipe(gulp.dest(OUT_FOLDER));
-	gulp.src("./LICENSE").pipe(gulp.dest(OUT_FOLDER));
+gulp.task("build-source", () => {
+	return rollup.rollup({
+		input: "./src/main.ts",
+		external: external,
+		plugins: [
+			postCss(),
+			typescript(),
+		],
+	}).then(bundle => {
+		return bundle.write({
+			file: path.join(OUT_FOLDER, "latest", pkg.main),
+			format: "iife",
+			banner: getHeader,
+		});
+	});
 });
 
-gulp.task("watch", () => {
-	"use strict";
+gulp.task("build-meta", () => {
+	return getHeader()
+		.then(header => {
+			fs.existsSync(OUT_FOLDER) || fs.mkdirSync(OUT_FOLDER);
+			fs.existsSync(path.join(OUT_FOLDER, "latest")) || fs.mkdirSync(path.join(OUT_FOLDER, "latest"));
 
-	gulp.watch("./src/**/*.ts", ["build"]);
-	gulp.watch("./src/**/*.css", ["build"]);
-	gulp.watch("./src/header.txt", ["build"]);
-	gulp.watch("./package.json", ["build"]);
+			return asPromise(fs.writeFile, path.join(OUT_FOLDER, "latest",
+				pkg.main.replace(".user.js", ".meta.js")), header);
+		});
+});
+
+gulp.task("build-copy-other", ["build-copy-readme", "build-copy-license"]);
+
+gulp.task("build-copy-readme", () => {
+	return gulp.src("./README.md").pipe(gulp.dest(OUT_FOLDER));
+});
+
+gulp.task("build-copy-license", () => {
+	return gulp.src("./LICENSE").pipe(gulp.dest(OUT_FOLDER));
 });
 
 gulp.task("clean", () => {
-	"use strict";
-
-	gulp.src(["src/**/*.js", "tests/**/*.js", OUT_FOLDER])
-		.pipe(clean());
+	return gulp.src(["src/**/*.{js,map}", "tests/**/*.{js,map}", OUT_FOLDER]).pipe(clean());
 });
