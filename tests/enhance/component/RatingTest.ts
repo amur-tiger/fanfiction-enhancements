@@ -3,7 +3,7 @@ import { JSDOM } from "jsdom";
 import Rating from "../../../src/enhance/component/Rating";
 
 describe("Components", function() {
-	describe("Rating Component", function() {
+	describe("Rating", function() {
 		const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
 		const document = domFragment.window.document;
 

@@ -1,5 +1,9 @@
 export interface StoryMetaData {
 	id?: number;
+	title?: string;
+	author?: User;
+	description?: string;
+	imageUrl?: string;
 	chapters?: number;
 	favs?: number;
 	follows?: number;
@@ -14,4 +18,10 @@ export interface StoryMetaData {
 	words?: number;
 	characters?: string[];
 	status?: string;
+}
+
+export interface User {
+	id: number;
+	name: string;
+	imageUrl?: string;
 }
