@@ -1,8 +1,9 @@
 import Rating from "./component/Rating";
+import Enhancer from "./Enhancer";
 import { StoryMetaData } from "./StoryMetaData";
 import "./StoryProfile.css";
 
-export default class StoryProfile {
+export default class StoryProfile implements Enhancer {
 	public readonly iconElement: HTMLImageElement;
 	public readonly titleElement: HTMLElement;
 	public readonly authorByElement: HTMLElement;
