@@ -151,5 +151,7 @@ fabric.properties
 # Others
 .rpt2_cache
 src/**/*.js
+src/**/*.map
 tests/**/*.js
+tests/**/*.map
 target
