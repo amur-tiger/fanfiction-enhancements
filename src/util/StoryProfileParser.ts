@@ -68,7 +68,7 @@ export default class StoryProfileParser {
 			}
 
 			const tagName = tagNameMatch[1].toLowerCase();
-			const tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/)[1];
+			const tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/s)[1];
 
 			switch (tagName) {
 				case "characters":
@@ -76,13 +76,13 @@ export default class StoryProfileParser {
 					break;
 				case "reviews":
 					tempElement.innerHTML = tagValue;
-					result.reviews = +(tempElement.firstElementChild as HTMLElement).textContent;
+					result.reviews = +(tempElement.firstElementChild as HTMLElement).textContent.replace(/,/g, "");
 					break;
 				case "published":
 				case "updated":
 					tempElement.innerHTML = tagValue;
 					result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
-					result[tagName + "Words"] = tempElement.firstElementChild.textContent;
+					result[tagName + "Words"] = tempElement.firstElementChild.textContent.trim();
 					break;
 				default:
 					if (/^[0-9,.]*$/.test(tagValue)) {
