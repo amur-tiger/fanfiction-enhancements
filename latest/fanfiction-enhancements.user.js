@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.3+14.0472c9e
+// @version      0.1.4+15.07d4db3
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -20,25 +20,42 @@
 	var StoryProfileParser = /** @class */ (function () {
 	    function StoryProfileParser() {
 	    }
-	    StoryProfileParser.prototype.parse = function (element) {
+	    StoryProfileParser.prototype.parse = function (profile, chapters) {
+	        if (!profile) {
+	            throw new Error("Profile node must be defined.");
+	        }
+	        if (!chapters) {
+	            throw new Error("Chapters must be defined.");
+	        }
+	        var story = this.parseProfile(profile);
+	        story.chapters = this.parseChapters(chapters);
+	        return story;
+	    };
+	    StoryProfileParser.prototype.parseProfile = function (profileElement) {
 	        var offset = 0;
-	        var icon = element.children[0].firstChild;
-	        if (icon.nodeName !== "IMG") {
+	        var icon = profileElement.children[0].firstElementChild;
+	        if (!icon || icon.nodeName !== "IMG") {
 	            offset--;
 	        }
-	        var titleElement = element.children[offset + 2];
-	        var authorElement = element.children[offset + 4];
-	        var descriptionElement = element.children[offset + 7];
-	        var tagsElement = element.children[offset + 8];
-	        var result = this.parseTags(tagsElement);
-	        result.title = titleElement.textContent;
-	        result.author = {
-	            id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-	            name: authorElement.textContent,
+	        var titleElement = profileElement.children[offset + 2];
+	        var authorElement = profileElement.children[offset + 4];
+	        var descriptionElement = profileElement.children[offset + 7];
+	        var tagsElement = profileElement.children[offset + 8];
+	        var resultMeta = this.parseTags(tagsElement);
+	        resultMeta.imageUrl = icon && icon.nodeName === "IMG" ? icon.src : undefined;
+	        return {
+	            id: resultMeta.id,
+	            title: titleElement.textContent,
+	            author: {
+	                id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+	                name: authorElement.textContent,
+	                profileUrl: authorElement.href,
+	                avatarUrl: undefined,
+	            },
+	            description: descriptionElement.textContent,
+	            chapters: undefined,
+	            meta: resultMeta,
 	        };
-	        result.description = descriptionElement.textContent;
-	        result.imageUrl = icon.nodeName === "IMG" ? icon.src : undefined;
-	        return result;
 	    };
 	    StoryProfileParser.prototype.parseTags = function (tagsElement) {
 	        var result = {};
@@ -47,7 +64,7 @@
 	        tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
 	        result.rating = tempElement.firstElementChild.textContent;
 	        result.language = tagsArray[1].trim();
-	        result.genre = tagsArray[2].trim();
+	        result.genre = tagsArray[2].trim().split("/");
 	        for (var i = 3; i < tagsArray.length; i++) {
 	            var tagNameMatch = tagsArray[i].match(/^(\w+):/);
 	            if (!tagNameMatch) {
@@ -55,20 +72,20 @@
 	                continue;
 	            }
 	            var tagName = tagNameMatch[1].toLowerCase();
-	            var tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/)[1];
+	            var tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/s)[1];
 	            switch (tagName) {
 	                case "characters":
 	                    result.characters = tagsArray[i].trim().split(/,\s+/);
 	                    break;
 	                case "reviews":
 	                    tempElement.innerHTML = tagValue;
-	                    result.reviews = +tempElement.firstElementChild.textContent;
+	                    result.reviews = +tempElement.firstElementChild.textContent.replace(/,/g, "");
 	                    break;
 	                case "published":
 	                case "updated":
 	                    tempElement.innerHTML = tagValue;
 	                    result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
-	                    result[tagName + "Words"] = tempElement.firstElementChild.textContent;
+	                    result[tagName + "Words"] = tempElement.firstElementChild.textContent.trim();
 	                    break;
 	                default:
 	                    if (/^[0-9,.]*$/.test(tagValue)) {
@@ -79,6 +96,21 @@
 	                    }
 	                    break;
 	            }
+	        }
+	        return result;
+	    };
+	    StoryProfileParser.prototype.parseChapters = function (selectElement) {
+	        var result = [];
+	        for (var i = 0; i < selectElement.children.length; i++) {
+	            var option = selectElement.children[i];
+	            if (option.tagName !== "OPTION") {
+	                continue;
+	            }
+	            var chapter = {
+	                id: +option.getAttribute("value"),
+	                name: option.textContent,
+	            };
+	            result.push(chapter);
 	        }
 	        return result;
 	    };
@@ -168,16 +200,16 @@
 	        var element = this.document.createElement("div");
 	        element.className = "ffe-sc";
 	        this.addHeader(element, story);
-	        this.addImage(element, story);
+	        this.addImage(element, story.meta);
 	        this.addDescription(element, story);
 	        this.addTags(element, story);
-	        this.addFooter(element, story);
+	        this.addFooter(element, story.meta);
 	        return element;
 	    };
 	    StoryCard.prototype.addHeader = function (element, story) {
 	        var header = this.document.createElement("div");
 	        header.className = "ffe-sc-header";
-	        var rating = new Rating(this.document).createElement(story.rating);
+	        var rating = new Rating(this.document).createElement(story.meta.rating);
 	        header.appendChild(rating);
 	        var title = this.document.createElement("a");
 	        title.className = "ffe-sc-title";
@@ -216,23 +248,23 @@
 	        var tags = this.document.createElement("div");
 	        tags.className = "ffe-sc-tags";
 	        var html = "";
-	        if (story.language) {
-	            html += "<span class=\"ffe-sc-tag\">" + story.language + "</span>";
+	        if (story.meta.language) {
+	            html += "<span class=\"ffe-sc-tag\">" + story.meta.language + "</span>";
 	        }
-	        if (story.genre) {
-	            html += "<span class=\"ffe-sc-tag\">" + story.genre + "</span>";
+	        if (story.meta.genre) {
+	            html += "<span class=\"ffe-sc-tag\">" + story.meta.genre.join("/") + "</span>";
 	        }
-	        if (story.chapters) {
-	            html += "<span class=\"ffe-sc-tag\">Chapters: " + story.chapters + "</span>";
+	        if (story.chapters && story.chapters.length) {
+	            html += "<span class=\"ffe-sc-tag\">Chapters: " + story.chapters.length + "</span>";
 	        }
-	        if (story.reviews) {
-	            html += "<span class=\"ffe-sc-tag\"><a href=\"/r/" + story.id + "\">Reviews: " + story.reviews + "</a></span>";
+	        if (story.meta.reviews) {
+	            html += "<span class=\"ffe-sc-tag\"><a href=\"/r/" + story.id + "/\">Reviews: " + story.meta.reviews + "</a></span>";
 	        }
-	        if (story.favs) {
-	            html += "<span class=\"ffe-sc-tag\">Favorites: " + story.favs + "</span>";
+	        if (story.meta.favs) {
+	            html += "<span class=\"ffe-sc-tag\">Favorites: " + story.meta.favs + "</span>";
 	        }
-	        if (story.follows) {
-	            html += "<span class=\"ffe-sc-tag\">Follows: " + story.follows + "</span>";
+	        if (story.meta.follows) {
+	            html += "<span class=\"ffe-sc-tag\">Follows: " + story.meta.follows + "</span>";
 	        }
 	        tags.innerHTML = html;
 	        element.appendChild(tags);
@@ -287,15 +319,23 @@
 	styleInject(css$2);
 
 	var StoryProfile = /** @class */ (function () {
-	    function StoryProfile(profile) {
-	        this.profile = profile;
+	    function StoryProfile(document) {
+	        this.document = document;
 	    }
 	    StoryProfile.prototype.enhance = function () {
+	        var profile = this.document.getElementById("profile_top");
+	        if (!profile) {
+	            throw new Error("Could not find profile element. Check for update?");
+	        }
+	        var chapters = this.document.getElementById("chap_select");
+	        if (!chapters) {
+	            throw new Error("Could not find chapter select element. Check for update?");
+	        }
 	        var parser = new StoryProfileParser();
-	        var meta = parser.parse(this.profile);
+	        var story = parser.parse(profile, chapters);
 	        var card = new StoryCard(document);
-	        var replacement = card.createElement(meta);
-	        this.profile.parentElement.replaceChild(replacement, this.profile);
+	        var replacement = card.createElement(story);
+	        profile.parentElement.replaceChild(replacement, profile);
 	    };
 	    return StoryProfile;
 	}());
@@ -385,8 +425,7 @@
 	var identifier = new PageIdentifier(window.location);
 	var page = identifier.getPage();
 	if (page == 2 /* Chapter */) {
-	    var profile = document.getElementById("profile_top");
-	    var storyProfile = new StoryProfile(profile);
+	    var storyProfile = new StoryProfile(document);
 	    storyProfile.enhance();
 	    var text = document.getElementById("storytextp");
 	    var storyText = new StoryText(text);
