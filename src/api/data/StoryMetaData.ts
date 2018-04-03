@@ -1,14 +1,11 @@
-export interface StoryMetaData {
+export default interface StoryMetaData {
 	id?: number;
-	title?: string;
-	author?: User;
-	description?: string;
 	imageUrl?: string;
-	chapters?: number;
+	imageOriginalUrl?: string;
 	favs?: number;
 	follows?: number;
 	reviews?: number;
-	genre?: string;
+	genre?: string[];
 	language?: string;
 	published?: Date;
 	publishedWords?: string;
@@ -18,10 +15,4 @@ export interface StoryMetaData {
 	words?: number;
 	characters?: string[];
 	status?: string;
-}
-
-export interface User {
-	id: number;
-	name: string;
-	imageUrl?: string;
 }

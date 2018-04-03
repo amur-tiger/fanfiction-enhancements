@@ -1,4 +1,5 @@
-import { StoryMetaData } from "../StoryMetaData";
+import Story from "../../api/data/Story";
+import StoryMetaData from "../../api/data/StoryMetaData";
 import Component from "./Component";
 import Rating from "./Rating";
 import "./StoryCard.css";
@@ -7,24 +8,24 @@ export default class StoryCard implements Component {
 	constructor(private document: Document) {
 	}
 
-	public createElement(story: StoryMetaData): HTMLElement {
+	public createElement(story: Story): HTMLElement {
 		const element = this.document.createElement("div") as HTMLDivElement;
 		element.className = "ffe-sc";
 
 		this.addHeader(element, story);
-		this.addImage(element, story);
+		this.addImage(element, story.meta);
 		this.addDescription(element, story);
 		this.addTags(element, story);
-		this.addFooter(element, story);
+		this.addFooter(element, story.meta);
 
 		return element;
 	}
 
-	private addHeader(element: HTMLDivElement, story: StoryMetaData): void {
+	private addHeader(element: HTMLDivElement, story: Story): void {
 		const header = this.document.createElement("div") as HTMLDivElement;
 		header.className = "ffe-sc-header";
 
-		const rating = new Rating(this.document).createElement(story.rating);
+		const rating = new Rating(this.document).createElement(story.meta.rating);
 		header.appendChild(rating);
 
 		const title = this.document.createElement("a") as HTMLAnchorElement;
@@ -62,7 +63,7 @@ export default class StoryCard implements Component {
 		element.appendChild(imageContainer);
 	}
 
-	private addDescription(element: HTMLDivElement, story: StoryMetaData) {
+	private addDescription(element: HTMLDivElement, story: Story) {
 		const description = this.document.createElement("div");
 		description.className = "ffe-sc-description";
 		description.textContent = story.description;
@@ -70,34 +71,34 @@ export default class StoryCard implements Component {
 		element.appendChild(description);
 	}
 
-	private addTags(element: HTMLDivElement, story: StoryMetaData) {
+	private addTags(element: HTMLDivElement, story: Story) {
 		const tags = this.document.createElement("div");
 		tags.className = "ffe-sc-tags";
 
 		let html = "";
 
-		if (story.language) {
-			html += `<span class="ffe-sc-tag">${story.language}</span>`;
+		if (story.meta.language) {
+			html += `<span class="ffe-sc-tag">${story.meta.language}</span>`;
 		}
 
-		if (story.genre) {
-			html += `<span class="ffe-sc-tag">${story.genre}</span>`;
+		if (story.meta.genre) {
+			html += `<span class="ffe-sc-tag">${story.meta.genre.join("/")}</span>`;
 		}
 
-		if (story.chapters) {
-			html += `<span class="ffe-sc-tag">Chapters: ${story.chapters}</span>`;
+		if (story.chapters && story.chapters.length) {
+			html += `<span class="ffe-sc-tag">Chapters: ${story.chapters.length}</span>`;
 		}
 
-		if (story.reviews) {
-			html += `<span class="ffe-sc-tag"><a href="/r/${story.id}">Reviews: ${story.reviews}</a></span>`;
+		if (story.meta.reviews) {
+			html += `<span class="ffe-sc-tag"><a href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
 		}
 
-		if (story.favs) {
-			html += `<span class="ffe-sc-tag">Favorites: ${story.favs}</span>`;
+		if (story.meta.favs) {
+			html += `<span class="ffe-sc-tag">Favorites: ${story.meta.favs}</span>`;
 		}
 
-		if (story.follows) {
-			html += `<span class="ffe-sc-tag">Follows: ${story.follows}</span>`;
+		if (story.meta.follows) {
+			html += `<span class="ffe-sc-tag">Follows: ${story.meta.follows}</span>`;
 		}
 
 		tags.innerHTML = html;

@@ -8,14 +8,37 @@ describe("Components", function() {
 		const document = domFragment.window.document;
 
 		it("should create a div element", function() {
-			const element = new StoryCard(document).createElement({});
+			const element = new StoryCard(document).createElement({
+				id: 0,
+				title: "",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
+				chapters: [],
+				meta: {},
+			});
 			assert.equal(element.tagName, "DIV");
 		});
 
 		it("should insert a rating", function() {
 			const element = new StoryCard(document).createElement({
-				rating: "T",
+				id: 0,
+				title: "",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
+				chapters: [],
+				meta: {
+					rating: "T",
+				},
 			});
+
 			assert.isDefined(element.querySelector(".ffe-rating"));
 		});
 
@@ -23,7 +46,16 @@ describe("Components", function() {
 			const element = new StoryCard(document).createElement({
 				id: 123,
 				title: "the title",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
+				chapters: [],
+				meta: {},
 			});
+
 			const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
 			assert.equal(title.tagName, "A");
 			assert.equal(title.textContent, "the title");
@@ -32,11 +64,18 @@ describe("Components", function() {
 
 		it("should insert author", function() {
 			const element = new StoryCard(document).createElement({
+				id: 0,
+				title: "",
 				author: {
 					id: 456,
 					name: "author",
+					profileUrl: "",
+					avatarUrl: "",
 				},
+				chapters: [],
+				meta: {},
 			});
+
 			const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
 			assert.equal(author.tagName, "A");
 			assert.equal(author.textContent, "author");
@@ -45,8 +84,20 @@ describe("Components", function() {
 
 		it("should insert image", function() {
 			const element = new StoryCard(document).createElement({
-				imageUrl: "/src/img.jpg",
+				id: 0,
+				title: "",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
+				chapters: [],
+				meta: {
+					imageUrl: "/src/img.jpg",
+				},
 			});
+
 			const image = element.querySelector(".ffe-sc-image img") as HTMLImageElement;
 			assert.equal(image.tagName, "IMG");
 			assert.equal(image.src, "/src/img.jpg");
@@ -54,8 +105,19 @@ describe("Components", function() {
 
 		it("should insert description", function() {
 			const element = new StoryCard(document).createElement({
+				id: 0,
+				title: "",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
 				description: "this is a description",
+				chapters: [],
+				meta: {},
 			});
+
 			const description = element.querySelector(".ffe-sc-description");
 			assert.equal(description.tagName, "DIV");
 			assert.equal(description.textContent, "this is a description");
@@ -64,28 +126,51 @@ describe("Components", function() {
 		it("should insert relevant tags", function() {
 			const element = new StoryCard(document).createElement({
 				id: 123,
-				language: "Elvish",
-				genre: "Adventure/Fantasy",
-				reviews: 11,
-				updated: new Date(),
-				updatedWords: "today",
+				title: "",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
+				chapters: [],
+				meta: {
+					language: "Elvish",
+					genre: ["Adventure", "Fantasy"],
+					reviews: 11,
+					updated: new Date(),
+					updatedWords: "today",
+				},
 			});
+
 			const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
 			assert.equal(tags.length, 3);
 
 			assert.equal(tags[0].textContent, "Elvish");
 			assert.equal(tags[1].textContent, "Adventure/Fantasy");
 			assert.equal(tags[2].firstElementChild.tagName, "A");
-			assert.equal((tags[2].firstElementChild as HTMLAnchorElement).href, "/r/123");
+			assert.equal((tags[2].firstElementChild as HTMLAnchorElement).href, "/r/123/");
 		});
 
 		it("should insert footer", function() {
 			const element = new StoryCard(document).createElement({
-				words: 12345,
-				status: "Complete",
-				published: new Date(),
-				publishedWords: "today",
+				id: 0,
+				title: "",
+				author: {
+					id: 0,
+					name: "",
+					profileUrl: "",
+					avatarUrl: "",
+				},
+				chapters: [],
+				meta: {
+					words: 12345,
+					status: "Complete",
+					published: new Date(),
+					publishedWords: "today",
+				},
 			});
+
 			const footer = element.querySelector(".ffe-sc-footer");
 			assert.equal(footer.childElementCount, 3);
 			assert.equal(footer.children[0].textContent, "12,345 words");

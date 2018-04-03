@@ -91,20 +91,6 @@ export function ptToEm(pt: string, base?: number): string | boolean {
 }
 
 /**
- * Turns anything that has a length and an indexer to access values into a proper array.
- * @param value
- * @returns {Array}
- */
-export function toArray<T>(value: { length: number, [i: number]: T }): T[] {
-	const result = [];
-	for (let i = 0; i < value.length; i++) {
-		result.push(value[i]);
-	}
-
-	return result;
-}
-
-/**
  * Reads in cookies and extracts the value of the cookie with the given name.
  * If the cookie doesn't exist, returns false.
  * @param {string} name

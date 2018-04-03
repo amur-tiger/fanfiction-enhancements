@@ -1,31 +1,54 @@
-import { StoryMetaData } from "../enhance/StoryMetaData";
+import Chapter from "../api/data/Chapter";
+import Story from "../api/data/Story";
+import StoryMetaData from "../api/data/StoryMetaData";
 
 export default class StoryProfileParser {
-	public parse(element: HTMLElement): StoryMetaData {
+	public parse(profile: Element, chapters: ParentNode): Story {
+		if (!profile) {
+			throw new Error("Profile node must be defined.");
+		}
+
+		if (!chapters) {
+			throw new Error("Chapters must be defined.");
+		}
+
+		const story = this.parseProfile(profile);
+		story.chapters = this.parseChapters(chapters);
+
+		return story;
+	}
+
+	private parseProfile(profileElement: Element): Story {
 		let offset = 0;
-		const icon = element.children[0].firstChild;
-		if (icon.nodeName !== "IMG") {
+		const icon = profileElement.children[0].firstElementChild;
+		if (!icon || icon.nodeName !== "IMG") {
 			offset--;
 		}
 
-		const titleElement = element.children[offset + 2] as HTMLElement;
-		const authorElement = element.children[offset + 4] as HTMLAnchorElement;
-		const descriptionElement = element.children[offset + 7] as HTMLElement;
-		const tagsElement = element.children[offset + 8] as HTMLElement;
+		const titleElement = profileElement.children[offset + 2];
+		const authorElement = profileElement.children[offset + 4] as HTMLAnchorElement;
+		const descriptionElement = profileElement.children[offset + 7];
+		const tagsElement = profileElement.children[offset + 8];
 
-		const result = this.parseTags(tagsElement);
-		result.title = titleElement.textContent;
-		result.author = {
-			id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-			name: authorElement.textContent,
+		const resultMeta = this.parseTags(tagsElement);
+		resultMeta.imageUrl = icon && icon.nodeName === "IMG" ? (icon as HTMLImageElement).src : undefined;
+
+		return {
+			id: resultMeta.id,
+			title: titleElement.textContent,
+			author: {
+				id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+				name: authorElement.textContent,
+				profileUrl: authorElement.href,
+				avatarUrl: undefined,
+			},
+			description: descriptionElement.textContent,
+			chapters: undefined,
+			meta: resultMeta,
 		};
-		result.description = descriptionElement.textContent;
-		result.imageUrl = icon.nodeName === "IMG" ? (icon as HTMLImageElement).src : undefined;
-
-		return result;
 	}
 
-	private parseTags(tagsElement: HTMLElement): StoryMetaData {
+	private parseTags(tagsElement: Element): StoryMetaData {
 		const result: StoryMetaData = {};
 
 		const tagsArray = tagsElement.innerHTML.split(" - ");
@@ -35,7 +58,7 @@ export default class StoryProfileParser {
 		result.rating = (tempElement.firstElementChild as HTMLElement).textContent;
 
 		result.language = tagsArray[1].trim();
-		result.genre = tagsArray[2].trim();
+		result.genre = tagsArray[2].trim().split("/");
 
 		for (let i = 3; i < tagsArray.length; i++) {
 			const tagNameMatch = tagsArray[i].match(/^(\w+):/);
@@ -69,6 +92,26 @@ export default class StoryProfileParser {
 					}
 					break;
 			}
+		}
+
+		return result;
+	}
+
+	private parseChapters(selectElement: ParentNode): Chapter[] {
+		const result: Chapter[] = [];
+
+		for (let i = 0; i < selectElement.children.length; i++) {
+			const option = selectElement.children[i];
+			if (option.tagName !== "OPTION") {
+				continue;
+			}
+
+			const chapter: Chapter = {
+				id: +option.getAttribute("value"),
+				name: option.textContent,
+			};
+
+			result.push(chapter);
 		}
 
 		return result;

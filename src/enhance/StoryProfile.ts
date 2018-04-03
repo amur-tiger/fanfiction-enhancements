@@ -4,16 +4,26 @@ import Enhancer from "./Enhancer";
 import "./StoryProfile.css";
 
 export default class StoryProfile implements Enhancer {
-	constructor(private profile: HTMLElement) {
+	constructor(private document: Document) {
 	}
 
 	public enhance() {
+		const profile = this.document.getElementById("profile_top");
+		if (!profile) {
+			throw new Error("Could not find profile element. Check for update?");
+		}
+
+		const chapters = this.document.getElementById("chap_select");
+		if (!chapters) {
+			throw new Error("Could not find chapter select element. Check for update?");
+		}
+
 		const parser = new StoryProfileParser();
-		const meta = parser.parse(this.profile);
+		const story = parser.parse(profile, chapters);
 
 		const card = new StoryCard(document);
-		const replacement = card.createElement(meta);
+		const replacement = card.createElement(story);
 
-		this.profile.parentElement.replaceChild(replacement, this.profile);
+		profile.parentElement.replaceChild(replacement, profile);
 	}
 }

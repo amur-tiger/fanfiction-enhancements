@@ -6,8 +6,7 @@ const identifier = new PageIdentifier(window.location);
 const page = identifier.getPage();
 
 if (page == Page.Chapter) {
-	const profile = document.getElementById("profile_top");
-	const storyProfile = new StoryProfile(profile);
+	const storyProfile = new StoryProfile(document);
 	storyProfile.enhance();
 
 	const text = document.getElementById("storytextp");
