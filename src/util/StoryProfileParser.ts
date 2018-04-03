@@ -68,7 +68,7 @@ export default class StoryProfileParser {
 			}
 
 			const tagName = tagNameMatch[1].toLowerCase();
-			const tagValue = tagsArray[i].match(/^.*?:\s+(.*?)\s*$/s)[1];
+			const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
 
 			switch (tagName) {
 				case "characters":
