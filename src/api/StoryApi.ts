@@ -1,6 +1,7 @@
 import StoryProfileParser from "../util/StoryProfileParser";
+import { getByAjax } from "../utils";
 import Chapter from "./data/Chapter";
-import StoryMetaData from "./data/StoryMetaData";
+import Story from "./data/Story";
 
 const BASE_URL = "https://www.fanfiction.net";
 
@@ -28,42 +29,21 @@ export default class StoryApi {
 		});
 	}
 
-	// public static getMetaData(storyId: number): Promise<StoryMetaData> {
-	// 	return StoryApi.getByAjax(BASE_URL + "/s/" + storyId)
-	// 		.then(html => {
-	// 			const fragment = html.match(/<div id=profile_top(?:.*?<\/div>){3}/i);
-	// 			console.log("fragment = %o", fragment);
-	// 			const template = document.createElement("template");
-	// 			template.innerHTML = fragment[0];
-	//
-	// 			const parser = new StoryProfileParser();
-	//
-	// 			return parser.parse(template.content);
-	// 		});
-	// }
-
-	public static getChapters(storyId: number): Promise<Chapter[]> {
-		return StoryApi.getByAjax(BASE_URL + "/s/" + storyId)
-			.then(html => {
-				const fragment = html.match(/(<select id=chap_select.*?<\/select>)/i);
+	public static getStoryInfo(id: number): Promise<Story> {
+		return getByAjax(BASE_URL + "/s/" + id)
+			.then(body => {
+				const parser = new StoryProfileParser();
 				const template = document.createElement("template");
-				template.innerHTML = fragment[0];
+				template.innerHTML = body;
 
-				const options = template.content.querySelectorAll("option");
-				const result: Chapter[] = [];
+				const profile = template.content.getElementById("profile_top");
+				const chapters = template.content.getElementById("chap_select");
 
-				for (let i = 0; i < options.length; i++) {
-					const option = options[i];
-
-					const chapter: Chapter = {
-						id: +option.getAttribute("value"),
-						name: option.textContent,
-					};
-
-					result.push(chapter);
+				if (!profile || !chapters) {
+					throw new Error("Story " + id + " does not exist.");
 				}
 
-				return result;
+				return parser.parse(profile, chapters);
 			});
 	}
 
