@@ -137,6 +137,7 @@ describe("StoryCard Component", function() {
 			meta: {
 				language: "Elvish",
 				genre: ["Adventure", "Fantasy"],
+				characters: ["James Bond"],
 				reviews: 11,
 				updated: new Date(),
 				updatedWords: "today",
@@ -144,12 +145,13 @@ describe("StoryCard Component", function() {
 		});
 
 		const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
-		assert.equal(tags.length, 3);
+		assert.equal(tags.length, 4);
 
 		assert.equal(tags[0].textContent, "Elvish");
 		assert.equal(tags[1].textContent, "Adventure/Fantasy");
-		assert.equal(tags[2].firstElementChild.tagName, "A");
-		assert.equal((tags[2].firstElementChild as HTMLAnchorElement).href, "/r/123/");
+		assert.equal(tags[2].textContent, "James Bond");
+		assert.equal(tags[3].firstElementChild.tagName, "A");
+		assert.equal((tags[3].firstElementChild as HTMLAnchorElement).href, "/r/123/");
 	});
 
 	it("should insert footer", function() {

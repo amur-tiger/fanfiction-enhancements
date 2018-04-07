@@ -86,6 +86,10 @@ export class StoryCard implements Component {
 			html += `<span class="ffe-sc-tag">${story.meta.genre.join("/")}</span>`;
 		}
 
+		if (story.meta.characters && story.meta.characters.length) {
+			html += `<span class="ffe-sc-tag">${story.meta.characters.join(", ")}</span>`;
+		}
+
 		if (story.chapters && story.chapters.length) {
 			html += `<span class="ffe-sc-tag">Chapters: ${story.chapters.length}</span>`;
 		}
