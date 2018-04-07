@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.5+16.a42e809
+// @version      0.1.6+17.eb0ef8d
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -10,6 +10,5 @@
 // @supportURL   https://github.com/NekiCat/fanfiction-enhancements/issues
 // @updateURL    https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
 // @downloadURL  https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
-// @require      https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js
 // @match        *://www.fanfiction.net/*
 // ==/UserScript==
