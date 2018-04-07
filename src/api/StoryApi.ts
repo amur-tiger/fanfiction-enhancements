@@ -1,11 +1,10 @@
-import StoryProfileParser from "../util/StoryProfileParser";
 import { getByAjax } from "../utils";
-import Chapter from "./data/Chapter";
-import Story from "./data/Story";
+import { Story } from "./data/Story";
+import { StoryProfileParser } from "../util/StoryProfileParser";
 
 const BASE_URL = "https://www.fanfiction.net";
 
-export default class StoryApi {
+export class StoryApi {
 	public static getByAjax(url: string, options?): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const xhr = new XMLHttpRequest();

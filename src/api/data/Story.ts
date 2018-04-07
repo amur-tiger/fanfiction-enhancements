@@ -1,8 +1,8 @@
-import Chapter from "./Chapter";
-import StoryMetaData from "./StoryMetaData";
-import User from "./User";
+import { Chapter } from "./Chapter";
+import { StoryMetaData } from "./StoryMetaData";
+import { User } from "./User";
 
-export default interface Story {
+export interface Story {
 	id: number;
 	title: string;
 	author: User;

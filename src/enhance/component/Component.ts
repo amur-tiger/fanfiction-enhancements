@@ -1,3 +1,3 @@
-export default interface Component {
+export interface Component {
 	createElement(from: any): HTMLElement;
 }

@@ -1,7 +1,8 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
-import StoryText from "../../src/enhance/StoryText";
+
 import { setCookie } from "../../src/utils";
+import { StoryText } from "../../src/enhance/StoryText";
 
 describe("Story Text", function() {
 	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);

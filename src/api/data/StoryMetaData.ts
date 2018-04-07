@@ -1,4 +1,4 @@
-export default interface StoryMetaData {
+export interface StoryMetaData {
 	id?: number;
 	imageUrl?: string;
 	imageOriginalUrl?: string;

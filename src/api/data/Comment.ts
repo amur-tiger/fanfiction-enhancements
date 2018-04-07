@@ -1,6 +1,6 @@
-import User from "./User";
+import { User } from "./User";
 
-export default interface Comment {
+export interface Comment {
 	user: User;
 	date: Date;
 	text: string;

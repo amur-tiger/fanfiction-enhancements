@@ -1,9 +1,10 @@
-import StoryProfileParser from "../util/StoryProfileParser";
-import StoryCard from "./component/StoryCard";
-import Enhancer from "./Enhancer";
+import { Enhancer } from "./Enhancer";
+import { StoryCard } from "./component/StoryCard";
+import { StoryProfileParser } from "../util/StoryProfileParser";
+
 import "./StoryProfile.css";
 
-export default class StoryProfile implements Enhancer {
+export class StoryProfile implements Enhancer {
 	constructor(private document: Document) {
 	}
 

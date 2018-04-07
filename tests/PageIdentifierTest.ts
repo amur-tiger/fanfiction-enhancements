@@ -1,5 +1,6 @@
 import { assert } from "chai";
-import PageIdentifier, { Page } from "../src/PageIdentifier";
+
+import { Page, PageIdentifier } from "../src/PageIdentifier";
 
 describe("Page Identification", function() {
 	const noOp = () => {

@@ -1,8 +1,8 @@
-import Chapter from "../api/data/Chapter";
-import Story from "../api/data/Story";
-import StoryMetaData from "../api/data/StoryMetaData";
+import { Chapter } from "../api/data/Chapter";
+import { Story } from "../api/data/Story";
+import { StoryMetaData } from "../api/data/StoryMetaData";
 
-export default class StoryProfileParser {
+export class StoryProfileParser {
 	public parse(profile: Element, chapters: ParentNode): Story {
 		if (!profile) {
 			throw new Error("Profile node must be defined.");

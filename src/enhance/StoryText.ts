@@ -1,12 +1,13 @@
 import { getCookie } from "../utils";
-import Enhancer from "./Enhancer";
+import { Enhancer } from "./Enhancer";
+
 import "./StoryText.css";
 
 declare const XCOOKIE;
 
 declare function _fontastic_save(): void;
 
-export default class StoryText implements Enhancer {
+export class StoryText implements Enhancer {
 	constructor(private text: HTMLElement) {
 		// nothing to do here
 	}

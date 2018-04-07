@@ -1,7 +1,8 @@
-import Component from "./Component";
+import { Component } from "./Component";
+
 import "./Rating.css";
 
-export default class Rating implements Component {
+export class Rating implements Component {
 	constructor(private document: Document) { }
 
 	public createElement(rating: string): HTMLAnchorElement {

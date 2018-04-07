@@ -1,4 +1,4 @@
-export default class PageIdentifier {
+export class PageIdentifier {
 	constructor(private location: Location) { }
 
 	public getPage(): Page {

@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
-import StoryProfileParser from "../../src/util/StoryProfileParser";
+
+import { StoryProfileParser } from "../../src/util/StoryProfileParser";
 
 describe("Story Profile Parser", function() {
 	const params = [

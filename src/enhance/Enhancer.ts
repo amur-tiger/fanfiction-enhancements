@@ -1,3 +1,3 @@
-export default interface Enhancer {
+export interface Enhancer {
 	enhance();
 }

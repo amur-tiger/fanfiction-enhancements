@@ -1,4 +1,4 @@
-export default interface Chapter {
+export interface Chapter {
 	id: number;
 	name: string;
 }

@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
+
 import { getByAjax, loadScript, ptToEm, rgbToHex } from "../src/utils";
 
 describe("Utility Functions", function() {

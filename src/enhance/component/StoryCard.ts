@@ -1,10 +1,11 @@
-import Story from "../../api/data/Story";
-import StoryMetaData from "../../api/data/StoryMetaData";
-import Component from "./Component";
-import Rating from "./Rating";
+import { Component } from "./Component";
+import { Rating } from "./Rating";
+import { Story } from "../../api/data/Story";
+import { StoryMetaData } from "../../api/data/StoryMetaData";
+
 import "./StoryCard.css";
 
-export default class StoryCard implements Component {
+export class StoryCard implements Component {
 	constructor(private document: Document) {
 	}
 

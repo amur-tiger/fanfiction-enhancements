@@ -1,6 +1,6 @@
-import StoryProfile from "./enhance/StoryProfile";
-import StoryText from "./enhance/StoryText";
-import PageIdentifier, { Page } from "./PageIdentifier";
+import { Page, PageIdentifier } from "./PageIdentifier";
+import { StoryProfile } from "./enhance/StoryProfile";
+import { StoryText } from "./enhance/StoryText";
 
 const identifier = new PageIdentifier(window.location);
 const page = identifier.getPage();
