@@ -8,12 +8,16 @@ export class StoryProfileParser {
 			throw new Error("Profile node must be defined.");
 		}
 
-		if (!chapters) {
-			throw new Error("Chapters must be defined.");
-		}
-
 		const story = this.parseProfile(profile);
-		story.chapters = this.parseChapters(chapters);
+
+		if (chapters) {
+			story.chapters = this.parseChapters(chapters);
+		} else {
+			story.chapters = [{
+				id: 1,
+				name: story.title,
+			}];
+		}
 
 		return story;
 	}

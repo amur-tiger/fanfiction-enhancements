@@ -15,9 +15,6 @@ export class StoryProfile implements Enhancer {
 		}
 
 		const chapters = this.document.getElementById("chap_select");
-		if (!chapters) {
-			throw new Error("Could not find chapter select element. Check for update?");
-		}
 
 		const parser = new StoryProfileParser();
 		const story = parser.parse(profile, chapters);
