@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.6+17.eb0ef8d
+// @version      0.1.7+18.99a3e77
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -102,7 +102,7 @@
 	    }
 	}
 
-	var css$1 = ".ffe-sc-header {\n\tborder-bottom: 1px solid silver;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid silver;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-tags {\n\tcolor: gray;\n\tline-height: 1.4em;\n\tmargin-top: 6px;\n}\n\n.ffe-sc-tag:before {\n\tcontent: \" - \";\n}\n\n.ffe-sc-tag:first-child:before {\n\tcontent: \"\";\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
+	var css$1 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tbackground-color: #f6f7ee;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
 	styleInject(css$1);
 
 	class StoryCard {
@@ -113,9 +113,9 @@
 	        const element = this.document.createElement("div");
 	        element.className = "ffe-sc";
 	        this.addHeader(element, story);
+	        this.addTags(element, story);
 	        this.addImage(element, story.meta);
 	        this.addDescription(element, story);
-	        this.addTags(element, story);
 	        this.addFooter(element, story.meta);
 	        return element;
 	    }
@@ -162,25 +162,37 @@
 	        tags.className = "ffe-sc-tags";
 	        let html = "";
 	        if (story.meta.language) {
-	            html += `<span class="ffe-sc-tag">${story.meta.language}</span>`;
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-language">${story.meta.language}</span>`;
 	        }
 	        if (story.meta.genre) {
-	            html += `<span class="ffe-sc-tag">${story.meta.genre.join("/")}</span>`;
+	            for (const genre of story.meta.genre) {
+	                html += `<span class="ffe-sc-tag ffe-sc-tag-genre">${genre}</span>`;
+	            }
 	        }
 	        if (story.meta.characters && story.meta.characters.length) {
-	            html += `<span class="ffe-sc-tag">${story.meta.characters.join(", ")}</span>`;
+	            for (const character of story.meta.characters) {
+	                if (typeof character === "string") {
+	                    html += `<span class="ffe-sc-tag ffe-sc-tag-character">${character}</span>`;
+	                }
+	                else {
+	                    html += `<span class="ffe-sc-tag ffe-sc-tag-ship"><span 
+						class="ffe-sc-tag-character">${character.join("</span><span " +
+                        "class='ffe-sc-tag-character'>")}</span></span>`;
+	                }
+	            }
 	        }
 	        if (story.chapters && story.chapters.length) {
-	            html += `<span class="ffe-sc-tag">Chapters: ${story.chapters.length}</span>`;
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters: ${story.chapters.length}</span>`;
 	        }
 	        if (story.meta.reviews) {
-	            html += `<span class="ffe-sc-tag"><a href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-reviews"><a 
+				href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
 	        }
 	        if (story.meta.favs) {
-	            html += `<span class="ffe-sc-tag">Favorites: ${story.meta.favs}</span>`;
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-favs">Favorites: ${story.meta.favs}</span>`;
 	        }
 	        if (story.meta.follows) {
-	            html += `<span class="ffe-sc-tag">Follows: ${story.meta.follows}</span>`;
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-follows">Follows: ${story.meta.follows}</span>`;
 	        }
 	        tags.innerHTML = html;
 	        element.appendChild(tags);
@@ -274,7 +286,11 @@
 	        };
 	    }
 	    parseTags(tagsElement) {
-	        const result = {};
+	        // todo: genre may not be tagged, in which case characters get parsed as genre!
+	        const result = {
+	            genre: [],
+	            characters: [],
+	        };
 	        const tagsArray = tagsElement.innerHTML.split(" - ");
 	        const tempElement = document.createElement("div");
 	        tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
@@ -284,14 +300,14 @@
 	        for (let i = 3; i < tagsArray.length; i++) {
 	            const tagNameMatch = tagsArray[i].match(/^(\w+):/);
 	            if (!tagNameMatch) {
-	                result.characters = tagsArray[i].trim().split(/,\s+/);
+	                result.characters = this.parseCharacters(tagsArray[i]);
 	                continue;
 	            }
 	            const tagName = tagNameMatch[1].toLowerCase();
 	            const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
 	            switch (tagName) {
 	                case "characters":
-	                    result.characters = tagsArray[i].trim().split(/,\s+/);
+	                    result.characters = this.parseCharacters(tagsArray[i]);
 	                    break;
 	                case "reviews":
 	                    tempElement.innerHTML = tagValue;
@@ -311,6 +327,29 @@
 	                        result[tagName] = tagValue;
 	                    }
 	                    break;
+	            }
+	        }
+	        return result;
+	    }
+	    parseCharacters(tag) {
+	        const result = [];
+	        const ships = tag.trim().split(/([\[\]])\s*/).filter(ship => ship.length);
+	        let inShip = false;
+	        for (const ship of ships) {
+	            if (ship == "[") {
+	                inShip = true;
+	                continue;
+	            }
+	            if (ship == "]") {
+	                inShip = false;
+	                continue;
+	            }
+	            const characters = ship.split(/,\s+/);
+	            if (!inShip || characters.length == 1) {
+	                result.push(...characters);
+	            }
+	            else {
+	                result.push(characters);
 	            }
 	        }
 	        return result;
