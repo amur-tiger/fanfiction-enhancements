@@ -87,7 +87,8 @@ export class StoryCard implements Component {
 		}
 
 		if (story.meta.characters && story.meta.characters.length) {
-			html += `<span class="ffe-sc-tag">${story.meta.characters.join(", ")}</span>`;
+			html += `<span class="ffe-sc-tag">${story.meta.characters.map(c => typeof c === "string"
+				? c : c.join(" + ")).join(", ")}</span>`;
 		}
 
 		if (story.chapters && story.chapters.length) {

@@ -70,7 +70,7 @@ export class StoryProfileParser {
 		for (let i = 3; i < tagsArray.length; i++) {
 			const tagNameMatch = tagsArray[i].match(/^(\w+):/);
 			if (!tagNameMatch) {
-				result.characters = tagsArray[i].trim().split(/,\s+/);
+				result.characters = this.parseCharacters(tagsArray[i]);
 				continue;
 			}
 
@@ -79,7 +79,7 @@ export class StoryProfileParser {
 
 			switch (tagName) {
 				case "characters":
-					result.characters = tagsArray[i].trim().split(/,\s+/);
+					result.characters = this.parseCharacters(tagsArray[i]);
 					break;
 				case "reviews":
 					tempElement.innerHTML = tagValue;
@@ -98,6 +98,33 @@ export class StoryProfileParser {
 						result[tagName] = tagValue;
 					}
 					break;
+			}
+		}
+
+		return result;
+	}
+
+	private parseCharacters(tag: string): (string | string[])[] {
+		const result = [];
+		const ships = tag.trim().split(/([\[\]])\s*/).filter(ship => ship.length);
+		let inShip = false;
+
+		for (const ship of ships) {
+			if (ship == "[") {
+				inShip = true;
+				continue;
+			}
+
+			if (ship == "]") {
+				inShip = false;
+				continue;
+			}
+
+			const characters = ship.split(/,\s+/);
+			if (!inShip || characters.length == 1) {
+				result.push(...characters);
+			} else {
+				result.push(characters);
 			}
 		}
 

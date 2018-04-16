@@ -155,8 +155,8 @@ describe("Story Profile Parser", function() {
 		<a><!-- message link --></a>
 		<div>description</div>
 		<span>
-			Rated: <a>M</a> - Elvish - Fantasy - Chapters: 33 - Words: 1,234 - Reviews: <a>123</a> - Favs: 345 - Follows: 
-			567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
+			Rated: <a>M</a> - Elvish - Fantasy - [Romeo, Juliet] Steve - Chapters: 33 - Words: 1,234 - Reviews: 
+			<a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 		</span>
 	</div>
@@ -170,7 +170,10 @@ describe("Story Profile Parser", function() {
 			rating: "M",
 			language: "Elvish",
 			genre: ["Fantasy"],
-			characters: [],
+			characters: [
+				["Romeo", "Juliet"],
+				"Steve",
+			],
 			chapters: [{
 				id: 1,
 				name: "title",

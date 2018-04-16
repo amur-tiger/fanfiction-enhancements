@@ -137,7 +137,10 @@ describe("StoryCard Component", function() {
 			meta: {
 				language: "Elvish",
 				genre: ["Adventure", "Fantasy"],
-				characters: ["James Bond"],
+				characters: [
+					["Adam", "Eva"],
+					"Steve",
+				],
 				reviews: 11,
 				updated: new Date(),
 				updatedWords: "today",
@@ -149,7 +152,7 @@ describe("StoryCard Component", function() {
 
 		assert.equal(tags[0].textContent, "Elvish");
 		assert.equal(tags[1].textContent, "Adventure/Fantasy");
-		assert.equal(tags[2].textContent, "James Bond");
+		assert.equal(tags[2].textContent, "Adam + Eva, Steve");
 		assert.equal(tags[3].firstElementChild.tagName, "A");
 		assert.equal((tags[3].firstElementChild as HTMLAnchorElement).href, "/r/123/");
 	});

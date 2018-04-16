@@ -13,6 +13,6 @@ export interface StoryMetaData {
 	updatedWords?: string;
 	rating?: string;
 	words?: number;
-	characters?: string[];
+	characters?: (string | string[])[];
 	status?: string;
 }
