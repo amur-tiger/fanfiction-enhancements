@@ -36,6 +36,7 @@ describe("Story Profile Parser", function() {
 			rating: "M",
 			language: "Elvish",
 			genre: ["Fantasy"],
+			characters: [],
 			chapters: [{
 				id: 1,
 				name: "Chapter 1",
@@ -82,6 +83,7 @@ describe("Story Profile Parser", function() {
 			rating: "T",
 			language: "Klingon",
 			genre: ["Sci-Fi"],
+			characters: [],
 			chapters: [{
 				id: 1,
 				name: "Intro",
@@ -126,6 +128,7 @@ describe("Story Profile Parser", function() {
 			rating: "T",
 			language: "English",
 			genre: ["Adventure"],
+			characters: ["Naruto U.", "Shikamaru N.", "OC"],
 			chapters: [{
 				id: 1,
 				name: "Intro",
@@ -167,6 +170,7 @@ describe("Story Profile Parser", function() {
 			rating: "M",
 			language: "Elvish",
 			genre: ["Fantasy"],
+			characters: [],
 			chapters: [{
 				id: 1,
 				name: "title",
@@ -254,6 +258,13 @@ describe("Story Profile Parser", function() {
 				const result = sut.parse(param.fragment.querySelector("#profile_top"),
 					param.fragment.querySelector("#chap_select"));
 				assert.deepEqual(result.meta.genre, param.genre);
+			});
+
+			it("should recognize characters", function() {
+				const sut = new StoryProfileParser();
+				const result = sut.parse(param.fragment.querySelector("#profile_top"),
+					param.fragment.querySelector("#chap_select"));
+				assert.deepEqual(result.meta.characters, param.characters);
 			});
 
 			it("should recognize language", function() {

@@ -53,7 +53,10 @@ export class StoryProfileParser {
 	}
 
 	private parseTags(tagsElement: Element): StoryMetaData {
-		const result: StoryMetaData = {};
+		const result: StoryMetaData = {
+			genre: [],
+			characters: [],
+		};
 
 		const tagsArray = tagsElement.innerHTML.split(" - ");
 		const tempElement = document.createElement("div");
