@@ -14,9 +14,9 @@ export class StoryCard implements Component {
 		element.className = "ffe-sc";
 
 		this.addHeader(element, story);
+		this.addTags(element, story);
 		this.addImage(element, story.meta);
 		this.addDescription(element, story);
-		this.addTags(element, story);
 		this.addFooter(element, story.meta);
 
 		return element;
@@ -79,32 +79,42 @@ export class StoryCard implements Component {
 		let html = "";
 
 		if (story.meta.language) {
-			html += `<span class="ffe-sc-tag">${story.meta.language}</span>`;
+			html += `<span class="ffe-sc-tag ffe-sc-tag-language">${story.meta.language}</span>`;
 		}
 
 		if (story.meta.genre) {
-			html += `<span class="ffe-sc-tag">${story.meta.genre.join("/")}</span>`;
+			for (const genre of story.meta.genre) {
+				html += `<span class="ffe-sc-tag ffe-sc-tag-genre">${genre}</span>`;
+			}
 		}
 
 		if (story.meta.characters && story.meta.characters.length) {
-			html += `<span class="ffe-sc-tag">${story.meta.characters.map(c => typeof c === "string"
-				? c : c.join(" + ")).join(", ")}</span>`;
+			for (const character of story.meta.characters) {
+				if (typeof character === "string") {
+					html += `<span class="ffe-sc-tag ffe-sc-tag-character">${character}</span>`;
+				} else {
+					html += `<span class="ffe-sc-tag ffe-sc-tag-ship"><span 
+						class="ffe-sc-tag-character">${character.join("</span><span " +
+						"class='ffe-sc-tag-character'>")}</span></span>`;
+				}
+			}
 		}
 
 		if (story.chapters && story.chapters.length) {
-			html += `<span class="ffe-sc-tag">Chapters: ${story.chapters.length}</span>`;
+			html += `<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters: ${story.chapters.length}</span>`;
 		}
 
 		if (story.meta.reviews) {
-			html += `<span class="ffe-sc-tag"><a href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
+			html += `<span class="ffe-sc-tag ffe-sc-tag-reviews"><a 
+				href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
 		}
 
 		if (story.meta.favs) {
-			html += `<span class="ffe-sc-tag">Favorites: ${story.meta.favs}</span>`;
+			html += `<span class="ffe-sc-tag ffe-sc-tag-favs">Favorites: ${story.meta.favs}</span>`;
 		}
 
 		if (story.meta.follows) {
-			html += `<span class="ffe-sc-tag">Follows: ${story.meta.follows}</span>`;
+			html += `<span class="ffe-sc-tag ffe-sc-tag-follows">Follows: ${story.meta.follows}</span>`;
 		}
 
 		tags.innerHTML = html;

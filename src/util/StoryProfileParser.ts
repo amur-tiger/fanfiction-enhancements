@@ -53,6 +53,8 @@ export class StoryProfileParser {
 	}
 
 	private parseTags(tagsElement: Element): StoryMetaData {
+		// todo: genre may not be tagged, in which case characters get parsed as genre!
+
 		const result: StoryMetaData = {
 			genre: [],
 			characters: [],

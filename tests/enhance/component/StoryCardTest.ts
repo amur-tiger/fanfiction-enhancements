@@ -148,13 +148,27 @@ describe("StoryCard Component", function() {
 		});
 
 		const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
-		assert.equal(tags.length, 4);
+		assert.equal(tags.length, 6);
 
 		assert.equal(tags[0].textContent, "Elvish");
-		assert.equal(tags[1].textContent, "Adventure/Fantasy");
-		assert.equal(tags[2].textContent, "Adam + Eva, Steve");
-		assert.equal(tags[3].firstElementChild.tagName, "A");
-		assert.equal((tags[3].firstElementChild as HTMLAnchorElement).href, "/r/123/");
+		assert.equal(tags[0].className, "ffe-sc-tag ffe-sc-tag-language");
+
+		assert.equal(tags[1].textContent, "Adventure");
+		assert.equal(tags[1].className, "ffe-sc-tag ffe-sc-tag-genre");
+		assert.equal(tags[2].textContent, "Fantasy");
+		assert.equal(tags[2].className, "ffe-sc-tag ffe-sc-tag-genre");
+
+		assert.equal(tags[3].className, "ffe-sc-tag ffe-sc-tag-ship");
+		assert.equal(tags[3].firstElementChild.textContent, "Adam");
+		assert.equal(tags[3].firstElementChild.className, "ffe-sc-tag-character");
+		assert.equal(tags[3].lastElementChild.textContent, "Eva");
+		assert.equal(tags[3].lastElementChild.className, "ffe-sc-tag-character");
+		assert.equal(tags[4].textContent, "Steve");
+		assert.equal(tags[4].className, "ffe-sc-tag ffe-sc-tag-character");
+
+		assert.equal(tags[5].textContent, "Reviews: 11");
+		assert.equal(tags[5].firstElementChild.tagName, "A");
+		assert.equal((tags[5].firstElementChild as HTMLAnchorElement).href, "/r/123/");
 	});
 
 	it("should insert footer", function() {
