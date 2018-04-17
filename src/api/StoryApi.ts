@@ -4,6 +4,66 @@ import { StoryProfileParser } from "../util/StoryProfileParser";
 declare const userid: number;
 
 const BASE_URL = "https://www.fanfiction.net";
+const CACHE_FOLLOWS_KEY = "ffe-api-follows";
+const CACHE_FAVORITES_KEY = "ffe-api-favorites";
+
+const cache = {
+	get follows(): FollowedStory[] {
+		const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
+
+		return value && JSON.parse(value);
+	},
+
+	set follows(value: FollowedStory[]) {
+		localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(value));
+	},
+
+	addFollow: (story: FollowedStory) => {
+		const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
+		const list = (value && JSON.parse(value)) as FollowedStory[];
+		if (list && list.every(f => f.id !== story.id)) {
+			list.push(story);
+			localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(list));
+		}
+	},
+
+	removeFollow: (story: FollowedStory) => {
+		const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
+		let list = (value && JSON.parse(value)) as FollowedStory[];
+		if (list) {
+			list = list.filter(f => f.id !== story.id);
+			localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(list));
+		}
+	},
+
+	get favorites(): FollowedStory[] {
+		const value = localStorage.getItem(CACHE_FAVORITES_KEY);
+
+		return value && JSON.parse(value);
+	},
+
+	set favorites(value: FollowedStory[]) {
+		localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(value));
+	},
+
+	addFavorite: (story: FollowedStory) => {
+		const value = localStorage.getItem(CACHE_FAVORITES_KEY);
+		const list = (value && JSON.parse(value)) as FollowedStory[];
+		if (list && list.every(f => f.id !== story.id)) {
+			list.push(story);
+			localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
+		}
+	},
+
+	removeFavorite: (story: FollowedStory) => {
+		const value = localStorage.getItem(CACHE_FAVORITES_KEY);
+		let list = (value && JSON.parse(value)) as FollowedStory[];
+		if (list) {
+			list = list.filter(f => f.id !== story.id);
+			localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
+		}
+	},
+};
 
 function urlencoded(obj: any): string {
 	const result = [];
@@ -61,14 +121,20 @@ function ajaxCall(url: string, method: string, body: any, options?: any): Promis
  * Follows the story with the given id.
  * @param storyid
  */
-export function followStory(storyid: number): Promise<any> {
+export function followStory(story: Story): Promise<any> {
 	return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
-		storyid: storyid,
+		storyid: story.id,
 		userid: userid,
 		storyalert: 1,
 	}, {
 		type: "urlencoded",
 	}).then(data => {
+		cache.addFollow({
+			id: story.id,
+			title: story.title,
+			author: story.author,
+		});
+
 		return JSON.parse(data);
 	});
 }
@@ -77,12 +143,20 @@ export function followStory(storyid: number): Promise<any> {
  * Stops following the story with the given id.
  * @param storyid
  */
-export function unFollowStory(storyid: number): Promise<any> {
+export function unFollowStory(story: Story): Promise<any> {
 	return ajaxCall(BASE_URL + "/alert/story.php", "POST", {
 		action: "remove-multi",
-		"rids[]": storyid,
+		"rids[]": story.id,
 	}, {
 		type: "urlencoded",
+	}).then(data => {
+		cache.removeFollow({
+			id: story.id,
+			title: story.title,
+			author: story.author,
+		});
+
+		return data;
 	});
 }
 
@@ -90,14 +164,20 @@ export function unFollowStory(storyid: number): Promise<any> {
  * Favorites the story with the given id.
  * @param storyid
  */
-export function favoriteStory(storyid: number): Promise<any> {
+export function favoriteStory(story: Story): Promise<any> {
 	return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
-		storyid: storyid,
+		storyid: story.id,
 		userid: userid,
 		favstory: 1,
 	}, {
 		type: "urlencoded",
 	}).then(data => {
+		cache.addFavorite({
+			id: story.id,
+			title: story.title,
+			author: story.author,
+		});
+
 		return JSON.parse(data);
 	});
 }
@@ -106,12 +186,20 @@ export function favoriteStory(storyid: number): Promise<any> {
  * Removes the story with the given id from favorites.
  * @param storyid
  */
-export function unFavoriteStory(storyid: number): Promise<any> {
+export function unFavoriteStory(story: Story): Promise<any> {
 	return ajaxCall(BASE_URL + "/favorites/story.php", "POST", {
 		action: "remove-multi",
-		"rids[]": storyid,
+		"rids[]": story.id,
 	}, {
 		type: "urlencoded",
+	}).then(data => {
+		cache.removeFavorite({
+			id: story.id,
+			title: story.title,
+			author: story.author,
+		});
+
+		return data;
 	});
 }
 
@@ -143,13 +231,25 @@ function parseFollowedStoryList(body): FollowedStory[] {
 }
 
 export function getFollowedStories(): Promise<FollowedStory[]> {
+	const list = cache.follows;
+	if (list) {
+		return Promise.resolve(list);
+	}
+
 	return ajaxCall(BASE_URL + "/alert/story.php", "GET", undefined)
-		.then(parseFollowedStoryList);
+		.then(parseFollowedStoryList)
+		.then(fetchedList => cache.follows = fetchedList);
 }
 
 export function getFavoritedStories(): Promise<FollowedStory[]> {
+	const list = cache.favorites;
+	if (list) {
+		return Promise.resolve(list);
+	}
+
 	return ajaxCall(BASE_URL + "/favorites/story.php", "GET", undefined)
-		.then(parseFollowedStoryList);
+		.then(parseFollowedStoryList)
+		.then(fetchedList => cache.favorites = fetchedList);
 }
 
 /**

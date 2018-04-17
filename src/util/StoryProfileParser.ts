@@ -3,7 +3,9 @@ import { Chapter, Story, StoryMetaData } from "../api/data";
 export class StoryProfileParser {
 	public parse(profile: Element, chapters: ParentNode): Story {
 		if (!profile) {
-			throw new Error("Profile node must be defined.");
+			console.error("Profile node not found. Cannot parse story info.");
+
+			return undefined;
 		}
 
 		const story = this.parseProfile(profile);
@@ -150,4 +152,14 @@ export class StoryProfileParser {
 
 		return result;
 	}
+}
+
+let currentStory: Story = undefined;
+export function getCurrentStory(): Story {
+	if (!currentStory) {
+		currentStory = new StoryProfileParser()
+			.parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
+	}
+
+	return currentStory;
 }

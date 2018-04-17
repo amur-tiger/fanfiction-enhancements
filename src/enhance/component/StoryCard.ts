@@ -3,6 +3,7 @@ import { Component } from "./Component";
 import { Rating } from "./Rating";
 import { favoriteStory, followStory, getFavoritedStories,
 	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/StoryApi";
+import { getCurrentStory } from "../../util/StoryProfileParser";
 
 import "./StoryCard.css";
 
@@ -61,7 +62,7 @@ export class StoryCard implements Component {
 			if (stories.some(s => s.id === storyid)) {
 				follow.classList.add("ffe-sc-active");
 			}
-		});
+		}).catch(console.error);
 		mark.appendChild(follow);
 
 		const favorite = this.document.createElement("span") as HTMLSpanElement;
@@ -71,7 +72,7 @@ export class StoryCard implements Component {
 			if (stories.some(s => s.id === storyid)) {
 				favorite.classList.add("ffe-sc-active");
 			}
-		});
+		}).catch(console.error);
 		mark.appendChild(favorite);
 
 		header.appendChild(mark);
@@ -81,12 +82,12 @@ export class StoryCard implements Component {
 
 	private clickFollow(event: MouseEvent): void {
 		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFollowStory(storyid)
+			unFollowStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
 					xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
 				}) :
-			followStory(storyid)
+			followStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
 					xtoast("We have successfully processed the following: " + data.payload_data, 3500);
@@ -101,12 +102,12 @@ export class StoryCard implements Component {
 
 	private clickFavorite(event: MouseEvent): void {
 		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFavoriteStory(storyid)
+			unFavoriteStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
 					xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
 				}) :
-			favoriteStory(storyid)
+			favoriteStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
 					xtoast("We have successfully processed the following: " + data.payload_data, 3500);

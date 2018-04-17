@@ -5,9 +5,6 @@ import { setCookie } from "../../src/utils";
 import { StoryText } from "../../src/enhance/StoryText";
 
 describe("Story Text", function() {
-	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
-	global["window"] = domFragment.window;
-	global["document"] = domFragment.window.document;
 	global["XCOOKIE"] = {};
 	global["_fontastic_save"] = () => {
 		// dummy function

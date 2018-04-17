@@ -1,11 +1,31 @@
 import { assert } from "chai";
-import { JSDOM } from "jsdom";
 
 import { StoryCard } from "../../../src/enhance/component/StoryCard";
 
 describe("StoryCard Component", function() {
-	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
-	const document = domFragment.window.document;
+	beforeEach(function() {
+		const store = {};
+		const noOp = () => {
+			// no operation
+		};
+
+		global["localStorage"] = {
+			getItem: function(key: string): string {
+				return store[key];
+			},
+
+			setItem: function(key: string, value: string): void {
+				store[key] = value;
+			},
+		};
+
+		global["XMLHttpRequest"] = function() {
+			this.addEventListener = noOp;
+			this.open = noOp;
+			this.setRequestHeader = noOp;
+			this.send = noOp;
+		};
+	});
 
 	it("should create a div element", function() {
 		const element = new StoryCard(document).createElement({

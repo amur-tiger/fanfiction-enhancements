@@ -16,6 +16,7 @@
     "gulp-clean": "^0.4.0",
     "ignore-styles": "^5.0.1",
     "jsdom": "^11.7.0",
+    "jsdom-global": "^3.0.2",
     "mocha": "^5.0.5",
     "parse5": "^4.0.0",
     "rollup": "^0.57.1",
@@ -27,7 +28,7 @@
   },
   "scripts": {
     "pretest": "tslint --project .",
-    "test": "tsc --project tests/tsconfig.json && mocha --recursive --require ignore-styles tests",
+    "test": "tsc --project tests/tsconfig.json && mocha --recursive --require ignore-styles --require jsdom-global/register tests",
     "posttest": "gulp clean",
     "lint": "tslint --project .",
     "build": "gulp build",

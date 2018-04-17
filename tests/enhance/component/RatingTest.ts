@@ -1,12 +1,8 @@
 import { assert } from "chai";
-import { JSDOM } from "jsdom";
 
 import { Rating } from "../../../src/enhance/component/Rating";
 
 describe("Rating Component", function() {
-	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
-	const document = domFragment.window.document;
-
 	it("should create an anchor element with certain properties", function() {
 		const element = new Rating(document).createElement("K");
 
