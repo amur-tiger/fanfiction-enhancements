@@ -16,13 +16,7 @@ export function loadScript(url: string): Promise<Event> {
 	});
 }
 
-/**
- * Makes an AJAX GET call, optionally with additional headers.
- * @param {string} url
- * @param {object} [options]
- * @returns {Promise}
- */
-export function getByAjax(url: string, options?): Promise<string> {
+function ajaxCall(url: string, method: string, body: any, options?: any): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const xhr = new XMLHttpRequest();
 		xhr.addEventListener("load", () => {
@@ -35,14 +29,39 @@ export function getByAjax(url: string, options?): Promise<string> {
 		xhr.addEventListener("error", () => {
 			reject(xhr.response);
 		});
-		xhr.open("GET", url, true);
+		xhr.open(method, url, true);
 		if (options && options.headers) {
 			Object.keys(options.headers).forEach(key => {
 				xhr.setRequestHeader(key, options.headers[key]);
 			});
 		}
-		xhr.send();
+		if (body) {
+			xhr.send(typeof body === "string" ? body : JSON.stringify(body));
+		} else {
+			xhr.send();
+		}
 	});
+}
+
+/**
+ * Makes an AJAX GET call, optionally with additional headers.
+ * @param {string} url
+ * @param {object} [options]
+ * @returns {Promise}
+ */
+export function getByAjax(url: string, options?): Promise<string> {
+	return ajaxCall(url, "GET", undefined, options);
+}
+
+/**
+ * Makes an AJAX POST call, optionally with additional headers.
+ * @param {string} url
+ * @param {any} body
+ * @param {object} [options]
+ * @returns {Promise}
+ */
+export function postByAjax(url: string, body: any, options?): Promise<string> {
+	return ajaxCall(url, "POST", body, options);
 }
 
 /**

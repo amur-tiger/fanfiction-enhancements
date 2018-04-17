@@ -18,6 +18,18 @@
 	padding: 0 .5em;
 }
 
+.ffe-sc-mark {
+	float: right;
+}
+
+.ffe-sc-follow:hover {
+	color: #60cf23;
+}
+
+.ffe-sc-favorite:hover {
+	color: #ffb400;
+}
+
 .ffe-sc-tags {
 	border-bottom: 1px solid #ddd;
 	line-height: 2em;

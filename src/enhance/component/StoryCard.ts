@@ -1,9 +1,15 @@
+import { postByAjax } from "../../utils";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
 import { Story } from "../../api/data/Story";
 import { StoryMetaData } from "../../api/data/StoryMetaData";
 
 import "./StoryCard.css";
+
+declare function xtoast(message: string, time?: number);
+
+declare const storyid: number;
+declare const userid: number;
 
 export class StoryCard implements Component {
 	constructor(private document: Document) {
@@ -46,7 +52,52 @@ export class StoryCard implements Component {
 		author.href = "/u/" + (story.author ? story.author.id : "?");
 		header.appendChild(author);
 
+		const mark = this.document.createElement("div") as HTMLDivElement;
+		mark.className = "ffe-sc-mark btn-group";
+
+		const follow = this.document.createElement("span") as HTMLSpanElement;
+		follow.className = "ffe-sc-follow btn icon-bookmark-2";
+		follow.addEventListener("click", this.clickFollow);
+		mark.appendChild(follow);
+
+		const favorite = this.document.createElement("span") as HTMLSpanElement;
+		favorite.className = "ffe-sc-favorite btn icon-heart";
+		favorite.addEventListener("click", this.clickFavorite);
+		mark.appendChild(favorite);
+
+		header.appendChild(mark);
+
 		element.appendChild(header);
+	}
+
+	private clickFollow(event: MouseEvent): void {
+		postByAjax("/api/ajax_subs.php", `storyid=${storyid}&userid=${userid}&storyalert=1`,
+		{
+			headers: {
+				"content-type": "application/x-www-form-urlencoded",
+			},
+		}).catch(err => {
+			console.error(err);
+			xtoast("We are unable to process your request due to an network error. Please try again later.");
+		}).then((data: string) => {
+			const parsed = JSON.parse(data);
+			xtoast("We have successfully processed the following: " + parsed.payload_data, 3500);
+		});
+	}
+
+	private clickFavorite(event: MouseEvent): void {
+		postByAjax("/api/ajax_subs.php", `storyid=${storyid}&userid=${userid}&favstory=1`,
+		{
+			headers: {
+				"content-type": "application/x-www-form-urlencoded",
+			},
+		}).catch(err => {
+			console.error(err);
+			xtoast("We are unable to process your request due to an network error. Please try again later.");
+		}).then((data: string) => {
+			const parsed = JSON.parse(data);
+			xtoast("We have successfully processed the following: " + parsed.payload_data, 3500);
+		});
 	}
 
 	private addImage(element: HTMLDivElement, story: StoryMetaData) {
@@ -93,7 +144,7 @@ export class StoryCard implements Component {
 				if (typeof character === "string") {
 					html += `<span class="ffe-sc-tag ffe-sc-tag-character">${character}</span>`;
 				} else {
-					html += `<span class="ffe-sc-tag ffe-sc-tag-ship"><span 
+					html += `<span class="ffe-sc-tag ffe-sc-tag-ship"><span
 						class="ffe-sc-tag-character">${character.join("</span><span " +
 						"class='ffe-sc-tag-character'>")}</span></span>`;
 				}
@@ -105,7 +156,7 @@ export class StoryCard implements Component {
 		}
 
 		if (story.meta.reviews) {
-			html += `<span class="ffe-sc-tag ffe-sc-tag-reviews"><a 
+			html += `<span class="ffe-sc-tag ffe-sc-tag-reviews"><a
 				href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
 		}
 

@@ -82,6 +82,28 @@ describe("StoryCard Component", function() {
 		assert.equal(author.href, "/u/456");
 	});
 
+	it("should insert buttons", function() {
+		const element = new StoryCard(document).createElement({
+			id: 0,
+			title: "",
+			author: {
+				id: 0,
+				name: "",
+				profileUrl: "",
+				avatarUrl: "",
+			},
+			chapters: [],
+			meta: {},
+		});
+
+		const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
+		const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
+		const fav = buttons.querySelector(".ffe-sc-favorite") as HTMLSpanElement;
+
+		assert.equal(follow.className, "ffe-sc-follow btn icon-bookmark-2");
+		assert.equal(fav.className, "ffe-sc-favorite btn icon-heart");
+	});
+
 	it("should insert image", function() {
 		const element = new StoryCard(document).createElement({
 			id: 0,
