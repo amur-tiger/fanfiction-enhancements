@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.8+19.4544bf6
+// @version      0.1.9+20.70c41ce
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -29,66 +29,6 @@
 	        }
 	        return 0 /* Other */;
 	    }
-	}
-
-	/**
-	 * Loads a script dynamically by creating a script element and attaching it to the head element.
-	 * @param {string} url
-	 * @returns {Promise}
-	 */
-	function ajaxCall(url, method, body, options) {
-	    return new Promise((resolve, reject) => {
-	        const xhr = new XMLHttpRequest();
-	        xhr.addEventListener("load", () => {
-	            if (xhr.status >= 200 && xhr.status < 300) {
-	                resolve(xhr.response);
-	            }
-	            else {
-	                reject(xhr.response);
-	            }
-	        });
-	        xhr.addEventListener("error", () => {
-	            reject(xhr.response);
-	        });
-	        xhr.open(method, url, true);
-	        if (options && options.headers) {
-	            Object.keys(options.headers).forEach(key => {
-	                xhr.setRequestHeader(key, options.headers[key]);
-	            });
-	        }
-	        if (body) {
-	            xhr.send(typeof body === "string" ? body : JSON.stringify(body));
-	        }
-	        else {
-	            xhr.send();
-	        }
-	    });
-	}
-	/**
-	 * Makes an AJAX POST call, optionally with additional headers.
-	 * @param {string} url
-	 * @param {any} body
-	 * @param {object} [options]
-	 * @returns {Promise}
-	 */
-	function postByAjax(url, body, options) {
-	    return ajaxCall(url, "POST", body, options);
-	}
-	/**
-	 * Reads in cookies and extracts the value of the cookie with the given name.
-	 * If the cookie doesn't exist, returns false.
-	 * @param {string} name
-	 * @returns {string | boolean}
-	 */
-	function getCookie(name) {
-	    const ca = document.cookie.split(";");
-	    for (let i = 0; i < ca.length; i++) {
-	        const c = ca[i].trimLeft();
-	        if (c.indexOf(name + "=") == 0) {
-	            return c.substring(name.length + 1, c.length);
-	        }
-	    }
-	    return false;
 	}
 
 	function styleInject(css, ref) {
@@ -162,187 +102,11 @@
 	    }
 	}
 
-	var css$1 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
-	styleInject(css$1);
-
-	class StoryCard {
-	    constructor(document) {
-	        this.document = document;
-	    }
-	    createElement(story) {
-	        const element = this.document.createElement("div");
-	        element.className = "ffe-sc";
-	        this.addHeader(element, story);
-	        this.addTags(element, story);
-	        this.addImage(element, story.meta);
-	        this.addDescription(element, story);
-	        this.addFooter(element, story.meta);
-	        return element;
-	    }
-	    addHeader(element, story) {
-	        const header = this.document.createElement("div");
-	        header.className = "ffe-sc-header";
-	        const rating = new Rating(this.document).createElement(story.meta.rating);
-	        header.appendChild(rating);
-	        const title = this.document.createElement("a");
-	        title.className = "ffe-sc-title";
-	        title.textContent = story.title;
-	        title.href = "/s/" + story.id;
-	        header.appendChild(title);
-	        const by = this.document.createElement("span");
-	        by.className = "ffe-sc-by";
-	        by.textContent = "by";
-	        header.appendChild(by);
-	        const author = this.document.createElement("a");
-	        author.className = "ffe-sc-author";
-	        author.textContent = story.author ? story.author.name : "?";
-	        author.href = "/u/" + (story.author ? story.author.id : "?");
-	        header.appendChild(author);
-	        const mark = this.document.createElement("div");
-	        mark.className = "ffe-sc-mark btn-group";
-	        const follow = this.document.createElement("span");
-	        follow.className = "ffe-sc-follow btn icon-bookmark-2";
-	        follow.addEventListener("click", this.clickFollow);
-	        mark.appendChild(follow);
-	        const favorite = this.document.createElement("span");
-	        favorite.className = "ffe-sc-favorite btn icon-heart";
-	        favorite.addEventListener("click", this.clickFavorite);
-	        mark.appendChild(favorite);
-	        header.appendChild(mark);
-	        element.appendChild(header);
-	    }
-	    clickFollow(event) {
-	        postByAjax("/api/ajax_subs.php", `storyid=${storyid}&userid=${userid}&storyalert=1`, {
-	            headers: {
-	                "content-type": "application/x-www-form-urlencoded",
-	            },
-	        }).catch(err => {
-	            console.error(err);
-	            xtoast("We are unable to process your request due to an network error. Please try again later.");
-	        }).then((data) => {
-	            const parsed = JSON.parse(data);
-	            xtoast("We have successfully processed the following: " + parsed.payload_data, 3500);
-	        });
-	    }
-	    clickFavorite(event) {
-	        postByAjax("/api/ajax_subs.php", `storyid=${storyid}&userid=${userid}&favstory=1`, {
-	            headers: {
-	                "content-type": "application/x-www-form-urlencoded",
-	            },
-	        }).catch(err => {
-	            console.error(err);
-	            xtoast("We are unable to process your request due to an network error. Please try again later.");
-	        }).then((data) => {
-	            const parsed = JSON.parse(data);
-	            xtoast("We have successfully processed the following: " + parsed.payload_data, 3500);
-	        });
-	    }
-	    addImage(element, story) {
-	        if (!story.imageUrl) {
-	            return;
-	        }
-	        const imageContainer = this.document.createElement("div");
-	        imageContainer.className = "ffe-sc-image";
-	        const image = this.document.createElement("img");
-	        image.src = story.imageUrl;
-	        imageContainer.appendChild(image);
-	        element.appendChild(imageContainer);
-	    }
-	    addDescription(element, story) {
-	        const description = this.document.createElement("div");
-	        description.className = "ffe-sc-description";
-	        description.textContent = story.description;
-	        element.appendChild(description);
-	    }
-	    addTags(element, story) {
-	        const tags = this.document.createElement("div");
-	        tags.className = "ffe-sc-tags";
-	        let html = "";
-	        if (story.meta.language) {
-	            html += `<span class="ffe-sc-tag ffe-sc-tag-language">${story.meta.language}</span>`;
-	        }
-	        if (story.meta.genre) {
-	            for (const genre of story.meta.genre) {
-	                html += `<span class="ffe-sc-tag ffe-sc-tag-genre">${genre}</span>`;
-	            }
-	        }
-	        if (story.meta.characters && story.meta.characters.length) {
-	            for (const character of story.meta.characters) {
-	                if (typeof character === "string") {
-	                    html += `<span class="ffe-sc-tag ffe-sc-tag-character">${character}</span>`;
-	                }
-	                else {
-	                    html += `<span class="ffe-sc-tag ffe-sc-tag-ship"><span
-						class="ffe-sc-tag-character">${character.join("</span><span " +
-                        "class='ffe-sc-tag-character'>")}</span></span>`;
-	                }
-	            }
-	        }
-	        if (story.chapters && story.chapters.length) {
-	            html += `<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters: ${story.chapters.length}</span>`;
-	        }
-	        if (story.meta.reviews) {
-	            html += `<span class="ffe-sc-tag ffe-sc-tag-reviews"><a
-				href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
-	        }
-	        if (story.meta.favs) {
-	            html += `<span class="ffe-sc-tag ffe-sc-tag-favs">Favorites: ${story.meta.favs}</span>`;
-	        }
-	        if (story.meta.follows) {
-	            html += `<span class="ffe-sc-tag ffe-sc-tag-follows">Follows: ${story.meta.follows}</span>`;
-	        }
-	        tags.innerHTML = html;
-	        element.appendChild(tags);
-	    }
-	    addFooter(element, story) {
-	        const footer = this.document.createElement("div");
-	        footer.className = "ffe-sc-footer";
-	        footer.innerHTML = "&nbsp;";
-	        if (story.words) {
-	            const words = this.document.createElement("div");
-	            words.style.cssFloat = "right";
-	            words.innerHTML = "<b>" + story.words.toLocaleString("en") + "</b> words";
-	            footer.appendChild(words);
-	        }
-	        const status = this.document.createElement("span");
-	        status.className = "ffe-sc-footer-info";
-	        if (story.status === "Complete") {
-	            status.className += " ffe-sc-footer-complete";
-	            status.textContent = "Complete";
-	        }
-	        else {
-	            status.className += " ffe-sc-footer-incomplete";
-	            status.textContent = "Incomplete";
-	        }
-	        footer.appendChild(status);
-	        if (story.published) {
-	            const published = this.document.createElement("span");
-	            published.className = "ffe-sc-footer-info";
-	            published.innerHTML = "<b>Published:</b> ";
-	            const time = this.document.createElement("time");
-	            time.dateTime = story.published.toISOString();
-	            time.textContent = story.publishedWords;
-	            published.appendChild(time);
-	            footer.appendChild(published);
-	        }
-	        if (story.updated) {
-	            const updated = this.document.createElement("span");
-	            updated.className = "ffe-sc-footer-info";
-	            updated.innerHTML = "<b>Updated:</b> ";
-	            const time = this.document.createElement("time");
-	            time.dateTime = story.updated.toISOString();
-	            time.textContent = story.updatedWords;
-	            updated.appendChild(time);
-	            footer.appendChild(updated);
-	        }
-	        element.appendChild(footer);
-	    }
-	}
-
 	class StoryProfileParser {
 	    parse(profile, chapters) {
 	        if (!profile) {
-	            throw new Error("Profile node must be defined.");
+	            console.error("Profile node not found. Cannot parse story info.");
+	            return undefined;
 	        }
 	        const story = this.parseProfile(profile);
 	        if (chapters) {
@@ -467,6 +231,437 @@
 	        return result;
 	    }
 	}
+	let currentStory = undefined;
+	function getCurrentStory() {
+	    if (!currentStory) {
+	        currentStory = new StoryProfileParser()
+	            .parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
+	    }
+	    return currentStory;
+	}
+
+	const BASE_URL = "https://www.fanfiction.net";
+	const CACHE_FOLLOWS_KEY = "ffe-api-follows";
+	const CACHE_FAVORITES_KEY = "ffe-api-favorites";
+	const cache = {
+	    get follows() {
+	        const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
+	        return value && JSON.parse(value);
+	    },
+	    set follows(value) {
+	        localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(value));
+	    },
+	    addFollow: (story) => {
+	        const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
+	        const list = (value && JSON.parse(value));
+	        if (list && list.every(f => f.id !== story.id)) {
+	            list.push(story);
+	            localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(list));
+	        }
+	    },
+	    removeFollow: (story) => {
+	        const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
+	        let list = (value && JSON.parse(value));
+	        if (list) {
+	            list = list.filter(f => f.id !== story.id);
+	            localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(list));
+	        }
+	    },
+	    get favorites() {
+	        const value = localStorage.getItem(CACHE_FAVORITES_KEY);
+	        return value && JSON.parse(value);
+	    },
+	    set favorites(value) {
+	        localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(value));
+	    },
+	    addFavorite: (story) => {
+	        const value = localStorage.getItem(CACHE_FAVORITES_KEY);
+	        const list = (value && JSON.parse(value));
+	        if (list && list.every(f => f.id !== story.id)) {
+	            list.push(story);
+	            localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
+	        }
+	    },
+	    removeFavorite: (story) => {
+	        const value = localStorage.getItem(CACHE_FAVORITES_KEY);
+	        let list = (value && JSON.parse(value));
+	        if (list) {
+	            list = list.filter(f => f.id !== story.id);
+	            localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
+	        }
+	    },
+	};
+	function urlencoded(obj) {
+	    const result = [];
+	    for (const key of Object.keys(obj)) {
+	        result.push(encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]));
+	    }
+	    return result.join("&");
+	}
+	function ajaxCall(url, method, body, options) {
+	    return new Promise((resolve, reject) => {
+	        const xhr = new XMLHttpRequest();
+	        xhr.addEventListener("load", () => {
+	            if (xhr.status >= 200 && xhr.status < 300) {
+	                resolve(xhr.response);
+	            }
+	            else {
+	                reject(xhr.response);
+	            }
+	        });
+	        xhr.addEventListener("error", () => {
+	            reject(xhr.response);
+	        });
+	        xhr.open(method, url, true);
+	        let content = body;
+	        if (options) {
+	            if (options.headers) {
+	                Object.keys(options.headers).forEach(key => {
+	                    xhr.setRequestHeader(key, options.headers[key]);
+	                });
+	            }
+	            if ((!options.headers || !options.headers["content-type"]) && options.type) {
+	                switch (options.type) {
+	                    case "json":
+	                        xhr.setRequestHeader("content-type", "application/json; encoding=utf-8");
+	                        content = JSON.stringify(content);
+	                        break;
+	                    case "urlencoded":
+	                        xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded; encoding=utf8");
+	                        content = urlencoded(content);
+	                        break;
+	                }
+	            }
+	        }
+	        if (content) {
+	            xhr.send(content);
+	        }
+	        else {
+	            xhr.send();
+	        }
+	    });
+	}
+	/**
+	 * Follows the story with the given id.
+	 * @param storyid
+	 */
+	function followStory(story) {
+	    return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
+	        storyid: story.id,
+	        userid: userid,
+	        storyalert: 1,
+	    }, {
+	        type: "urlencoded",
+	    }).then(data => {
+	        cache.addFollow({
+	            id: story.id,
+	            title: story.title,
+	            author: story.author,
+	        });
+	        return JSON.parse(data);
+	    });
+	}
+	/**
+	 * Stops following the story with the given id.
+	 * @param storyid
+	 */
+	function unFollowStory(story) {
+	    return ajaxCall(BASE_URL + "/alert/story.php", "POST", {
+	        action: "remove-multi",
+	        "rids[]": story.id,
+	    }, {
+	        type: "urlencoded",
+	    }).then(data => {
+	        cache.removeFollow({
+	            id: story.id,
+	            title: story.title,
+	            author: story.author,
+	        });
+	        return data;
+	    });
+	}
+	/**
+	 * Favorites the story with the given id.
+	 * @param storyid
+	 */
+	function favoriteStory(story) {
+	    return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
+	        storyid: story.id,
+	        userid: userid,
+	        favstory: 1,
+	    }, {
+	        type: "urlencoded",
+	    }).then(data => {
+	        cache.addFavorite({
+	            id: story.id,
+	            title: story.title,
+	            author: story.author,
+	        });
+	        return JSON.parse(data);
+	    });
+	}
+	/**
+	 * Removes the story with the given id from favorites.
+	 * @param storyid
+	 */
+	function unFavoriteStory(story) {
+	    return ajaxCall(BASE_URL + "/favorites/story.php", "POST", {
+	        action: "remove-multi",
+	        "rids[]": story.id,
+	    }, {
+	        type: "urlencoded",
+	    }).then(data => {
+	        cache.removeFavorite({
+	            id: story.id,
+	            title: story.title,
+	            author: story.author,
+	        });
+	        return data;
+	    });
+	}
+	function parseFollowedStoryList(body) {
+	    const template = document.createElement("template");
+	    template.innerHTML = body;
+	    const rows = template.content.querySelectorAll("#gui_table1i tbody tr");
+	    return Array.from(rows).map((row) => {
+	        if (row.firstElementChild.colSpan > 1) {
+	            return undefined;
+	        }
+	        const storyAnchor = row.children[0].firstElementChild;
+	        const authorAnchor = row.children[1].firstElementChild;
+	        return {
+	            id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
+	            title: storyAnchor.textContent,
+	            author: {
+	                id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
+	                name: authorAnchor.textContent,
+	                profileUrl: authorAnchor.href,
+	                avatarUrl: "",
+	            },
+	        };
+	    }).filter(story => story);
+	}
+	function getFollowedStories() {
+	    const list = cache.follows;
+	    if (list) {
+	        return Promise.resolve(list);
+	    }
+	    return ajaxCall(BASE_URL + "/alert/story.php", "GET", undefined)
+	        .then(parseFollowedStoryList)
+	        .then(fetchedList => cache.follows = fetchedList);
+	}
+	function getFavoritedStories() {
+	    const list = cache.favorites;
+	    if (list) {
+	        return Promise.resolve(list);
+	    }
+	    return ajaxCall(BASE_URL + "/favorites/story.php", "GET", undefined)
+	        .then(parseFollowedStoryList)
+	        .then(fetchedList => cache.favorites = fetchedList);
+	}
+	/*export function getComments(storyId: number): Promise<Comment[]> {
+	    // fetch all comment pages, not just the first!
+	    // to do that, fetch first and find out how many there are
+	    // url is /r/<storyId>/<chapterId>/<pageNumber>/
+	    // warning: trailing slash is mandatory!
+	}*/
+
+	var css$1 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-sc-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-sc-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
+	styleInject(css$1);
+
+	class StoryCard {
+	    constructor(document) {
+	        this.document = document;
+	    }
+	    createElement(story) {
+	        const element = this.document.createElement("div");
+	        element.className = "ffe-sc";
+	        this.addHeader(element, story);
+	        this.addTags(element, story);
+	        this.addImage(element, story.meta);
+	        this.addDescription(element, story);
+	        this.addFooter(element, story.meta);
+	        return element;
+	    }
+	    addHeader(element, story) {
+	        const header = this.document.createElement("div");
+	        header.className = "ffe-sc-header";
+	        const rating = new Rating(this.document).createElement(story.meta.rating);
+	        header.appendChild(rating);
+	        const title = this.document.createElement("a");
+	        title.className = "ffe-sc-title";
+	        title.textContent = story.title;
+	        title.href = "/s/" + story.id;
+	        header.appendChild(title);
+	        const by = this.document.createElement("span");
+	        by.className = "ffe-sc-by";
+	        by.textContent = "by";
+	        header.appendChild(by);
+	        const author = this.document.createElement("a");
+	        author.className = "ffe-sc-author";
+	        author.textContent = story.author ? story.author.name : "?";
+	        author.href = "/u/" + (story.author ? story.author.id : "?");
+	        header.appendChild(author);
+	        const mark = this.document.createElement("div");
+	        mark.className = "ffe-sc-mark btn-group";
+	        const follow = this.document.createElement("span");
+	        follow.className = "ffe-sc-follow btn icon-bookmark-2";
+	        follow.addEventListener("click", this.clickFollow);
+	        getFollowedStories().then(stories => {
+	            if (stories.some(s => s.id === storyid)) {
+	                follow.classList.add("ffe-sc-active");
+	            }
+	        }).catch(console.error);
+	        mark.appendChild(follow);
+	        const favorite = this.document.createElement("span");
+	        favorite.className = "ffe-sc-favorite btn icon-heart";
+	        favorite.addEventListener("click", this.clickFavorite);
+	        getFavoritedStories().then(stories => {
+	            if (stories.some(s => s.id === storyid)) {
+	                favorite.classList.add("ffe-sc-active");
+	            }
+	        }).catch(console.error);
+	        mark.appendChild(favorite);
+	        header.appendChild(mark);
+	        element.appendChild(header);
+	    }
+	    clickFollow(event) {
+	        const promise = (event.target.classList.contains("ffe-sc-active")) ?
+	            unFollowStory(getCurrentStory())
+	                .then(data => {
+	                event.target.classList.remove("ffe-sc-active");
+	                xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
+	            }) :
+	            followStory(getCurrentStory())
+	                .then(data => {
+	                event.target.classList.add("ffe-sc-active");
+	                xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+	            });
+	        promise
+	            .catch(err => {
+	            console.error(err);
+	            xtoast("We are unable to process your request due to an network error. Please try again later.");
+	        });
+	    }
+	    clickFavorite(event) {
+	        const promise = (event.target.classList.contains("ffe-sc-active")) ?
+	            unFavoriteStory(getCurrentStory())
+	                .then(data => {
+	                event.target.classList.remove("ffe-sc-active");
+	                xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
+	            }) :
+	            favoriteStory(getCurrentStory())
+	                .then(data => {
+	                event.target.classList.add("ffe-sc-active");
+	                xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+	            });
+	        promise
+	            .catch(err => {
+	            console.error(err);
+	            xtoast("We are unable to process your request due to an network error. Please try again later.");
+	        });
+	    }
+	    addImage(element, story) {
+	        if (!story.imageUrl) {
+	            return;
+	        }
+	        const imageContainer = this.document.createElement("div");
+	        imageContainer.className = "ffe-sc-image";
+	        const image = this.document.createElement("img");
+	        image.src = story.imageUrl;
+	        imageContainer.appendChild(image);
+	        element.appendChild(imageContainer);
+	    }
+	    addDescription(element, story) {
+	        const description = this.document.createElement("div");
+	        description.className = "ffe-sc-description";
+	        description.textContent = story.description;
+	        element.appendChild(description);
+	    }
+	    addTags(element, story) {
+	        const tags = this.document.createElement("div");
+	        tags.className = "ffe-sc-tags";
+	        let html = "";
+	        if (story.meta.language) {
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-language">${story.meta.language}</span>`;
+	        }
+	        if (story.meta.genre) {
+	            for (const genre of story.meta.genre) {
+	                html += `<span class="ffe-sc-tag ffe-sc-tag-genre">${genre}</span>`;
+	            }
+	        }
+	        if (story.meta.characters && story.meta.characters.length) {
+	            for (const character of story.meta.characters) {
+	                if (typeof character === "string") {
+	                    html += `<span class="ffe-sc-tag ffe-sc-tag-character">${character}</span>`;
+	                }
+	                else {
+	                    html += `<span class="ffe-sc-tag ffe-sc-tag-ship"><span
+						class="ffe-sc-tag-character">${character.join("</span><span " +
+                        "class='ffe-sc-tag-character'>")}</span></span>`;
+	                }
+	            }
+	        }
+	        if (story.chapters && story.chapters.length) {
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters: ${story.chapters.length}</span>`;
+	        }
+	        if (story.meta.reviews) {
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-reviews"><a
+				href="/r/${story.id}/">Reviews: ${story.meta.reviews}</a></span>`;
+	        }
+	        if (story.meta.favs) {
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-favs">Favorites: ${story.meta.favs}</span>`;
+	        }
+	        if (story.meta.follows) {
+	            html += `<span class="ffe-sc-tag ffe-sc-tag-follows">Follows: ${story.meta.follows}</span>`;
+	        }
+	        tags.innerHTML = html;
+	        element.appendChild(tags);
+	    }
+	    addFooter(element, story) {
+	        const footer = this.document.createElement("div");
+	        footer.className = "ffe-sc-footer";
+	        footer.innerHTML = "&nbsp;";
+	        if (story.words) {
+	            const words = this.document.createElement("div");
+	            words.style.cssFloat = "right";
+	            words.innerHTML = "<b>" + story.words.toLocaleString("en") + "</b> words";
+	            footer.appendChild(words);
+	        }
+	        const status = this.document.createElement("span");
+	        status.className = "ffe-sc-footer-info";
+	        if (story.status === "Complete") {
+	            status.className += " ffe-sc-footer-complete";
+	            status.textContent = "Complete";
+	        }
+	        else {
+	            status.className += " ffe-sc-footer-incomplete";
+	            status.textContent = "Incomplete";
+	        }
+	        footer.appendChild(status);
+	        if (story.published) {
+	            const published = this.document.createElement("span");
+	            published.className = "ffe-sc-footer-info";
+	            published.innerHTML = "<b>Published:</b> ";
+	            const time = this.document.createElement("time");
+	            time.dateTime = story.published.toISOString();
+	            time.textContent = story.publishedWords;
+	            published.appendChild(time);
+	            footer.appendChild(published);
+	        }
+	        if (story.updated) {
+	            const updated = this.document.createElement("span");
+	            updated.className = "ffe-sc-footer-info";
+	            updated.innerHTML = "<b>Updated:</b> ";
+	            const time = this.document.createElement("time");
+	            time.dateTime = story.updated.toISOString();
+	            time.textContent = story.updatedWords;
+	            updated.appendChild(time);
+	            footer.appendChild(updated);
+	        }
+	        element.appendChild(footer);
+	    }
+	}
 
 	var css$2 = "";
 	styleInject(css$2);
@@ -477,16 +672,35 @@
 	    }
 	    enhance() {
 	        const profile = this.document.getElementById("profile_top");
-	        if (!profile) {
-	            throw new Error("Could not find profile element. Check for update?");
-	        }
-	        const chapters = this.document.getElementById("chap_select");
-	        const parser = new StoryProfileParser();
-	        const story = parser.parse(profile, chapters);
+	        const story = getCurrentStory();
 	        const card = new StoryCard(document);
 	        const replacement = card.createElement(story);
-	        profile.parentElement.replaceChild(replacement, profile);
+	        // profile.parentElement.replaceChild(replacement, profile);
+	        profile.parentElement.insertBefore(replacement, profile);
+	        profile.style.display = "none";
 	    }
+	}
+
+	/**
+	 * Loads a script dynamically by creating a script element and attaching it to the head element.
+	 * @param {string} url
+	 * @returns {Promise}
+	 */
+	/**
+	 * Reads in cookies and extracts the value of the cookie with the given name.
+	 * If the cookie doesn't exist, returns false.
+	 * @param {string} name
+	 * @returns {string | boolean}
+	 */
+	function getCookie(name) {
+	    const ca = document.cookie.split(";");
+	    for (let i = 0; i < ca.length; i++) {
+	        const c = ca[i].trimLeft();
+	        if (c.indexOf(name + "=") == 0) {
+	            return c.substring(name.length + 1, c.length);
+	        }
+	    }
+	    return false;
 	}
 
 	var css$3 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
