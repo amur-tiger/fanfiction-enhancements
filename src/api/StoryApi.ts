@@ -1,5 +1,5 @@
+import { Story } from "./data";
 import { getByAjax } from "../utils";
-import { Story } from "./data/Story";
 import { StoryProfileParser } from "../util/StoryProfileParser";
 
 const BASE_URL = "https://www.fanfiction.net";

@@ -1,6 +1,4 @@
-import { Chapter } from "../api/data/Chapter";
-import { Story } from "../api/data/Story";
-import { StoryMetaData } from "../api/data/StoryMetaData";
+import { Chapter, Story, StoryMetaData } from "../api/data";
 
 export class StoryProfileParser {
 	public parse(profile: Element, chapters: ParentNode): Story {

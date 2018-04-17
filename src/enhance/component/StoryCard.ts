@@ -1,8 +1,7 @@
+import { Story, StoryMetaData } from "../../api/data";
 import { postByAjax } from "../../utils";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
-import { Story } from "../../api/data/Story";
-import { StoryMetaData } from "../../api/data/StoryMetaData";
 
 import "./StoryCard.css";
 

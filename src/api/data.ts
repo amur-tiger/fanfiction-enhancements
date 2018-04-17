@@ -1,3 +1,24 @@
+export interface Chapter {
+	id: number;
+	name: string;
+}
+
+export interface Comment {
+	user: User;
+	date: Date;
+	text: string;
+}
+
+export interface Story {
+	id: number;
+	title: string;
+	author: User;
+	description?: string;
+
+	chapters: Chapter[];
+	meta: StoryMetaData;
+}
+
 export interface StoryMetaData {
 	id?: number;
 	imageUrl?: string;
@@ -15,4 +36,11 @@ export interface StoryMetaData {
 	words?: number;
 	characters?: (string | string[])[];
 	status?: string;
+}
+
+export interface User {
+	id: number;
+	name: string;
+	profileUrl: string;
+	avatarUrl: string;
 }
