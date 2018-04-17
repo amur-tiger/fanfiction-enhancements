@@ -124,6 +124,7 @@ typings/
 
 # Visual Studio/Visual Studio Code
 .vs/
+.vscode/
 
 ## JetBrains IDE project settings
 .idea/
