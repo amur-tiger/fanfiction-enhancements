@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
 
-import { getByAjax, loadScript, ptToEm, rgbToHex } from "../src/utils";
+import { loadScript, ptToEm, rgbToHex } from "../src/utils";
 
 describe("Utility Functions", function() {
 	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
@@ -11,16 +11,6 @@ describe("Utility Functions", function() {
 	describe("Loading Scripts", function() {
 		it("should return a promise", function() {
 			const promise = loadScript("some url");
-			assert.isTrue(promise instanceof Promise);
-			promise.catch(() => {
-				// do nothing
-			});
-		});
-	});
-
-	describe("Making XHR GET calls", function() {
-		it("should return a promise", function() {
-			const promise = getByAjax("some url");
 			assert.isTrue(promise instanceof Promise);
 			promise.catch(() => {
 				// do nothing

@@ -1,14 +1,14 @@
 import { Story, StoryMetaData } from "../../api/data";
-import { postByAjax } from "../../utils";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
+import { favoriteStory, followStory, getFavoritedStories,
+	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/StoryApi";
 
 import "./StoryCard.css";
 
 declare function xtoast(message: string, time?: number);
 
 declare const storyid: number;
-declare const userid: number;
 
 export class StoryCard implements Component {
 	constructor(private document: Document) {
@@ -57,11 +57,21 @@ export class StoryCard implements Component {
 		const follow = this.document.createElement("span") as HTMLSpanElement;
 		follow.className = "ffe-sc-follow btn icon-bookmark-2";
 		follow.addEventListener("click", this.clickFollow);
+		getFollowedStories().then(stories => {
+			if (stories.some(s => s.id === storyid)) {
+				follow.classList.add("ffe-sc-active");
+			}
+		});
 		mark.appendChild(follow);
 
 		const favorite = this.document.createElement("span") as HTMLSpanElement;
 		favorite.className = "ffe-sc-favorite btn icon-heart";
 		favorite.addEventListener("click", this.clickFavorite);
+		getFavoritedStories().then(stories => {
+			if (stories.some(s => s.id === storyid)) {
+				favorite.classList.add("ffe-sc-active");
+			}
+		});
 		mark.appendChild(favorite);
 
 		header.appendChild(mark);
@@ -70,33 +80,43 @@ export class StoryCard implements Component {
 	}
 
 	private clickFollow(event: MouseEvent): void {
-		postByAjax("/api/ajax_subs.php", `storyid=${storyid}&userid=${userid}&storyalert=1`,
-		{
-			headers: {
-				"content-type": "application/x-www-form-urlencoded",
-			},
-		}).catch(err => {
-			console.error(err);
-			xtoast("We are unable to process your request due to an network error. Please try again later.");
-		}).then((data: string) => {
-			const parsed = JSON.parse(data);
-			xtoast("We have successfully processed the following: " + parsed.payload_data, 3500);
-		});
+		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
+			unFollowStory(storyid)
+				.then(data => {
+					(event.target as HTMLElement).classList.remove("ffe-sc-active");
+					xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
+				}) :
+			followStory(storyid)
+				.then(data => {
+					(event.target as HTMLElement).classList.add("ffe-sc-active");
+					xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+				});
+
+		promise
+			.catch(err => {
+				console.error(err);
+				xtoast("We are unable to process your request due to an network error. Please try again later.");
+			});
 	}
 
 	private clickFavorite(event: MouseEvent): void {
-		postByAjax("/api/ajax_subs.php", `storyid=${storyid}&userid=${userid}&favstory=1`,
-		{
-			headers: {
-				"content-type": "application/x-www-form-urlencoded",
-			},
-		}).catch(err => {
-			console.error(err);
-			xtoast("We are unable to process your request due to an network error. Please try again later.");
-		}).then((data: string) => {
-			const parsed = JSON.parse(data);
-			xtoast("We have successfully processed the following: " + parsed.payload_data, 3500);
-		});
+		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
+			unFavoriteStory(storyid)
+				.then(data => {
+					(event.target as HTMLElement).classList.remove("ffe-sc-active");
+					xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
+				}) :
+			favoriteStory(storyid)
+				.then(data => {
+					(event.target as HTMLElement).classList.add("ffe-sc-active");
+					xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+				});
+
+		promise
+			.catch(err => {
+				console.error(err);
+				xtoast("We are unable to process your request due to an network error. Please try again later.");
+			});
 	}
 
 	private addImage(element: HTMLDivElement, story: StoryMetaData) {

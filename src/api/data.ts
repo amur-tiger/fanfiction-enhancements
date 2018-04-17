@@ -9,6 +9,12 @@ export interface Comment {
 	text: string;
 }
 
+export interface FollowedStory {
+	id: number;
+	title: string;
+	author: User;
+}
+
 export interface Story {
 	id: number;
 	title: string;

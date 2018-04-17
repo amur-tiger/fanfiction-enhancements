@@ -1,4 +1,5 @@
 import { Page, PageIdentifier } from "./PageIdentifier";
+import { getFollowedStories } from "./api/StoryApi";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { StoryText } from "./enhance/StoryText";
 

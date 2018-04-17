@@ -22,11 +22,13 @@
 	float: right;
 }
 
-.ffe-sc-follow:hover {
+.ffe-sc-follow:hover,
+.ffe-sc-follow.ffe-sc-active {
 	color: #60cf23;
 }
 
-.ffe-sc-favorite:hover {
+.ffe-sc-favorite:hover,
+.ffe-sc-favorite.ffe-sc-active {
 	color: #ffb400;
 }
 
