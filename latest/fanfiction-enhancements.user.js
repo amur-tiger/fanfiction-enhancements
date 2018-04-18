@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.9+20.70c41ce
+// @version      0.1.10+21.ca08e4a
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -103,6 +103,31 @@
 	}
 
 	class StoryProfileParser {
+	    constructor() {
+	        this.validGenres = [
+	            "Adventure",
+	            "Angst",
+	            "Crime",
+	            "Drama",
+	            "Family",
+	            "Fantasy",
+	            "Friendship",
+	            "General",
+	            "Horror",
+	            "Humor",
+	            "Hurt/Comfort",
+	            "Mystery",
+	            "Parody",
+	            "Poetry",
+	            "Romance",
+	            "Sci-Fi",
+	            "Spiritual",
+	            "Supernatural",
+	            "Suspense",
+	            "Tragedy",
+	            "Western",
+	        ];
+	    }
 	    parse(profile, chapters) {
 	        if (!profile) {
 	            console.error("Profile node not found. Cannot parse story info.");
@@ -147,7 +172,6 @@
 	        };
 	    }
 	    parseTags(tagsElement) {
-	        // todo: genre may not be tagged, in which case characters get parsed as genre!
 	        const result = {
 	            genre: [],
 	            characters: [],
@@ -158,6 +182,11 @@
 	        result.rating = tempElement.firstElementChild.textContent;
 	        result.language = tagsArray[1].trim();
 	        result.genre = tagsArray[2].trim().split("/");
+	        // Some genres might not have a genre tagged. If so, index 2 should be the characters instead.
+	        if (result.genre.some(g => !this.validGenres.includes(g))) {
+	            result.genre = [];
+	            result.characters = this.parseCharacters(tagsArray[2]);
+	        }
 	        for (let i = 3; i < tagsArray.length; i++) {
 	            const tagNameMatch = tagsArray[i].match(/^(\w+):/);
 	            if (!tagNameMatch) {
@@ -167,9 +196,6 @@
 	            const tagName = tagNameMatch[1].toLowerCase();
 	            const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
 	            switch (tagName) {
-	                case "characters":
-	                    result.characters = this.parseCharacters(tagsArray[i]);
-	                    break;
 	                case "reviews":
 	                    tempElement.innerHTML = tagValue;
 	                    result.reviews = +tempElement.firstElementChild.textContent.replace(/,/g, "");
