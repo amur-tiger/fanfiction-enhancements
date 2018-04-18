@@ -1,6 +1,30 @@
 import { Chapter, Story, StoryMetaData } from "../api/data";
 
 export class StoryProfileParser {
+	private readonly validGenres = [
+		"Adventure",
+		"Angst",
+		"Crime",
+		"Drama",
+		"Family",
+		"Fantasy",
+		"Friendship",
+		"General",
+		"Horror",
+		"Humor",
+		"Hurt/Comfort",
+		"Mystery",
+		"Parody",
+		"Poetry",
+		"Romance",
+		"Sci-Fi",
+		"Spiritual",
+		"Supernatural",
+		"Suspense",
+		"Tragedy",
+		"Western",
+	];
+
 	public parse(profile: Element, chapters: ParentNode): Story {
 		if (!profile) {
 			console.error("Profile node not found. Cannot parse story info.");
@@ -53,8 +77,6 @@ export class StoryProfileParser {
 	}
 
 	private parseTags(tagsElement: Element): StoryMetaData {
-		// todo: genre may not be tagged, in which case characters get parsed as genre!
-
 		const result: StoryMetaData = {
 			genre: [],
 			characters: [],
@@ -69,6 +91,12 @@ export class StoryProfileParser {
 		result.language = tagsArray[1].trim();
 		result.genre = tagsArray[2].trim().split("/");
 
+		// Some genres might not have a genre tagged. If so, index 2 should be the characters instead.
+		if (result.genre.some(g => !this.validGenres.includes(g))) {
+			result.genre = [];
+			result.characters = this.parseCharacters(tagsArray[2]);
+		}
+
 		for (let i = 3; i < tagsArray.length; i++) {
 			const tagNameMatch = tagsArray[i].match(/^(\w+):/);
 			if (!tagNameMatch) {
@@ -80,9 +108,6 @@ export class StoryProfileParser {
 			const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
 
 			switch (tagName) {
-				case "characters":
-					result.characters = this.parseCharacters(tagsArray[i]);
-					break;
 				case "reviews":
 					tempElement.innerHTML = tagValue;
 					result.reviews = +(tempElement.firstElementChild as HTMLElement).textContent.replace(/,/g, "");

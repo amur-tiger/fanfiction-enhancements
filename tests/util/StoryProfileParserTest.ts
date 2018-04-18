@@ -17,8 +17,8 @@ describe("Story Profile Parser", function() {
 		<a><!-- message link --></a>
 		<div>description</div>
 		<span>
-			Rated: <a>M</a> - Elvish - Fantasy - Chapters: 33 - Words: 1,234 - Reviews: <a>123</a> - Favs: 345 - Follows: 
-			567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
+			Rated: <a>M</a> - Elvish - Fantasy - Chapters: 33 - Words: 1,234 - Reviews: <a>123</a> - Favs: 345 - Follows:
+			567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published:
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 		</span>
 	</div>
@@ -65,8 +65,8 @@ describe("Story Profile Parser", function() {
 		<a><!-- message link --></a>
 		<div>something</div>
 		<span>
-			Rated: <a>T</a> - Klingon - Sci-Fi - Chapters: 19 - Words: 3,210 - Reviews: <a>123</a> - Favs: 345 - Follows: 
-			567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
+			Rated: <a>T</a> - Klingon - Sci-Fi - Chapters: 19 - Words: 3,210 - Reviews: <a>123</a> - Favs: 345 - Follows:
+			567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published:
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 		</span>
 	</div>
@@ -110,7 +110,7 @@ describe("Story Profile Parser", function() {
 		<a><!-- message link --></a>
 		<div>Description.</div>
 		<span class="xgray xcontrast_txt">Rated: <a>Fiction  T</a>
-		 - English - Adventure -  Naruto U., Shikamaru N., OC - Chapters: 145   - Words: 692,018 - Reviews: 
+		 - English - Adventure -  Naruto U., Shikamaru N., OC - Chapters: 145   - Words: 692,018 - Reviews:
 		 <a href="/r/12345/">21,234</a> - Favs: 13,936 - Follows: 13,707 - Updated: <span data-xutime="1520735917">Mar 11
 		 </span> - Published: <span data-xutime="1315014342">Sep 3, 2011</span> - id: 123456 </span>
 	</div>
@@ -155,8 +155,8 @@ describe("Story Profile Parser", function() {
 		<a><!-- message link --></a>
 		<div>description</div>
 		<span>
-			Rated: <a>M</a> - Elvish - Fantasy - [Romeo, Juliet] Steve - Chapters: 33 - Words: 1,234 - Reviews: 
-			<a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published: 
+			Rated: <a>M</a> - Elvish - Fantasy - [Romeo, Juliet] Steve - Chapters: 33 - Words: 1,234 - Reviews:
+			<a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published:
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 		</span>
 	</div>
@@ -187,6 +187,51 @@ describe("Story Profile Parser", function() {
 			published: 1426879324000,
 			publishedWords: "Mar 20, 2015",
 			id: 12345678,
+		},
+		{
+			fragment: JSDOM.fragment(`<div id="test-wrapper">
+	<div id="profile_top">
+		<span><img src="/image/12345/75/" width="75" height="100"></span>
+		<button><!-- follow+fav button --></button>
+		<b>The Title</b>
+		<span><div style="height:5px"></div>By:</span>
+		<a href="/u/12345/author">Author</a>
+		<span><!-- mail icon --></span>
+		<a><!-- message link --></a>
+		<div>Description.</div>
+		<span class="xgray xcontrast_txt">Rated: <a>Fiction  T</a>
+		 - English - Naruto U., Shikamaru N., OC - Chapters: 145   - Words: 692,018 - Reviews:
+		 <a href="/r/12345/">21,234</a> - Favs: 13,936 - Follows: 13,707 - Updated: <span data-xutime="1520735917">Mar 11
+		 </span> - Published: <span data-xutime="1315014342">Sep 3, 2011</span> - id: 123456 </span>
+	</div>
+	<select id="chap_select">
+		<option value="1">Intro</option>
+	</select>
+</div>
+`).firstChild as HTMLElement,
+			test: "Missing genre tag",
+			title: "The Title",
+			authorId: 12345,
+			author: "Author",
+			description: "Description.",
+			imageUrl: "/image/12345/75/",
+			rating: "T",
+			language: "English",
+			genre: [],
+			characters: ["Naruto U.", "Shikamaru N.", "OC"],
+			chapters: [{
+				id: 1,
+				name: "Intro",
+			}],
+			words: 692018,
+			reviews: 21234,
+			favs: 13936,
+			follows: 13707,
+			updated: 1520735917000,
+			updatedWords: "Mar 11",
+			published: 1315014342000,
+			publishedWords: "Sep 3, 2011",
+			id: 123456,
 		},
 	];
 

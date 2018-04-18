@@ -5,8 +5,7 @@
 		"sourceMap": true,
 		"lib": [
 			"dom",
-			"es5",
-			"es6"
+			"es7"
 		]
 	},
 	"exclude": [
