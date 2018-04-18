@@ -1,4 +1,5 @@
 import { Story, StoryMetaData } from "../../api/data";
+import { environment, ffnServices } from "../../util/environment";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
 import { favoriteStory, followStory, getFavoritedStories,
@@ -6,10 +7,6 @@ import { favoriteStory, followStory, getFavoritedStories,
 import { getCurrentStory } from "../../util/StoryProfileParser";
 
 import "./StoryCard.css";
-
-declare function xtoast(message: string, time?: number);
-
-declare const storyid: number;
 
 export class StoryCard implements Component {
 	constructor(private document: Document) {
@@ -59,7 +56,7 @@ export class StoryCard implements Component {
 		follow.className = "ffe-sc-follow btn icon-bookmark-2";
 		follow.addEventListener("click", this.clickFollow);
 		getFollowedStories().then(stories => {
-			if (stories.some(s => s.id === storyid)) {
+			if (stories.some(s => s.id === environment.currentStoryId)) {
 				follow.classList.add("ffe-sc-active");
 			}
 		}).catch(console.error);
@@ -69,7 +66,7 @@ export class StoryCard implements Component {
 		favorite.className = "ffe-sc-favorite btn icon-heart";
 		favorite.addEventListener("click", this.clickFavorite);
 		getFavoritedStories().then(stories => {
-			if (stories.some(s => s.id === storyid)) {
+			if (stories.some(s => s.id === environment.currentStoryId)) {
 				favorite.classList.add("ffe-sc-active");
 			}
 		}).catch(console.error);
@@ -85,18 +82,18 @@ export class StoryCard implements Component {
 			unFollowStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
-					xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
+					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
 				}) :
 			followStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
-					xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
 				});
 
 		promise
 			.catch(err => {
 				console.error(err);
-				xtoast("We are unable to process your request due to an network error. Please try again later.");
+				ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
 			});
 	}
 
@@ -105,18 +102,18 @@ export class StoryCard implements Component {
 			unFavoriteStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
-					xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
+					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
 				}) :
 			favoriteStory(getCurrentStory())
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
-					xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
 				});
 
 		promise
 			.catch(err => {
 				console.error(err);
-				xtoast("We are unable to process your request due to an network error. Please try again later.");
+				ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
 			});
 	}
 

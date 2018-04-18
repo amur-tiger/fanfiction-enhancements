@@ -1,7 +1,6 @@
 import { FollowedStory, Story } from "./data";
+import { environment } from "../util/environment";
 import { StoryProfileParser } from "../util/StoryProfileParser";
-
-declare const userid: number;
 
 const BASE_URL = "https://www.fanfiction.net";
 const CACHE_FOLLOWS_KEY = "ffe-api-follows";
@@ -124,7 +123,7 @@ function ajaxCall(url: string, method: string, body: any, options?: any): Promis
 export function followStory(story: Story): Promise<any> {
 	return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
 		storyid: story.id,
-		userid: userid,
+		userid: environment.currentUserId,
 		storyalert: 1,
 	}, {
 		type: "urlencoded",
@@ -167,7 +166,7 @@ export function unFollowStory(story: Story): Promise<any> {
 export function favoriteStory(story: Story): Promise<any> {
 	return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
 		storyid: story.id,
-		userid: userid,
+		userid: environment.currentUserId,
 		favstory: 1,
 	}, {
 		type: "urlencoded",
