@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.10+21.ca08e4a
+// @version      0.1.10+22.b96fc02
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -30,6 +30,20 @@
 	        return 0 /* Other */;
 	    }
 	}
+
+	const ffnServices = Object.freeze({
+	    xtoast: typeof xtoast === "undefined" ? () => { } : xtoast,
+	    fontastic: Object.freeze({
+	        save: (cookie) => {
+	            XCOOKIE = cookie;
+	            _fontastic_save();
+	        },
+	    }),
+	});
+	const environment = Object.freeze({
+	    currentUserId: typeof userid === "undefined" ? undefined : userid,
+	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
+	});
 
 	function styleInject(css, ref) {
 	  if ( ref === void 0 ) ref = {};
@@ -374,7 +388,7 @@
 	function followStory(story) {
 	    return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
 	        storyid: story.id,
-	        userid: userid,
+	        userid: environment.currentUserId,
 	        storyalert: 1,
 	    }, {
 	        type: "urlencoded",
@@ -413,7 +427,7 @@
 	function favoriteStory(story) {
 	    return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
 	        storyid: story.id,
-	        userid: userid,
+	        userid: environment.currentUserId,
 	        favstory: 1,
 	    }, {
 	        type: "urlencoded",
@@ -534,7 +548,7 @@
 	        follow.className = "ffe-sc-follow btn icon-bookmark-2";
 	        follow.addEventListener("click", this.clickFollow);
 	        getFollowedStories().then(stories => {
-	            if (stories.some(s => s.id === storyid)) {
+	            if (stories.some(s => s.id === environment.currentStoryId)) {
 	                follow.classList.add("ffe-sc-active");
 	            }
 	        }).catch(console.error);
@@ -543,7 +557,7 @@
 	        favorite.className = "ffe-sc-favorite btn icon-heart";
 	        favorite.addEventListener("click", this.clickFavorite);
 	        getFavoritedStories().then(stories => {
-	            if (stories.some(s => s.id === storyid)) {
+	            if (stories.some(s => s.id === environment.currentStoryId)) {
 	                favorite.classList.add("ffe-sc-active");
 	            }
 	        }).catch(console.error);
@@ -556,17 +570,17 @@
 	            unFollowStory(getCurrentStory())
 	                .then(data => {
 	                event.target.classList.remove("ffe-sc-active");
-	                xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
+	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
 	            }) :
 	            followStory(getCurrentStory())
 	                .then(data => {
 	                event.target.classList.add("ffe-sc-active");
-	                xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+	                ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
 	            });
 	        promise
 	            .catch(err => {
 	            console.error(err);
-	            xtoast("We are unable to process your request due to an network error. Please try again later.");
+	            ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
 	        });
 	    }
 	    clickFavorite(event) {
@@ -574,17 +588,17 @@
 	            unFavoriteStory(getCurrentStory())
 	                .then(data => {
 	                event.target.classList.remove("ffe-sc-active");
-	                xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
+	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
 	            }) :
 	            favoriteStory(getCurrentStory())
 	                .then(data => {
 	                event.target.classList.add("ffe-sc-active");
-	                xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+	                ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
 	            });
 	        promise
 	            .catch(err => {
 	            console.error(err);
-	            xtoast("We are unable to process your request due to an network error. Please try again later.");
+	            ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
 	        });
 	    }
 	    addImage(element, story) {
@@ -735,21 +749,22 @@
 	class StoryText {
 	    constructor(text) {
 	        this.text = text;
-	        // nothing to do here
 	    }
 	    enhance() {
 	        this.fixUserSelect();
 	        if (!getCookie("xcookie2")) {
-	            XCOOKIE.read_font = "Open Sans";
-	            XCOOKIE.read_font_size = "1.2";
-	            XCOOKIE.read_line_height = "2.00";
-	            XCOOKIE.read_width = 75;
-	            _fontastic_save();
+	            const cookie = {
+	                read_font: "Open Sans",
+	                read_font_size: "1.2",
+	                read_line_height: "2.00",
+	                read_width: 75,
+	            };
+	            ffnServices.fontastic.save(cookie);
 	            const text = this.text.firstElementChild;
-	            text.style.fontFamily = XCOOKIE.read_font;
-	            text.style.fontSize = XCOOKIE.read_font_size + "em";
-	            text.style.lineHeight = XCOOKIE.read_line_height;
-	            text.style.width = XCOOKIE.read_width + "%";
+	            text.style.fontFamily = cookie.read_font;
+	            text.style.fontSize = cookie.read_font_size + "em";
+	            text.style.lineHeight = cookie.read_line_height;
+	            text.style.width = cookie.read_width + "%";
 	        }
 	    }
 	    fixUserSelect() {
