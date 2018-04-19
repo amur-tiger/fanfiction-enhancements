@@ -5,11 +5,16 @@ import { Enhancer } from "./Enhancer";
 import "./StoryText.css";
 
 export class StoryText implements Enhancer {
-	constructor(private text: HTMLElement) {
+	constructor(private document: Document) {
 	}
 
 	public enhance() {
-		this.fixUserSelect();
+		const textContainer = this.document.getElementById("storytextp");
+		if (!textContainer) {
+			throw new Error("Could not find text container element.");
+		}
+
+		this.fixUserSelect(textContainer);
 
 		if (!getCookie("xcookie2")) {
 			const cookie = {
@@ -20,7 +25,7 @@ export class StoryText implements Enhancer {
 			};
 			ffnServices.fontastic.save(cookie);
 
-			const text = this.text.firstElementChild as HTMLElement;
+			const text = textContainer.firstElementChild as HTMLElement;
 			text.style.fontFamily = cookie.read_font;
 			text.style.fontSize = cookie.read_font_size + "em";
 			text.style.lineHeight = cookie.read_line_height;
@@ -28,19 +33,18 @@ export class StoryText implements Enhancer {
 		}
 	}
 
-	private fixUserSelect() {
-		const element = this.text;
+	private fixUserSelect(textContainer: HTMLElement) {
 		const handle = setInterval(() => {
 			const rules = ["userSelect", "msUserSelect", "mozUserSelect", "khtmlUserSelect",
 				"webkitUserSelect", "webkitTouchCallout"];
 
 			let isOk = true;
 			for (const rule of rules) {
-				if (element.style[rule] !== "inherit") {
+				if (textContainer.style[rule] !== "inherit") {
 					isOk = false;
 				}
 
-				element.style[rule] = "inherit";
+				textContainer.style[rule] = "inherit";
 			}
 
 			if (isOk) {

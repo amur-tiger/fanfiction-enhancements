@@ -17,6 +17,12 @@ export interface FontasticCookie {
 	read_width?: number;
 }
 
+export const enum Page {
+	Other,
+	User,
+	Chapter,
+}
+
 export const ffnServices = Object.freeze({
 	xtoast: typeof xtoast === "undefined" ? () => {/*noop*/} : xtoast,
 	fontastic: Object.freeze({
@@ -30,4 +36,17 @@ export const ffnServices = Object.freeze({
 export const environment = Object.freeze({
 	currentUserId: typeof userid === "undefined" ? undefined : userid,
 	currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
+	currentPageType: getPage(location),
 });
+
+export function getPage(location: Location): Page {
+	if (location.pathname.indexOf("/u/") == 0) {
+		return Page.User;
+	}
+
+	if (location.pathname.indexOf("/s/") == 0) {
+		return Page.Chapter;
+	}
+
+	return Page.Other;
+}

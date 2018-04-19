@@ -5,17 +5,25 @@ import { setCookie } from "../../src/utils";
 import { StoryText } from "../../src/enhance/StoryText";
 
 describe("Story Text", function() {
+	const dom = new JSDOM();
+	const document = dom.window.document;
+
 	global["XCOOKIE"] = {};
 	global["_fontastic_save"] = () => {
-		// dummy function
+		// no operation
 	};
+
+	beforeEach(function() {
+		Array.from(document.children).forEach(child => document.removeChild(child));
+	});
 
 	it("should fix user-select", function(done) {
 		const fragment = JSDOM.fragment(`<div id="storytextp" style="user-select: none;"><div id="storytext"></div></div>`)
 			.firstChild as HTMLElement;
+		document.appendChild(fragment);
 		setTimeout(() => fragment.style.userSelect = "none", 200);
 
-		const sut = new StoryText(fragment);
+		const sut = new StoryText(document);
 		sut.enhance();
 
 		setTimeout(() => {
@@ -29,7 +37,9 @@ describe("Story Text", function() {
 		global["_fontastic_save"] = () => hit = true;
 		const fragment = JSDOM.fragment(`<div id="storytextp"><div id="storytext"></div></div>`)
 			.firstChild as HTMLElement;
-		const sut = new StoryText(fragment);
+		document.appendChild(fragment);
+
+		const sut = new StoryText(document);
 		sut.enhance();
 
 		assert.isTrue(hit, "should save styles");
@@ -41,7 +51,9 @@ describe("Story Text", function() {
 		setCookie("xcookie2", "dummy value");
 		const fragment = JSDOM.fragment(`<div id="storytextp"><div id="storytext"></div></div>`)
 			.firstChild as HTMLElement;
-		const sut = new StoryText(fragment);
+		document.appendChild(fragment);
+
+		const sut = new StoryText(document);
 		sut.enhance();
 
 		assert.equal((fragment.firstElementChild as HTMLElement).style.fontSize, "");

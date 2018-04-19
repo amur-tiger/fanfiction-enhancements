@@ -1,16 +1,12 @@
-import { Page, PageIdentifier } from "./PageIdentifier";
+import { environment, Page } from "./util/environment";
 import { getFollowedStories } from "./api/StoryApi";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { StoryText } from "./enhance/StoryText";
 
-const identifier = new PageIdentifier(window.location);
-const page = identifier.getPage();
+if (environment.currentPageType == Page.Chapter) {
+	const storyProfileEnhancer = new StoryProfile(document);
+	storyProfileEnhancer.enhance();
 
-if (page == Page.Chapter) {
-	const storyProfile = new StoryProfile(document);
-	storyProfile.enhance();
-
-	const text = document.getElementById("storytextp");
-	const storyText = new StoryText(text);
-	storyText.enhance();
+	const storyTextEnhancer = new StoryText(document);
+	storyTextEnhancer.enhance();
 }
