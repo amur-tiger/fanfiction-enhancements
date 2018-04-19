@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.1.10+22.b96fc02
+// @version      0.2.0+23.1646ea6
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -15,106 +15,6 @@
 
 (function () {
 	'use strict';
-
-	class PageIdentifier {
-	    constructor(location) {
-	        this.location = location;
-	    }
-	    getPage() {
-	        if (this.location.pathname.indexOf("/u/") == 0) {
-	            return 1 /* User */;
-	        }
-	        if (this.location.pathname.indexOf("/s/") == 0) {
-	            return 2 /* Chapter */;
-	        }
-	        return 0 /* Other */;
-	    }
-	}
-
-	const ffnServices = Object.freeze({
-	    xtoast: typeof xtoast === "undefined" ? () => { } : xtoast,
-	    fontastic: Object.freeze({
-	        save: (cookie) => {
-	            XCOOKIE = cookie;
-	            _fontastic_save();
-	        },
-	    }),
-	});
-	const environment = Object.freeze({
-	    currentUserId: typeof userid === "undefined" ? undefined : userid,
-	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
-	});
-
-	function styleInject(css, ref) {
-	  if ( ref === void 0 ) ref = {};
-	  var insertAt = ref.insertAt;
-
-	  if (!css || typeof document === 'undefined') { return; }
-
-	  var head = document.head || document.getElementsByTagName('head')[0];
-	  var style = document.createElement('style');
-	  style.type = 'text/css';
-
-	  if (insertAt === 'top') {
-	    if (head.firstChild) {
-	      head.insertBefore(style, head.firstChild);
-	    } else {
-	      head.appendChild(style);
-	    }
-	  } else {
-	    head.appendChild(style);
-	  }
-
-	  if (style.styleSheet) {
-	    style.styleSheet.cssText = css;
-	  } else {
-	    style.appendChild(document.createTextNode(css));
-	  }
-	}
-
-	var css = ".ffe-rating {\n\tbackground: gray;\n\tpadding: 3px 5px;\n\tcolor: #fff !important;\n\tborder: 1px solid rgba(0, 0, 0, 0.2);\n\ttext-shadow: -1px -1px rgba(0, 0, 0, 0.2);\n\tborder-radius: 4px;\n\tmargin-right: 5px;\n\tvertical-align: 2px;\n}\n\n.ffe-rating:hover {\n\tborder-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;\n}\n\n.ffe-rating-k,\n.ffe-rating-kp {\n\tbackground: #78ac40;\n\tbox-shadow: 0 1px 0 #90ce4d inset;\n}\n\n.ffe-rating-t,\n.ffe-rating-m {\n\tbackground: #ffb400;\n\tbox-shadow: 0 1px 0 #ffd800 inset;\n}\n\n.ffe-rating-ma {\n\tbackground: #c03d2f;\n\tbox-shadow: 0 1px 0 #e64938 inset;\n}\n";
-	styleInject(css);
-
-	class Rating {
-	    constructor(document) {
-	        this.document = document;
-	    }
-	    createElement(rating) {
-	        const element = this.document.createElement("a");
-	        element.href = "https://www.fictionratings.com/";
-	        element.className = "ffe-rating";
-	        element.rel = "noreferrer";
-	        element.target = "rating";
-	        element.textContent = rating;
-	        switch (rating) {
-	            case "K":
-	                element.title = "General Audience (5+)";
-	                element.className += " ffe-rating-k";
-	                break;
-	            case "K+":
-	                element.title = "Young Children (9+)";
-	                element.className += " ffe-rating-kp";
-	                break;
-	            case "T":
-	                element.title = "Teens (13+)";
-	                element.className += " ffe-rating-t";
-	                break;
-	            case "M":
-	                element.title = "Teens (16+)";
-	                element.className += " ffe-rating-m";
-	                break;
-	            case "MA":
-	                element.title = "Mature (18+)";
-	                element.className += " ffe-rating-ma";
-	                break;
-	            default:
-	                element.textContent = "?";
-	                element.title = "No Rating Available";
-	                break;
-	        }
-	        return element;
-	    }
-	}
 
 	class StoryProfileParser {
 	    constructor() {
@@ -278,6 +178,148 @@
 	            .parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
 	    }
 	    return currentStory;
+	}
+
+	const ffnServices = Object.freeze({
+	    xtoast: typeof xtoast === "undefined" ? () => { } : xtoast,
+	    fontastic: Object.freeze({
+	        save: (cookie) => {
+	            XCOOKIE = cookie;
+	            _fontastic_save();
+	        },
+	    }),
+	});
+	const environment = Object.freeze({
+	    currentUserId: typeof userid === "undefined" ? undefined : userid,
+	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
+	    currentPageType: getPage(location),
+	    currentStory: getCurrentStory$1(),
+	});
+	function getPage(location) {
+	    if (location.pathname.indexOf("/u/") == 0) {
+	        return 1 /* User */;
+	    }
+	    if (location.pathname.match(/^\/s\/\d+\/?$/i)) {
+	        return 2 /* Story */;
+	    }
+	    if (location.pathname.indexOf("/s/") == 0) {
+	        return 3 /* Chapter */;
+	    }
+	    return 0 /* Other */;
+	}
+	function getCurrentStory$1() {
+	    const page = getPage(location);
+	    if (page !== 2 /* Story */ && page !== 3 /* Chapter */) {
+	        return undefined;
+	    }
+	    const parser = new StoryProfileParser();
+	    const story = parser.parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
+	    return story;
+	}
+
+	function styleInject(css, ref) {
+	  if ( ref === void 0 ) ref = {};
+	  var insertAt = ref.insertAt;
+
+	  if (!css || typeof document === 'undefined') { return; }
+
+	  var head = document.head || document.getElementsByTagName('head')[0];
+	  var style = document.createElement('style');
+	  style.type = 'text/css';
+
+	  if (insertAt === 'top') {
+	    if (head.firstChild) {
+	      head.insertBefore(style, head.firstChild);
+	    } else {
+	      head.appendChild(style);
+	    }
+	  } else {
+	    head.appendChild(style);
+	  }
+
+	  if (style.styleSheet) {
+	    style.styleSheet.cssText = css;
+	  } else {
+	    style.appendChild(document.createTextNode(css));
+	  }
+	}
+
+	var css = ".ffe-cl-container {\n\tmargin-bottom: 50px;\n\tpadding: 20px;\n}\n\n.ffe-cl ol {\n\tborder-top: 1px solid #cdcdcd;\n\tlist-style-type: none;\n\tmargin: 0;\n}\n\n.ffe-cl-chapter {\n\tbackground-color: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tfont-size: 1.1em;\n\tline-height: 2em;\n\tpadding: 4px 20px;\n}\n";
+	styleInject(css);
+
+	class ChapterList {
+	    constructor(document) {
+	        this.document = document;
+	    }
+	    enhance() {
+	        const contentWrapper = this.document.getElementById("content_wrapper_inner");
+	        // clean up content
+	        Array.from(contentWrapper.children)
+	            .filter(e => (!e.textContent && e.style.height === "5px")
+	            || (e.firstElementChild && e.firstElementChild.nodeName === "SELECT")
+	            || e.className === "lc-wrapper")
+	            .forEach(e => contentWrapper.removeChild(e));
+	        contentWrapper.removeChild(this.document.getElementById("storytextp"));
+	        // add chapter list
+	        const chapterListContainer = this.document.createElement("div");
+	        chapterListContainer.className = "ffe-cl-container";
+	        const chapterList = this.document.createElement("div");
+	        chapterList.className = "ffe-cl";
+	        chapterListContainer.appendChild(chapterList);
+	        const list = this.document.createElement("ol");
+	        chapterList.appendChild(list);
+	        for (const chapter of environment.currentStory.chapters) {
+	            const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"/></span>
+				<span class="ffe-cl-chapter-title"><a href="/s/${environment.currentStoryId}/${chapter.id}/"
+				>${chapter.name}</a></span></li>`);
+	            list.appendChild($item[0]);
+	        }
+	        contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
+	    }
+	}
+
+	var css$1 = ".ffe-rating {\n\tbackground: gray;\n\tpadding: 3px 5px;\n\tcolor: #fff !important;\n\tborder: 1px solid rgba(0, 0, 0, 0.2);\n\ttext-shadow: -1px -1px rgba(0, 0, 0, 0.2);\n\tborder-radius: 4px;\n\tmargin-right: 5px;\n\tvertical-align: 2px;\n}\n\n.ffe-rating:hover {\n\tborder-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;\n}\n\n.ffe-rating-k,\n.ffe-rating-kp {\n\tbackground: #78ac40;\n\tbox-shadow: 0 1px 0 #90ce4d inset;\n}\n\n.ffe-rating-t,\n.ffe-rating-m {\n\tbackground: #ffb400;\n\tbox-shadow: 0 1px 0 #ffd800 inset;\n}\n\n.ffe-rating-ma {\n\tbackground: #c03d2f;\n\tbox-shadow: 0 1px 0 #e64938 inset;\n}\n";
+	styleInject(css$1);
+
+	class Rating {
+	    constructor(document) {
+	        this.document = document;
+	    }
+	    createElement(rating) {
+	        const element = this.document.createElement("a");
+	        element.href = "https://www.fictionratings.com/";
+	        element.className = "ffe-rating";
+	        element.rel = "noreferrer";
+	        element.target = "rating";
+	        element.textContent = rating;
+	        switch (rating) {
+	            case "K":
+	                element.title = "General Audience (5+)";
+	                element.classList.add("ffe-rating-k");
+	                break;
+	            case "K+":
+	                element.title = "Young Children (9+)";
+	                element.classList.add("ffe-rating-kp");
+	                break;
+	            case "T":
+	                element.title = "Teens (13+)";
+	                element.classList.add("ffe-rating-t");
+	                break;
+	            case "M":
+	                element.title = "Teens (16+)";
+	                element.classList.add("ffe-rating-m");
+	                break;
+	            case "MA":
+	                element.title = "Mature (18+)";
+	                element.classList.add("ffe-rating-ma");
+	                break;
+	            default:
+	                element.textContent = "?";
+	                element.title = "No Rating Available";
+	                break;
+	        }
+	        return element;
+	    }
 	}
 
 	const BASE_URL = "https://www.fanfiction.net";
@@ -506,8 +548,8 @@
 	    // warning: trailing slash is mandatory!
 	}*/
 
-	var css$1 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-sc-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-sc-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
-	styleInject(css$1);
+	var css$2 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-sc-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-sc-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
+	styleInject(css$2);
 
 	class StoryCard {
 	    constructor(document) {
@@ -703,8 +745,8 @@
 	    }
 	}
 
-	var css$2 = "";
-	styleInject(css$2);
+	var css$3 = "";
+	styleInject(css$3);
 
 	class StoryProfile {
 	    constructor(document) {
@@ -721,38 +763,20 @@
 	    }
 	}
 
-	/**
-	 * Loads a script dynamically by creating a script element and attaching it to the head element.
-	 * @param {string} url
-	 * @returns {Promise}
-	 */
-	/**
-	 * Reads in cookies and extracts the value of the cookie with the given name.
-	 * If the cookie doesn't exist, returns false.
-	 * @param {string} name
-	 * @returns {string | boolean}
-	 */
-	function getCookie(name) {
-	    const ca = document.cookie.split(";");
-	    for (let i = 0; i < ca.length; i++) {
-	        const c = ca[i].trimLeft();
-	        if (c.indexOf(name + "=") == 0) {
-	            return c.substring(name.length + 1, c.length);
-	        }
-	    }
-	    return false;
-	}
-
-	var css$3 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
-	styleInject(css$3);
+	var css$4 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
+	styleInject(css$4);
 
 	class StoryText {
-	    constructor(text) {
-	        this.text = text;
+	    constructor(document) {
+	        this.document = document;
 	    }
 	    enhance() {
-	        this.fixUserSelect();
-	        if (!getCookie("xcookie2")) {
+	        const textContainer = this.document.getElementById("storytextp");
+	        if (!textContainer) {
+	            throw new Error("Could not find text container element.");
+	        }
+	        this.fixUserSelect(textContainer);
+	        if (!jQuery.cookie("xcookie2")) {
 	            const cookie = {
 	                read_font: "Open Sans",
 	                read_font_size: "1.2",
@@ -760,24 +784,23 @@
 	                read_width: 75,
 	            };
 	            ffnServices.fontastic.save(cookie);
-	            const text = this.text.firstElementChild;
+	            const text = textContainer.firstElementChild;
 	            text.style.fontFamily = cookie.read_font;
 	            text.style.fontSize = cookie.read_font_size + "em";
 	            text.style.lineHeight = cookie.read_line_height;
 	            text.style.width = cookie.read_width + "%";
 	        }
 	    }
-	    fixUserSelect() {
-	        const element = this.text;
+	    fixUserSelect(textContainer) {
 	        const handle = setInterval(() => {
 	            const rules = ["userSelect", "msUserSelect", "mozUserSelect", "khtmlUserSelect",
 	                "webkitUserSelect", "webkitTouchCallout"];
 	            let isOk = true;
 	            for (const rule of rules) {
-	                if (element.style[rule] !== "inherit") {
+	                if (textContainer.style[rule] !== "inherit") {
 	                    isOk = false;
 	                }
-	                element.style[rule] = "inherit";
+	                textContainer.style[rule] = "inherit";
 	            }
 	            if (isOk) {
 	                clearTimeout(handle);
@@ -786,14 +809,17 @@
 	    }
 	}
 
-	const identifier = new PageIdentifier(window.location);
-	const page = identifier.getPage();
-	if (page == 2 /* Chapter */) {
-	    const storyProfile = new StoryProfile(document);
-	    storyProfile.enhance();
-	    const text = document.getElementById("storytextp");
-	    const storyText = new StoryText(text);
-	    storyText.enhance();
+	if (environment.currentPageType === 2 /* Story */) {
+	    const storyProfileEnhancer = new StoryProfile(document);
+	    storyProfileEnhancer.enhance();
+	    const chapterListEnhancer = new ChapterList(document);
+	    chapterListEnhancer.enhance();
+	}
+	if (environment.currentPageType === 3 /* Chapter */) {
+	    const storyProfileEnhancer = new StoryProfile(document);
+	    storyProfileEnhancer.enhance();
+	    const storyTextEnhancer = new StoryText(document);
+	    storyTextEnhancer.enhance();
 	}
 
 }());
