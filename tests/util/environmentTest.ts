@@ -28,6 +28,26 @@ describe("Environment", function() {
 			assert.equal(getPage(location), Page.User);
 		});
 
+		it("should recognize story pages", function() {
+			const location: Location = {
+				hash: "",
+				host: "www.fanfiction.net",
+				hostname: "www.fanfiction.net",
+				href: "https://www.fanfiction.net/s/1234567",
+				origin: "https://www.fanfiction.net",
+				pathname: "/s/1234567",
+				port: "",
+				protocol: "https:",
+				search: "",
+
+				assign: noOp,
+				reload: noOp,
+				replace: noOp,
+			};
+
+			assert.equal(getPage(location), Page.Story);
+		});
+
 		it("should recognize chapter pages", function() {
 			const location: Location = {
 				hash: "",
