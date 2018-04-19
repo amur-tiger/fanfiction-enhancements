@@ -8,13 +8,19 @@ describe("Story Text", function() {
 	const dom = new JSDOM();
 	const document = dom.window.document;
 
+	global["jQuery"] = {
+		cookie: () => undefined,
+	};
+
 	global["XCOOKIE"] = {};
 	global["_fontastic_save"] = () => {
 		// no operation
 	};
 
 	beforeEach(function() {
-		Array.from(document.children).forEach(child => document.removeChild(child));
+		while (document.lastChild) {
+			document.removeChild(document.lastChild);
+		}
 	});
 
 	it("should fix user-select", function(done) {
@@ -48,7 +54,7 @@ describe("Story Text", function() {
 	});
 
 	it("should not set styles if styles were modified", function() {
-		setCookie("xcookie2", "dummy value");
+		global["jQuery"].cookie = () => "dummy value";
 		const fragment = JSDOM.fragment(`<div id="storytextp"><div id="storytext"></div></div>`)
 			.firstChild as HTMLElement;
 		document.appendChild(fragment);

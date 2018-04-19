@@ -16,7 +16,7 @@ export class StoryText implements Enhancer {
 
 		this.fixUserSelect(textContainer);
 
-		if (!getCookie("xcookie2")) {
+		if (!jQuery.cookie("xcookie2")) {
 			const cookie = {
 				read_font: "Open Sans",
 				read_font_size: "1.2",

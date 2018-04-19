@@ -17,23 +17,23 @@ export class Rating implements Component {
 		switch (rating) {
 			case "K":
 				element.title = "General Audience (5+)";
-				element.className += " ffe-rating-k";
+				element.classList.add("ffe-rating-k");
 				break;
 			case "K+":
 				element.title = "Young Children (9+)";
-				element.className += " ffe-rating-kp";
+				element.classList.add("ffe-rating-kp");
 				break;
 			case "T":
 				element.title = "Teens (13+)";
-				element.className += " ffe-rating-t";
+				element.classList.add("ffe-rating-t");
 				break;
 			case "M":
 				element.title = "Teens (16+)";
-				element.className += " ffe-rating-m";
+				element.classList.add("ffe-rating-m");
 				break;
 			case "MA":
 				element.title = "Mature (18+)";
-				element.className += " ffe-rating-ma";
+				element.classList.add("ffe-rating-ma");
 				break;
 			default:
 				element.textContent = "?";
