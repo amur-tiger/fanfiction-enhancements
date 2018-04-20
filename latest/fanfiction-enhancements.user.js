@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.2.1+29.4454439
+// @version      0.2.2+31.6572f9b
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -20,11 +20,11 @@
 	'use strict';
 
 	class Chapter {
-	    constructor(story, id, name) {
-	        this.story = story;
+	    constructor(storyId, id, name) {
+	        this.storyId = storyId;
 	        this.id = id;
 	        this.name = name;
-	        this.readKey = "ffe-story-" + story.id + "-chapter-" + id + "-read";
+	        this.readKey = "ffe-story-" + storyId + "-chapter-" + id + "-read";
 	    }
 	    get read() {
 	        return !!GM_getValue(this.readKey);
@@ -35,6 +35,32 @@
 	        }
 	        else {
 	            GM_deleteValue(this.readKey);
+	        }
+	    }
+	}
+	class Story {
+	    constructor(id, title, author, description, chapters, meta) {
+	        this.id = id;
+	        this.title = title;
+	        this.author = author;
+	        this.description = description;
+	        this.chapters = chapters;
+	        this.meta = meta;
+	        if (chapters.length === 0) {
+	            throw new Error("A story must have at least one chapter.");
+	        }
+	    }
+	    get read() {
+	        for (const chapter of this.chapters) {
+	            if (!chapter.read) {
+	                return false;
+	            }
+	        }
+	        return true;
+	    }
+	    set read(value) {
+	        for (const chapter of this.chapters) {
+	            chapter.read = value;
 	        }
 	    }
 	}
@@ -70,16 +96,10 @@
 	            console.error("Profile node not found. Cannot parse story info.");
 	            return undefined;
 	        }
-	        const story = this.parseProfile(profile);
-	        if (chapters) {
-	            story.chapters = this.parseChapters(story, chapters);
-	        }
-	        else {
-	            story.chapters = [new Chapter(story, 1, story.title)];
-	        }
+	        const story = this.parseProfile(profile, chapters);
 	        return story;
 	    }
-	    parseProfile(profileElement) {
+	    parseProfile(profileElement, chapterElement) {
 	        let offset = 0;
 	        const icon = profileElement.children[0].firstElementChild;
 	        if (!icon || icon.nodeName !== "IMG") {
@@ -91,19 +111,14 @@
 	        const tagsElement = profileElement.children[offset + 8];
 	        const resultMeta = this.parseTags(tagsElement);
 	        resultMeta.imageUrl = icon && icon.nodeName === "IMG" ? icon.src : undefined;
-	        return {
-	            id: resultMeta.id,
-	            title: titleElement.textContent,
-	            author: {
-	                id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-	                name: authorElement.textContent,
-	                profileUrl: authorElement.href,
-	                avatarUrl: undefined,
-	            },
-	            description: descriptionElement.textContent,
-	            chapters: undefined,
-	            meta: resultMeta,
-	        };
+	        return new Story(resultMeta.id, titleElement.textContent, {
+	            id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+	            name: authorElement.textContent,
+	            profileUrl: authorElement.href,
+	            avatarUrl: undefined,
+	        }, descriptionElement.textContent, chapterElement ? this.parseChapters(resultMeta.id, chapterElement) : [
+	            new Chapter(resultMeta.id, 1, titleElement.textContent),
+	        ], resultMeta);
 	    }
 	    parseTags(tagsElement) {
 	        const result = {
@@ -175,25 +190,17 @@
 	        }
 	        return result;
 	    }
-	    parseChapters(story, selectElement) {
+	    parseChapters(storyId, selectElement) {
 	        const result = [];
 	        for (let i = 0; i < selectElement.children.length; i++) {
 	            const option = selectElement.children[i];
 	            if (option.tagName !== "OPTION") {
 	                continue;
 	            }
-	            result.push(new Chapter(story, +option.getAttribute("value"), option.textContent));
+	            result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent));
 	        }
 	        return result;
 	    }
-	}
-	let currentStory = undefined;
-	function getCurrentStory() {
-	    if (!currentStory) {
-	        currentStory = new StoryProfileParser()
-	            .parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
-	    }
-	    return currentStory;
 	}
 
 	const ffnServices = Object.freeze({
@@ -205,7 +212,7 @@
 	        },
 	    }),
 	});
-	const currentStoryTemp = getCurrentStory$1();
+	const currentStoryTemp = getCurrentStory();
 	const environment = Object.freeze({
 	    currentUserId: typeof userid === "undefined" ? undefined : userid,
 	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
@@ -226,7 +233,7 @@
 	    }
 	    return 0 /* Other */;
 	}
-	function getCurrentStory$1() {
+	function getCurrentStory() {
 	    const page = getPage(location);
 	    if (page !== 2 /* Story */ && page !== 3 /* Chapter */) {
 	        return undefined;
@@ -287,7 +294,7 @@
 	        Array.from(contentWrapper.children)
 	            .filter(e => (!e.textContent && e.style.height === "5px")
 	            || (e.firstElementChild && e.firstElementChild.nodeName === "SELECT")
-	            || e.className === "lc-wrapper")
+	            || (e.className === "lc-wrapper" && e.id !== "pre_story_links"))
 	            .forEach(e => contentWrapper.removeChild(e));
 	        contentWrapper.removeChild(this.document.getElementById("storytextp"));
 	        // add chapter list
@@ -308,6 +315,27 @@
 	                boundChapter.read = event.target.checked;
 	            }))(chapter);
 	        }
+	        const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
+	        const $all = $(`<span class="ffe-cl-read"><input type="checkbox" id="ffe-cl-story-${environment.currentStory.id}"
+			${environment.currentStory.read ? "checked" : ""}/>
+			<label for="ffe-cl-story-${environment.currentStory.id}"></span>`);
+	        $all.css({
+	            height: "auto",
+	            "margin-left": "10px",
+	        });
+	        profileFooter.insertBefore($all[0], profileFooter.firstElementChild);
+	        $all.find("input").click(event => {
+	            const message = environment.currentStory.read ? "Mark all as unread?" : "Mark all as read?";
+	            if (!confirm(message)) {
+	                event.preventDefault();
+	                return;
+	            }
+	            environment.currentStory.read = event.target.checked;
+	            for (const chapter of environment.currentStory.chapters) {
+	                const item = this.document.getElementById("ffe-cl-chapter-" + chapter.id);
+	                item.checked = event.target.checked;
+	            }
+	        });
 	        contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
 	    }
 	}
@@ -643,12 +671,12 @@
 	    }
 	    clickFollow(event) {
 	        const promise = (event.target.classList.contains("ffe-sc-active")) ?
-	            unFollowStory(getCurrentStory())
+	            unFollowStory(environment.currentStory)
 	                .then(data => {
 	                event.target.classList.remove("ffe-sc-active");
 	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
 	            }) :
-	            followStory(getCurrentStory())
+	            followStory(environment.currentStory)
 	                .then(data => {
 	                event.target.classList.add("ffe-sc-active");
 	                ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
@@ -661,12 +689,12 @@
 	    }
 	    clickFavorite(event) {
 	        const promise = (event.target.classList.contains("ffe-sc-active")) ?
-	            unFavoriteStory(getCurrentStory())
+	            unFavoriteStory(environment.currentStory)
 	                .then(data => {
 	                event.target.classList.remove("ffe-sc-active");
 	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
 	            }) :
-	            favoriteStory(getCurrentStory())
+	            favoriteStory(environment.currentStory)
 	                .then(data => {
 	                event.target.classList.add("ffe-sc-active");
 	                ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
@@ -718,7 +746,7 @@
 	                }
 	            }
 	        }
-	        if (story.chapters && story.chapters.length) {
+	        if (story.chapters && story.chapters.length > 1) {
 	            html += `<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters: ${story.chapters.length}</span>`;
 	        }
 	        if (story.meta.reviews) {
@@ -788,9 +816,8 @@
 	    }
 	    enhance() {
 	        const profile = this.document.getElementById("profile_top");
-	        const story = getCurrentStory();
 	        const card = new StoryCard(document);
-	        const replacement = card.createElement(story);
+	        const replacement = card.createElement(environment.currentStory);
 	        // profile.parentElement.replaceChild(replacement, profile);
 	        profile.parentElement.insertBefore(replacement, profile);
 	        profile.style.display = "none";
