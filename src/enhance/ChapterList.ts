@@ -30,10 +30,14 @@ export class ChapterList implements Enhancer {
 		chapterList.appendChild(list);
 
 		for (const chapter of environment.currentStory.chapters) {
-			const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"/></span>
-				<span class="ffe-cl-chapter-title"><a href="/s/${environment.currentStoryId}/${chapter.id}/"
-				>${chapter.name}</a></span></li>`);
+			const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"
+				${chapter.read ? "checked" : ""}/></span><span class="ffe-cl-chapter-title"><a
+				href="/s/${environment.currentStoryId}/${chapter.id}/">${chapter.name}</a></span></li>`);
 			list.appendChild($item[0]);
+
+			(boundChapter => $item.find("input").click(event => {
+				boundChapter.read = (event.target as HTMLInputElement).checked;
+			}))(chapter);
 		}
 
 		contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
