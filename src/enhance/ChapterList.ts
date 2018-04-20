@@ -14,7 +14,7 @@ export class ChapterList implements Enhancer {
 		Array.from(contentWrapper.children)
 			.filter(e => (!e.textContent && (e as HTMLDivElement).style.height === "5px")
 				|| (e.firstElementChild && e.firstElementChild.nodeName === "SELECT")
-				|| e.className === "lc-wrapper")
+				|| (e.className === "lc-wrapper" && e.id !== "pre_story_links"))
 			.forEach(e => contentWrapper.removeChild(e));
 		contentWrapper.removeChild(this.document.getElementById("storytextp"));
 
