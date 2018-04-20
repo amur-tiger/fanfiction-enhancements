@@ -270,7 +270,11 @@ describe("Story Profile Parser", function() {
 				const sut = new StoryProfileParser();
 				const result = sut.parse(param.fragment.querySelector("#profile_top"),
 					param.fragment.querySelector("#chap_select"));
-				assert.deepEqual(result.chapters, param.chapters);
+				assert.equal(result.chapters.length, param.chapters.length);
+				for (let i = 0; i < param.chapters.length; i++) {
+					assert.equal(result.chapters[i].id, param.chapters[i].id);
+					assert.equal(result.chapters[i].name, param.chapters[i].name);
+				}
 			});
 
 			it("should recognize image url", function() {

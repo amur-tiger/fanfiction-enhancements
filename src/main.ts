@@ -18,4 +18,18 @@ if (environment.currentPageType === Page.Chapter) {
 
 	const storyTextEnhancer = new StoryText(document);
 	storyTextEnhancer.enhance();
+
+	if (environment.currentChapter) {
+		const markRead = () => {
+			const amount = document.documentElement.scrollTop;
+			const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+
+			if (amount / (max - 550) >= 1) {
+				environment.currentChapter.read = true;
+				window.removeEventListener("scroll", markRead);
+			}
+		};
+
+		window.addEventListener("scroll", markRead);
+	}
 }
