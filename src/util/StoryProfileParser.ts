@@ -32,18 +32,12 @@ export class StoryProfileParser {
 			return undefined;
 		}
 
-		const story = this.parseProfile(profile);
-
-		if (chapters) {
-			story.chapters = this.parseChapters(story, chapters);
-		} else {
-			story.chapters = [new Chapter(story, 1, story.title)];
-		}
+		const story = this.parseProfile(profile, chapters);
 
 		return story;
 	}
 
-	private parseProfile(profileElement: Element): Story {
+	private parseProfile(profileElement: Element, chapterElement: ParentNode): Story {
 		let offset = 0;
 		const icon = profileElement.children[0].firstElementChild;
 		if (!icon || icon.nodeName !== "IMG") {
@@ -58,19 +52,21 @@ export class StoryProfileParser {
 		const resultMeta = this.parseTags(tagsElement);
 		resultMeta.imageUrl = icon && icon.nodeName === "IMG" ? (icon as HTMLImageElement).src : undefined;
 
-		return {
-			id: resultMeta.id,
-			title: titleElement.textContent,
-			author: {
+		return new Story(
+			resultMeta.id,
+			titleElement.textContent,
+			{
 				id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
 				name: authorElement.textContent,
 				profileUrl: authorElement.href,
 				avatarUrl: undefined,
 			},
-			description: descriptionElement.textContent,
-			chapters: undefined,
-			meta: resultMeta,
-		};
+			descriptionElement.textContent,
+			chapterElement ? this.parseChapters(resultMeta.id, chapterElement) : [
+				new Chapter(resultMeta.id, 1, titleElement.textContent),
+			],
+			resultMeta,
+		);
 	}
 
 	private parseTags(tagsElement: Element): StoryMetaData {
@@ -155,7 +151,7 @@ export class StoryProfileParser {
 		return result;
 	}
 
-	private parseChapters(story: Story, selectElement: ParentNode): Chapter[] {
+	private parseChapters(storyId: number, selectElement: ParentNode): Chapter[] {
 		const result: Chapter[] = [];
 
 		for (let i = 0; i < selectElement.children.length; i++) {
@@ -164,19 +160,9 @@ export class StoryProfileParser {
 				continue;
 			}
 
-			result.push(new Chapter(story, +option.getAttribute("value"), option.textContent));
+			result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent));
 		}
 
 		return result;
 	}
-}
-
-let currentStory: Story = undefined;
-export function getCurrentStory(): Story {
-	if (!currentStory) {
-		currentStory = new StoryProfileParser()
-			.parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
-	}
-
-	return currentStory;
 }
