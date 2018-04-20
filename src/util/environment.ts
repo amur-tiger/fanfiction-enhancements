@@ -1,4 +1,4 @@
-import { Story } from "../api/data";
+import {  Chapter, Story } from "../api/data";
 import { StoryProfileParser } from "./StoryProfileParser";
 
 declare function xtoast(message: string, time?: number): void;
@@ -8,6 +8,7 @@ declare let XCOOKIE: FontasticCookie;
 
 declare const userid: number;
 declare const storyid: number;
+declare const chapter: number;
 
 export interface FontasticCookie {
 	gui_font?: string;
@@ -37,12 +38,15 @@ export const ffnServices = Object.freeze({
 	}),
 });
 
+const currentStoryTemp = getCurrentStory();
 export const environment = Object.freeze({
 	currentUserId: typeof userid === "undefined" ? undefined : userid,
 	currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
+	currentChapterId: typeof chapter === "undefined" ? undefined : chapter,
 
 	currentPageType: getPage(location),
-	currentStory: getCurrentStory(),
+	currentStory: currentStoryTemp,
+	currentChapter: getCurrentChapter(currentStoryTemp),
 });
 
 export function getPage(location: Location): Page {
@@ -71,4 +75,18 @@ function getCurrentStory(): Story {
 	const story = parser.parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
 
 	return story;
+}
+
+function getCurrentChapter(story: Story): Chapter {
+	if (story === undefined) {
+		return undefined;
+	}
+
+	for (let i = 0; i < story.chapters.length; i++) {
+		if (story.chapters[i].id === chapter) {
+			return story.chapters[i];
+		}
+	}
+
+	return undefined;
 }
