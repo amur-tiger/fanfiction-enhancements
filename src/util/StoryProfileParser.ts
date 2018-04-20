@@ -35,12 +35,9 @@ export class StoryProfileParser {
 		const story = this.parseProfile(profile);
 
 		if (chapters) {
-			story.chapters = this.parseChapters(chapters);
+			story.chapters = this.parseChapters(story, chapters);
 		} else {
-			story.chapters = [{
-				id: 1,
-				name: story.title,
-			}];
+			story.chapters = [new Chapter(story, 1, story.title)];
 		}
 
 		return story;
@@ -158,7 +155,7 @@ export class StoryProfileParser {
 		return result;
 	}
 
-	private parseChapters(selectElement: ParentNode): Chapter[] {
+	private parseChapters(story: Story, selectElement: ParentNode): Chapter[] {
 		const result: Chapter[] = [];
 
 		for (let i = 0; i < selectElement.children.length; i++) {
@@ -167,12 +164,7 @@ export class StoryProfileParser {
 				continue;
 			}
 
-			const chapter: Chapter = {
-				id: +option.getAttribute("value"),
-				name: option.textContent,
-			};
-
-			result.push(chapter);
+			result.push(new Chapter(story, +option.getAttribute("value"), option.textContent));
 		}
 
 		return result;

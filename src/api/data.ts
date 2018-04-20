@@ -1,6 +1,25 @@
-export interface Chapter {
-	id: number;
-	name: string;
+declare function GM_getValue(key: string, def?: string | number | boolean): string | number | boolean;
+declare function GM_setValue(key: string, value: string | number | boolean): void;
+declare function GM_deleteValue(key: string): void;
+
+export class Chapter {
+	private readonly readKey: string;
+
+	constructor(private readonly story: Story, public readonly id: number, public readonly name: string) {
+		this.readKey = "ffe-story-" + story.id + "-chapter-" + id + "-read";
+	}
+
+	get read(): boolean {
+		return !!GM_getValue(this.readKey);
+	}
+
+	set read(value: boolean) {
+		if (value) {
+			GM_setValue(this.readKey, true);
+		} else {
+			GM_deleteValue(this.readKey);
+		}
+	}
 }
 
 export interface Comment {
