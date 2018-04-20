@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.2.0+25.46e916d
+// @version      0.2.1+29.4454439
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -11,10 +11,33 @@
 // @updateURL    https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
 // @downloadURL  https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
 // @match        *://www.fanfiction.net/*
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_deleteValue
 // ==/UserScript==
 
 (function () {
 	'use strict';
+
+	class Chapter {
+	    constructor(story, id, name) {
+	        this.story = story;
+	        this.id = id;
+	        this.name = name;
+	        this.readKey = "ffe-story-" + story.id + "-chapter-" + id + "-read";
+	    }
+	    get read() {
+	        return !!GM_getValue(this.readKey);
+	    }
+	    set read(value) {
+	        if (value) {
+	            GM_setValue(this.readKey, true);
+	        }
+	        else {
+	            GM_deleteValue(this.readKey);
+	        }
+	    }
+	}
 
 	class StoryProfileParser {
 	    constructor() {
@@ -49,13 +72,10 @@
 	        }
 	        const story = this.parseProfile(profile);
 	        if (chapters) {
-	            story.chapters = this.parseChapters(chapters);
+	            story.chapters = this.parseChapters(story, chapters);
 	        }
 	        else {
-	            story.chapters = [{
-	                    id: 1,
-	                    name: story.title,
-	                }];
+	            story.chapters = [new Chapter(story, 1, story.title)];
 	        }
 	        return story;
 	    }
@@ -155,18 +175,14 @@
 	        }
 	        return result;
 	    }
-	    parseChapters(selectElement) {
+	    parseChapters(story, selectElement) {
 	        const result = [];
 	        for (let i = 0; i < selectElement.children.length; i++) {
 	            const option = selectElement.children[i];
 	            if (option.tagName !== "OPTION") {
 	                continue;
 	            }
-	            const chapter = {
-	                id: +option.getAttribute("value"),
-	                name: option.textContent,
-	            };
-	            result.push(chapter);
+	            result.push(new Chapter(story, +option.getAttribute("value"), option.textContent));
 	        }
 	        return result;
 	    }
@@ -189,11 +205,14 @@
 	        },
 	    }),
 	});
+	const currentStoryTemp = getCurrentStory$1();
 	const environment = Object.freeze({
 	    currentUserId: typeof userid === "undefined" ? undefined : userid,
 	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
+	    currentChapterId: typeof chapter === "undefined" ? undefined : chapter,
 	    currentPageType: getPage(location),
-	    currentStory: getCurrentStory$1(),
+	    currentStory: currentStoryTemp,
+	    currentChapter: getCurrentChapter(currentStoryTemp),
 	});
 	function getPage(location) {
 	    if (location.pathname.indexOf("/u/") == 0) {
@@ -215,6 +234,17 @@
 	    const parser = new StoryProfileParser();
 	    const story = parser.parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
 	    return story;
+	}
+	function getCurrentChapter(story) {
+	    if (story === undefined) {
+	        return undefined;
+	    }
+	    for (let i = 0; i < story.chapters.length; i++) {
+	        if (story.chapters[i].id === chapter) {
+	            return story.chapters[i];
+	        }
+	    }
+	    return undefined;
 	}
 
 	function styleInject(css, ref) {
@@ -244,7 +274,7 @@
 	  }
 	}
 
-	var css = ".ffe-cl-container {\n\tmargin-bottom: 50px;\n\tpadding: 20px;\n}\n\n.ffe-cl ol {\n\tborder-top: 1px solid #cdcdcd;\n\tlist-style-type: none;\n\tmargin: 0;\n}\n\n.ffe-cl-chapter {\n\tbackground-color: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tfont-size: 1.1em;\n\tline-height: 2em;\n\tpadding: 4px 20px;\n}\n";
+	var css = ".ffe-cl-container {\n\tmargin-bottom: 50px;\n\tpadding: 20px;\n}\n\n.ffe-cl ol {\n\tborder-top: 1px solid #cdcdcd;\n\tlist-style-type: none;\n\tmargin: 0;\n}\n\n.ffe-cl-chapter {\n\tbackground-color: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tfont-size: 1.1em;\n\tline-height: 2em;\n\tpadding: 4px 20px;\n}\n\n.ffe-cl-read {\n\talign-items: center;\n\tdisplay: flex;\n\tflex-flow: column;\n\tfloat: left;\n\theight: 2em;\n\tjustify-content: center;\n\tmargin-right: 18px;\n}\n\n.ffe-cl-read label {\n\tbackground-color: #bbb;\n\tborder-radius: 4px;\n\theight: 16px;\n\twidth: 16px;\n}\n\n.ffe-cl-read label:hover {\n\tbackground-color: #888;\n}\n\n.ffe-cl-read input:checked ~ label {\n\tbackground-color: #0f37a0;\n}\n\n.ffe-cl-read input:checked ~ label:before {\n\tcolor: white;\n\tcontent: \"✓\";\n\tdisplay: block;\n\tfont-size: 1.2em;\n\tmargin-top: -3px;\n\tpadding-right: 2px;\n\ttext-align: right;\n}\n\n.ffe-cl-read input {\n\tdisplay: none;\n}\n";
 	styleInject(css);
 
 	class ChapterList {
@@ -269,10 +299,14 @@
 	        const list = this.document.createElement("ol");
 	        chapterList.appendChild(list);
 	        for (const chapter of environment.currentStory.chapters) {
-	            const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"/></span>
-				<span class="ffe-cl-chapter-title"><a href="/s/${environment.currentStoryId}/${chapter.id}/"
-				>${chapter.name}</a></span></li>`);
+	            const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"
+				id="ffe-cl-chapter-${chapter.id}" ${chapter.read ? "checked" : ""}/>
+				<label for="ffe-cl-chapter-${chapter.id}"></label></span><span class="ffe-cl-chapter-title"><a
+				href="/s/${environment.currentStoryId}/${chapter.id}/">${chapter.name}</a></span></li>`);
 	            list.appendChild($item[0]);
+	            (boundChapter => $item.find("input").click(event => {
+	                boundChapter.read = event.target.checked;
+	            }))(chapter);
 	        }
 	        contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
 	    }
@@ -820,6 +854,17 @@
 	    storyProfileEnhancer.enhance();
 	    const storyTextEnhancer = new StoryText(document);
 	    storyTextEnhancer.enhance();
+	    if (environment.currentChapter) {
+	        const markRead = () => {
+	            const amount = document.documentElement.scrollTop;
+	            const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+	            if (amount / (max - 550) >= 1) {
+	                environment.currentChapter.read = true;
+	                window.removeEventListener("scroll", markRead);
+	            }
+	        };
+	        window.addEventListener("scroll", markRead);
+	    }
 	}
 
 }());
