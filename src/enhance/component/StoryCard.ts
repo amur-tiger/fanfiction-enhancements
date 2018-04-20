@@ -4,7 +4,6 @@ import { Component } from "./Component";
 import { Rating } from "./Rating";
 import { favoriteStory, followStory, getFavoritedStories,
 	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/StoryApi";
-import { getCurrentStory } from "../../util/StoryProfileParser";
 
 import "./StoryCard.css";
 
@@ -79,12 +78,12 @@ export class StoryCard implements Component {
 
 	private clickFollow(event: MouseEvent): void {
 		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFollowStory(getCurrentStory())
+			unFollowStory(environment.currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
 				}) :
-			followStory(getCurrentStory())
+			followStory(environment.currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
@@ -99,12 +98,12 @@ export class StoryCard implements Component {
 
 	private clickFavorite(event: MouseEvent): void {
 		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFavoriteStory(getCurrentStory())
+			unFavoriteStory(environment.currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
 				}) :
-			favoriteStory(getCurrentStory())
+			favoriteStory(environment.currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
@@ -168,7 +167,7 @@ export class StoryCard implements Component {
 			}
 		}
 
-		if (story.chapters && story.chapters.length) {
+		if (story.chapters && story.chapters.length > 1) {
 			html += `<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters: ${story.chapters.length}</span>`;
 		}
 

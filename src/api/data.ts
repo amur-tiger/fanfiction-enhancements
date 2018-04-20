@@ -5,8 +5,8 @@ declare function GM_deleteValue(key: string): void;
 export class Chapter {
 	private readonly readKey: string;
 
-	constructor(private readonly story: Story, public readonly id: number, public readonly name: string) {
-		this.readKey = "ffe-story-" + story.id + "-chapter-" + id + "-read";
+	constructor(private readonly storyId: number, public readonly id: number, public readonly name: string) {
+		this.readKey = "ffe-story-" + storyId + "-chapter-" + id + "-read";
 	}
 
 	get read(): boolean {
@@ -34,14 +34,34 @@ export interface FollowedStory {
 	author: User;
 }
 
-export interface Story {
-	id: number;
-	title: string;
-	author: User;
-	description?: string;
+export class Story {
+	constructor(public readonly id: number,
+		public readonly title: string,
+		public readonly author: User,
+		public readonly description: string,
+		public readonly chapters: Chapter[],
+		public readonly meta: StoryMetaData) {
 
-	chapters: Chapter[];
-	meta: StoryMetaData;
+		if (chapters.length === 0) {
+			throw new Error("A story must have at least one chapter.");
+		}
+	}
+
+	get read(): boolean {
+		for (const chapter of this.chapters) {
+			if (!chapter.read) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	set read(value: boolean) {
+		for (const chapter of this.chapters) {
+			chapter.read = value;
+		}
+	}
 }
 
 export interface StoryMetaData {

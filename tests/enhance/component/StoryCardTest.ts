@@ -1,5 +1,6 @@
 import { assert } from "chai";
 
+import { Chapter, Story } from "../../../src/api/data";
 import { StoryCard } from "../../../src/enhance/component/StoryCard";
 
 describe("StoryCard Component", function() {
@@ -28,53 +29,34 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should create a div element", function() {
-		const element = new StoryCard(document).createElement({
-			id: 0,
-			title: "",
-			author: {
+		const element = new StoryCard(document).createElement(new Story(0, "", {
 				id: 0,
 				name: "",
 				profileUrl: "",
 				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {},
-		});
+			}, "", [new Chapter(0, 0, "")], {}));
+
 		assert.equal(element.tagName, "DIV");
 	});
 
 	it("should insert a rating", function() {
-		const element = new StoryCard(document).createElement({
+		const element = new StoryCard(document).createElement(new Story(0, "", {
 			id: 0,
-			title: "",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {
-				rating: "T",
-			},
-		});
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {}));
 
 		assert.isDefined(element.querySelector(".ffe-rating"));
 	});
 
 	it("should insert title", function() {
-		const element = new StoryCard(document).createElement({
-			id: 123,
-			title: "the title",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {},
-		});
+		const element = new StoryCard(document).createElement(new Story(123, "the title", {
+			id: 0,
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {}));
 
 		const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
 		assert.equal(title.tagName, "A");
@@ -83,18 +65,12 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert author", function() {
-		const element = new StoryCard(document).createElement({
-			id: 0,
-			title: "",
-			author: {
-				id: 456,
-				name: "author",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {},
-		});
+		const element = new StoryCard(document).createElement(new Story(0, "", {
+			id: 456,
+			name: "author",
+			profileUrl: "/u/456",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {}));
 
 		const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
 		assert.equal(author.tagName, "A");
@@ -103,18 +79,12 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert buttons", function() {
-		const element = new StoryCard(document).createElement({
+		const element = new StoryCard(document).createElement(new Story(0, "", {
 			id: 0,
-			title: "",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {},
-		});
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {}));
 
 		const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
 		const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
@@ -125,20 +95,14 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert image", function() {
-		const element = new StoryCard(document).createElement({
+		const element = new StoryCard(document).createElement(new Story(0, "", {
 			id: 0,
-			title: "",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {
-				imageUrl: "/src/img.jpg",
-			},
-		});
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {
+			imageUrl: "/src/img.jpg",
+		}));
 
 		const image = element.querySelector(".ffe-sc-image img") as HTMLImageElement;
 		assert.equal(image.tagName, "IMG");
@@ -146,19 +110,12 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert description", function() {
-		const element = new StoryCard(document).createElement({
+		const element = new StoryCard(document).createElement(new Story(0, "", {
 			id: 0,
-			title: "",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			description: "this is a description",
-			chapters: [],
-			meta: {},
-		});
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "this is a description", [new Chapter(0, 0, "")], {}));
 
 		const description = element.querySelector(".ffe-sc-description");
 		assert.equal(description.tagName, "DIV");
@@ -166,28 +123,22 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert relevant tags", function() {
-		const element = new StoryCard(document).createElement({
-			id: 123,
-			title: "",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {
-				language: "Elvish",
-				genre: ["Adventure", "Fantasy"],
-				characters: [
-					["Adam", "Eva"],
-					"Steve",
-				],
-				reviews: 11,
-				updated: new Date(),
-				updatedWords: "today",
-			},
-		});
+		const element = new StoryCard(document).createElement(new Story(123, "", {
+			id: 0,
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {
+			language: "Elvish",
+			genre: ["Adventure", "Fantasy"],
+			characters: [
+				["Adam", "Eva"],
+				"Steve",
+			],
+			reviews: 11,
+			updated: new Date(),
+			updatedWords: "today",
+		}));
 
 		const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
 		assert.equal(tags.length, 6);
@@ -214,23 +165,17 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert footer", function() {
-		const element = new StoryCard(document).createElement({
+		const element = new StoryCard(document).createElement(new Story(0, "", {
 			id: 0,
-			title: "",
-			author: {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			chapters: [],
-			meta: {
-				words: 12345,
-				status: "Complete",
-				published: new Date(),
-				publishedWords: "today",
-			},
-		});
+			name: "",
+			profileUrl: "",
+			avatarUrl: "",
+		}, "", [new Chapter(0, 0, "")], {
+			words: 12345,
+			status: "Complete",
+			published: new Date(),
+			publishedWords: "today",
+		}));
 
 		const footer = element.querySelector(".ffe-sc-footer");
 		assert.equal(footer.childElementCount, 3);
