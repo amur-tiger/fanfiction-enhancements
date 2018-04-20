@@ -31,7 +31,8 @@ export class ChapterList implements Enhancer {
 
 		for (const chapter of environment.currentStory.chapters) {
 			const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"
-				${chapter.read ? "checked" : ""}/></span><span class="ffe-cl-chapter-title"><a
+				id="ffe-cl-chapter-${chapter.id}" ${chapter.read ? "checked" : ""}/>
+				<label for="ffe-cl-chapter-${chapter.id}"></label></span><span class="ffe-cl-chapter-title"><a
 				href="/s/${environment.currentStoryId}/${chapter.id}/">${chapter.name}</a></span></li>`);
 			list.appendChild($item[0]);
 
