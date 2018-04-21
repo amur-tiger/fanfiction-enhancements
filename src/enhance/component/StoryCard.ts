@@ -125,7 +125,8 @@ export class StoryCard implements Component {
 		imageContainer.className = "ffe-sc-image";
 
 		const image = this.document.createElement("img");
-		image.src = story.imageUrl;
+		image.addEventListener("error", () => image.src = story.imageUrl);
+		image.src = story.imageOriginalUrl;
 		imageContainer.appendChild(image);
 
 		element.appendChild(imageContainer);

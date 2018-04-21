@@ -102,11 +102,12 @@ describe("StoryCard Component", function() {
 			avatarUrl: "",
 		}, "", [new Chapter(0, 0, "")], {
 			imageUrl: "/src/img.jpg",
+			imageOriginalUrl: "/src/imgBig.jpg",
 		}));
 
 		const image = element.querySelector(".ffe-sc-image img") as HTMLImageElement;
 		assert.equal(image.tagName, "IMG");
-		assert.equal(image.src, "/src/img.jpg");
+		assert.equal(image.src, "/src/imgBig.jpg");
 	});
 
 	it("should insert description", function() {
