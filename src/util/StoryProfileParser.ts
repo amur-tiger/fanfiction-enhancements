@@ -50,7 +50,13 @@ export class StoryProfileParser {
 		const tagsElement = profileElement.children[offset + 8];
 
 		const resultMeta = this.parseTags(tagsElement);
-		resultMeta.imageUrl = icon && icon.nodeName === "IMG" ? (icon as HTMLImageElement).src : undefined;
+		if (icon && icon.nodeName === "IMG") {
+			resultMeta.imageUrl = (icon as HTMLImageElement).src;
+			const oImage = document && document.querySelector("#img_large img");
+			if (oImage && oImage.nodeName === "IMG") {
+				resultMeta.imageOriginalUrl = oImage.getAttribute("data-original");
+			}
+		}
 
 		return new Story(
 			resultMeta.id,
