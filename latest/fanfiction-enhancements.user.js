@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.2.2+31.6572f9b
+// @version      0.2.3+34.bb1d922
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -110,7 +110,13 @@
 	        const descriptionElement = profileElement.children[offset + 7];
 	        const tagsElement = profileElement.children[offset + 8];
 	        const resultMeta = this.parseTags(tagsElement);
-	        resultMeta.imageUrl = icon && icon.nodeName === "IMG" ? icon.src : undefined;
+	        if (icon && icon.nodeName === "IMG") {
+	            resultMeta.imageUrl = icon.src;
+	            const oImage = document && document.querySelector("#img_large img");
+	            if (oImage && oImage.nodeName === "IMG") {
+	                resultMeta.imageOriginalUrl = oImage.getAttribute("data-original");
+	            }
+	        }
 	        return new Story(resultMeta.id, titleElement.textContent, {
 	            id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
 	            name: authorElement.textContent,
@@ -712,7 +718,8 @@
 	        const imageContainer = this.document.createElement("div");
 	        imageContainer.className = "ffe-sc-image";
 	        const image = this.document.createElement("img");
-	        image.src = story.imageUrl;
+	        image.addEventListener("error", () => image.src = story.imageUrl);
+	        image.src = story.imageOriginalUrl;
 	        imageContainer.appendChild(image);
 	        element.appendChild(imageContainer);
 	    }
