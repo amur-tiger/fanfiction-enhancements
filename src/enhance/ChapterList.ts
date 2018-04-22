@@ -38,6 +38,7 @@ export class ChapterList implements Enhancer {
 
 			(boundChapter => $item.find("input").click(event => {
 				boundChapter.read = (event.target as HTMLInputElement).checked;
+				($all.find("input")[0] as HTMLInputElement).checked = environment.currentStory.read;
 			}))(chapter);
 		}
 
