@@ -1,5 +1,6 @@
-import { Api } from "./api";
 import { FollowedStory } from "./data";
+import { Api } from "./Api";
+import { Synchronizer } from "./DropBox";
 import { SmartValue, SmartValueLocal, SmartValueRoaming } from "./SmartValue";
 import { Story, StoryData } from "./Story";
 
@@ -43,12 +44,20 @@ export class CacheName {
 	public static isChapterReadKey(key: string): boolean {
 		return /^ffe-story-\d+-chapter-\d+-read$/.test(key);
 	}
+
+	public static isTimestampKey(key: string): boolean {
+		return /\+timestamp$/.test(key);
+	}
 }
 
 export class ValueContainer {
 	private readonly instances: { [key: string]: SmartValue<any> } = {};
 
-	constructor(private readonly storage: Storage, private readonly api: Api) {
+	constructor(
+		private readonly storage: Storage,
+		private readonly api: Api,
+		private readonly synchronizer: Synchronizer,
+	) {
 		addEventListener("storage", async event => {
 			const value = this.instances[event.key];
 			if (!value) {
@@ -56,6 +65,18 @@ export class ValueContainer {
 			}
 
 			await (value as any).trigger(JSON.parse(event.newValue));
+		});
+
+		synchronizer.onValueUpdate(async (key, value) => {
+			const instance = this.instances[key];
+			if (!instance) {
+				await GM.setValue(key, value);
+				await GM.setValue(key + "+timestamp", new Date().getTime());
+
+				return;
+			}
+
+			await instance.update(value);
 		});
 	}
 
@@ -132,7 +153,7 @@ export class ValueContainer {
 	public getChapterReadValue(storyId: number, chapterId: number): SmartValue<boolean> {
 		const key = CacheName.chapterRead(storyId, chapterId);
 		if (!this.instances[key]) {
-			this.instances[key] = new SmartValueRoaming<boolean>(key);
+			this.instances[key] = new SmartValueRoaming<boolean>(key, undefined, undefined, this.synchronizer);
 		}
 
 		return this.instances[key];
