@@ -1,4 +1,6 @@
 import { ffnServices } from "../util/environment";
+import * as jQuery from "jquery";
+import "jquery.cookie";
 import { getCookie } from "../utils";
 import { Enhancer } from "./Enhancer";
 

@@ -1,4 +1,5 @@
 import { environment } from "../util/environment";
+import * as ko from "knockout";
 import { Enhancer } from "./Enhancer";
 
 import "./ChapterList.css";
@@ -21,53 +22,32 @@ export class ChapterList implements Enhancer {
 		// add chapter list
 		const chapterListContainer = this.document.createElement("div");
 		chapterListContainer.className = "ffe-cl-container";
-
-		const chapterList = this.document.createElement("div");
-		chapterList.className = "ffe-cl";
-		chapterListContainer.appendChild(chapterList);
-
-		const list = this.document.createElement("ol") as HTMLOListElement;
-		chapterList.appendChild(list);
-
-		for (const chapter of environment.currentStory.chapters) {
-			const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"
-				id="ffe-cl-chapter-${chapter.id}" ${chapter.read ? "checked" : ""}/>
-				<label for="ffe-cl-chapter-${chapter.id}"></label></span><span class="ffe-cl-chapter-title"><a
-				href="/s/${environment.currentStoryId}/${chapter.id}/">${chapter.name}</a></span></li>`);
-			list.appendChild($item[0]);
-
-			(boundChapter => $item.find("input").click(event => {
-				boundChapter.read = (event.target as HTMLInputElement).checked;
-				($all.find("input")[0] as HTMLInputElement).checked = environment.currentStory.read;
-			}))(chapter);
-		}
+		chapterListContainer.innerHTML =
+			`<div class="ffe-cl">
+				<ol data-bind="foreach: chapters">
+					<li class="ffe-cl-chapter">
+						<span class="ffe-cl-read">
+							<input type="checkbox" data-bind="attr: { id: 'ffe-cl-chapter-' + id }, checked: read"/>
+							<label data-bind="attr: { for: 'ffe-cl-chapter-' + id }"/>
+						</span>
+						<span class="ffe-cl-chapter-title">
+							<a data-bind="attr: { href: '/s/' + $parent.id + '/' + id }, text: name"></a>
+						</span>
+					</li>
+				</ol>
+			</div>`;
+		contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
 
 		const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
-		const $all = $(`<span class="ffe-cl-read"><input type="checkbox" id="ffe-cl-story-${environment.currentStory.id}"
-			${environment.currentStory.read ? "checked" : ""}/>
-			<label for="ffe-cl-story-${environment.currentStory.id}"></span>`);
-		$all.css({
-			height: "auto",
-			"margin-left": "10px",
-		});
-		profileFooter.insertBefore($all[0], profileFooter.firstElementChild);
+		const allReadContainer = this.document.createElement("span");
+		allReadContainer.className = "ffe-cl-read";
+		allReadContainer.style.height = "auto";
+		allReadContainer.style.marginLeft = "10px";
+		allReadContainer.innerHTML =
+			`<input type="checkbox" data-bind="attr: { id: 'ffe-cl-story-' + id }, checked: read"/>
+			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
+		profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
 
-		$all.find("input").click(event => {
-			const message = environment.currentStory.read ? "Mark all as unread?" : "Mark all as read?";
-			if (!confirm(message)) {
-				event.preventDefault();
-
-				return;
-			}
-
-			environment.currentStory.read = (event.target as HTMLInputElement).checked;
-
-			for (const chapter of environment.currentStory.chapters) {
-				const item = this.document.getElementById("ffe-cl-chapter-" + chapter.id) as HTMLInputElement;
-				item.checked = (event.target as HTMLInputElement).checked;
-			}
-		});
-
-		contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
+		ko.applyBindings(environment.currentStory, this.document.getElementById("content_wrapper_inner"));
 	}
 }

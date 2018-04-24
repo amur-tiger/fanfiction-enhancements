@@ -21,13 +21,20 @@ function getHeader(): string {
 		(build && commit ? "." : "") +
 		(commit ? commit.substr(0, 7) : "");
 
-	const header = fs.readFileSync("./src/header.txt").toString("utf-8");
+	let header = fs.readFileSync("./src/header.txt").toString("utf-8");
 
-	return header.replace(/\${version}/g, version)
+	header = header.replace(/\${version}/g, version)
 		.replace(/\${description}/g, PACKAGE.description)
 		.replace(/\${author}/g, PACKAGE.author)
 		.replace(/\${homepage}/g, PACKAGE.homepage)
 		.replace(/\${bugs}/g, PACKAGE.bugs.url);
+
+	for (const pkg of EXTERNAL) {
+		const searchKey = `\${${pkg}.version}`;
+		header = header.split(searchKey).join(PACKAGE.dependencies[pkg].replace(/^[~^]/, ""));
+	}
+
+	return header;
 }
 
 gulp.task("build", ["build-source", "build-meta", "build-copy-other"]);
@@ -45,6 +52,10 @@ gulp.task("build-source", () => {
 			file: path.join(OUT_FOLDER, "latest", PACKAGE.main),
 			format: "iife",
 			banner: getHeader(),
+			globals: {
+				jquery: "jQuery",
+				knockout: "ko",
+			},
 		});
 	});
 });
