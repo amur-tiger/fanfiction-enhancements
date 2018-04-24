@@ -25,7 +25,7 @@ if (environment.currentPageType === Page.Chapter) {
 			const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
 			if (amount / (max - 550) >= 1) {
-				environment.currentChapter.read = true;
+				environment.currentChapter.read(true);
 				window.removeEventListener("scroll", markRead);
 			}
 		};
