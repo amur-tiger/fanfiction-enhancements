@@ -1,24 +1,14 @@
-declare function GM_getValue(key: string, def?: string | number | boolean): string | number | boolean;
-declare function GM_setValue(key: string, value: string | number | boolean): void;
-declare function GM_deleteValue(key: string): void;
+import { cache } from "../util/cache";
+import * as ko from "knockout";
 
 export class Chapter {
-	private readonly readKey: string;
+	public readonly read = ko.observable();
 
-	constructor(private readonly storyId: number, public readonly id: number, public readonly name: string) {
-		this.readKey = "ffe-story-" + storyId + "-chapter-" + id + "-read";
-	}
-
-	get read(): boolean {
-		return !!GM_getValue(this.readKey);
-	}
-
-	set read(value: boolean) {
-		if (value) {
-			GM_setValue(this.readKey, true);
-		} else {
-			GM_deleteValue(this.readKey);
-		}
+	constructor(public readonly storyId: number, public readonly id: number, public readonly name: string) {
+		this.read(cache.read.isRead(this));
+		this.read.subscribe(value => {
+			cache.read.setRead(this);
+		});
 	}
 }
 
@@ -35,6 +25,25 @@ export interface FollowedStory {
 }
 
 export class Story {
+	public readonly follow = ko.observable();
+	public readonly favorite = ko.observable();
+	public readonly read = ko.pureComputed({
+		read: () => {
+			for (const chapter of this.chapters) {
+				if (!chapter.read()) {
+					return false;
+				}
+			}
+
+			return true;
+		},
+		write: value => {
+			for (const chapter of this.chapters) {
+				chapter.read(value);
+			}
+		},
+	});
+
 	constructor(public readonly id: number,
 		public readonly title: string,
 		public readonly author: User,
@@ -45,22 +54,16 @@ export class Story {
 		if (chapters.length === 0) {
 			throw new Error("A story must have at least one chapter.");
 		}
-	}
 
-	get read(): boolean {
-		for (const chapter of this.chapters) {
-			if (!chapter.read) {
-				return false;
-			}
-		}
+		this.follow(cache.alerts.isFollowed(this));
+		this.follow.subscribe(value => {
+			cache.alerts.setFollowed(this);
+		});
 
-		return true;
-	}
-
-	set read(value: boolean) {
-		for (const chapter of this.chapters) {
-			chapter.read = value;
-		}
+		this.favorite(cache.alerts.isFavorited(this));
+		this.favorite.subscribe(value => {
+			cache.alerts.setFavorited(this);
+		});
 	}
 }
 
