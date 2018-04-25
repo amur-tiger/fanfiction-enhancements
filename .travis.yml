@@ -2,6 +2,9 @@ language: node_js
 node_js:
   - node
 
+node_js:
+  - 8 # use LTS version, newest version 10 crashes
+
 branches:
   only:
     - master
