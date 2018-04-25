@@ -1,9 +1,9 @@
+import { favoriteStory, followStory, getFavoritedStories,
+	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/api";
 import { Story, StoryMetaData } from "../../api/data";
 import { environment, ffnServices } from "../../util/environment";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
-import { favoriteStory, followStory, getFavoritedStories,
-	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/StoryApi";
 
 import "./StoryCard.css";
 

@@ -1,6 +1,6 @@
+import { getFollowedStories } from "./api/api";
 import { environment, Page } from "./util/environment";
 import { ChapterList } from "./enhance/ChapterList";
-import { getFollowedStories } from "./api/StoryApi";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { StoryText } from "./enhance/StoryText";
 
