@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.2.3+38.b89449f
+// @version      0.2.4+41.1d35afb
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -10,32 +10,82 @@
 // @supportURL   https://github.com/NekiCat/fanfiction-enhancements/issues
 // @updateURL    https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
 // @downloadURL  https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js
 // @match        *://www.fanfiction.net/*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
 // ==/UserScript==
 
-(function () {
+(function (ko,jQuery) {
 	'use strict';
+
+	function GM_getObject(key) {
+	    return JSON.parse(GM_getValue(key, "{}"));
+	}
+	function GM_setObject(key, value) {
+	    GM_setValue(key, JSON.stringify(value));
+	}
+	class Read {
+	    isRead(chapter) {
+	        const data = GM_getObject(Read.READ_KEY);
+	        return !!(data[chapter.storyId] && data[chapter.storyId][chapter.id]);
+	    }
+	    setRead(chapter) {
+	        const data = GM_getObject(Read.READ_KEY);
+	        if (!data[chapter.storyId]) {
+	            data[chapter.storyId] = {};
+	        }
+	        data[chapter.storyId][chapter.id] = chapter.read();
+	        GM_setObject(Read.READ_KEY, data);
+	    }
+	}
+	Read.READ_KEY = "ffe-cache-read";
+	class Alerts {
+	    isFollowed(story) {
+	        const data = GM_getObject(Alerts.ALERTS_KEY);
+	        return !!(data.follows && data.follows[story.id]);
+	    }
+	    setFollowed(story) {
+	        const data = GM_getObject(Alerts.ALERTS_KEY);
+	        if (!data.follows) {
+	            data.follows = {};
+	        }
+	        data.follows[story.id] = story.follow();
+	        GM_setObject(Alerts.ALERTS_KEY, data);
+	    }
+	    isFavorited(story) {
+	        const data = GM_getObject(Alerts.ALERTS_KEY);
+	        return !!(data.favorites && data.favorites[story.id]);
+	    }
+	    setFavorited(story) {
+	        const data = GM_getObject(Alerts.ALERTS_KEY);
+	        if (!data.favorites) {
+	            data.favorites = {};
+	        }
+	        data.favorites[story.id] = story.favorite();
+	        GM_setObject(Alerts.ALERTS_KEY, data);
+	    }
+	}
+	Alerts.ALERTS_KEY = "ffe-cache-alerts";
+	class Cache {
+	    constructor() {
+	        this.read = new Read();
+	        this.alerts = new Alerts();
+	    }
+	}
+	const cache = new Cache();
 
 	class Chapter {
 	    constructor(storyId, id, name) {
 	        this.storyId = storyId;
 	        this.id = id;
 	        this.name = name;
-	        this.readKey = "ffe-story-" + storyId + "-chapter-" + id + "-read";
-	    }
-	    get read() {
-	        return !!GM_getValue(this.readKey);
-	    }
-	    set read(value) {
-	        if (value) {
-	            GM_setValue(this.readKey, true);
-	        }
-	        else {
-	            GM_deleteValue(this.readKey);
-	        }
+	        this.read = ko.observable();
+	        this.read(cache.read.isRead(this));
+	        this.read.subscribe(value => {
+	            cache.read.setRead(this);
+	        });
 	    }
 	}
 	class Story {
@@ -46,22 +96,34 @@
 	        this.description = description;
 	        this.chapters = chapters;
 	        this.meta = meta;
+	        this.follow = ko.observable();
+	        this.favorite = ko.observable();
+	        this.read = ko.pureComputed({
+	            read: () => {
+	                for (const chapter of this.chapters) {
+	                    if (!chapter.read()) {
+	                        return false;
+	                    }
+	                }
+	                return true;
+	            },
+	            write: value => {
+	                for (const chapter of this.chapters) {
+	                    chapter.read(value);
+	                }
+	            },
+	        });
 	        if (chapters.length === 0) {
 	            throw new Error("A story must have at least one chapter.");
 	        }
-	    }
-	    get read() {
-	        for (const chapter of this.chapters) {
-	            if (!chapter.read) {
-	                return false;
-	            }
-	        }
-	        return true;
-	    }
-	    set read(value) {
-	        for (const chapter of this.chapters) {
-	            chapter.read = value;
-	        }
+	        this.follow(cache.alerts.isFollowed(this));
+	        this.follow.subscribe(value => {
+	            cache.alerts.setFollowed(this);
+	        });
+	        this.favorite(cache.alerts.isFavorited(this));
+	        this.favorite.subscribe(value => {
+	            cache.alerts.setFavorited(this);
+	        });
 	    }
 	}
 
@@ -306,94 +368,38 @@
 	        // add chapter list
 	        const chapterListContainer = this.document.createElement("div");
 	        chapterListContainer.className = "ffe-cl-container";
-	        const chapterList = this.document.createElement("div");
-	        chapterList.className = "ffe-cl";
-	        chapterListContainer.appendChild(chapterList);
-	        const list = this.document.createElement("ol");
-	        chapterList.appendChild(list);
-	        for (const chapter of environment.currentStory.chapters) {
-	            const $item = $(`<li class="ffe-cl-chapter"><span class="ffe-cl-read"><input type="checkbox"
-				id="ffe-cl-chapter-${chapter.id}" ${chapter.read ? "checked" : ""}/>
-				<label for="ffe-cl-chapter-${chapter.id}"></label></span><span class="ffe-cl-chapter-title"><a
-				href="/s/${environment.currentStoryId}/${chapter.id}/">${chapter.name}</a></span></li>`);
-	            list.appendChild($item[0]);
-	            (boundChapter => $item.find("input").click(event => {
-	                boundChapter.read = event.target.checked;
-	            }))(chapter);
-	        }
-	        const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
-	        const $all = $(`<span class="ffe-cl-read"><input type="checkbox" id="ffe-cl-story-${environment.currentStory.id}"
-			${environment.currentStory.read ? "checked" : ""}/>
-			<label for="ffe-cl-story-${environment.currentStory.id}"></span>`);
-	        $all.css({
-	            height: "auto",
-	            "margin-left": "10px",
-	        });
-	        profileFooter.insertBefore($all[0], profileFooter.firstElementChild);
-	        $all.find("input").click(event => {
-	            const message = environment.currentStory.read ? "Mark all as unread?" : "Mark all as read?";
-	            if (!confirm(message)) {
-	                event.preventDefault();
-	                return;
-	            }
-	            environment.currentStory.read = event.target.checked;
-	            for (const chapter of environment.currentStory.chapters) {
-	                const item = this.document.getElementById("ffe-cl-chapter-" + chapter.id);
-	                item.checked = event.target.checked;
-	            }
-	        });
+	        chapterListContainer.innerHTML =
+	            `<div class="ffe-cl">
+				<ol data-bind="foreach: chapters">
+					<li class="ffe-cl-chapter">
+						<span class="ffe-cl-read">
+							<input type="checkbox" data-bind="attr: { id: 'ffe-cl-chapter-' + id }, checked: read"/>
+							<label data-bind="attr: { for: 'ffe-cl-chapter-' + id }"/>
+						</span>
+						<span class="ffe-cl-chapter-title">
+							<a data-bind="attr: { href: '/s/' + $parent.id + '/' + id }, text: name"></a>
+						</span>
+					</li>
+				</ol>
+			</div>`;
 	        contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
-	    }
-	}
-
-	var css$1 = ".ffe-rating {\n\tbackground: gray;\n\tpadding: 3px 5px;\n\tcolor: #fff !important;\n\tborder: 1px solid rgba(0, 0, 0, 0.2);\n\ttext-shadow: -1px -1px rgba(0, 0, 0, 0.2);\n\tborder-radius: 4px;\n\tmargin-right: 5px;\n\tvertical-align: 2px;\n}\n\n.ffe-rating:hover {\n\tborder-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;\n}\n\n.ffe-rating-k,\n.ffe-rating-kp {\n\tbackground: #78ac40;\n\tbox-shadow: 0 1px 0 #90ce4d inset;\n}\n\n.ffe-rating-t,\n.ffe-rating-m {\n\tbackground: #ffb400;\n\tbox-shadow: 0 1px 0 #ffd800 inset;\n}\n\n.ffe-rating-ma {\n\tbackground: #c03d2f;\n\tbox-shadow: 0 1px 0 #e64938 inset;\n}\n";
-	styleInject(css$1);
-
-	class Rating {
-	    constructor(document) {
-	        this.document = document;
-	    }
-	    createElement(rating) {
-	        const element = this.document.createElement("a");
-	        element.href = "https://www.fictionratings.com/";
-	        element.className = "ffe-rating";
-	        element.rel = "noreferrer";
-	        element.target = "rating";
-	        element.textContent = rating;
-	        switch (rating) {
-	            case "K":
-	                element.title = "General Audience (5+)";
-	                element.classList.add("ffe-rating-k");
-	                break;
-	            case "K+":
-	                element.title = "Young Children (9+)";
-	                element.classList.add("ffe-rating-kp");
-	                break;
-	            case "T":
-	                element.title = "Teens (13+)";
-	                element.classList.add("ffe-rating-t");
-	                break;
-	            case "M":
-	                element.title = "Teens (16+)";
-	                element.classList.add("ffe-rating-m");
-	                break;
-	            case "MA":
-	                element.title = "Mature (18+)";
-	                element.classList.add("ffe-rating-ma");
-	                break;
-	            default:
-	                element.textContent = "?";
-	                element.title = "No Rating Available";
-	                break;
-	        }
-	        return element;
+	        const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
+	        const allReadContainer = this.document.createElement("span");
+	        allReadContainer.className = "ffe-cl-read";
+	        allReadContainer.style.height = "auto";
+	        allReadContainer.style.marginLeft = "10px";
+	        allReadContainer.innerHTML =
+	            `<input type="checkbox" data-bind="attr: { id: 'ffe-cl-story-' + id }, checked: read"/>
+			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
+	        profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
+	        ko.applyBindings(environment.currentStory, this.document.getElementById("content_wrapper_inner"));
 	    }
 	}
 
 	const BASE_URL = "https://www.fanfiction.net";
 	const CACHE_FOLLOWS_KEY = "ffe-api-follows";
 	const CACHE_FAVORITES_KEY = "ffe-api-favorites";
-	const cache = {
+	const cache$1 = {
 	    get follows() {
 	        const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
 	        return value && JSON.parse(value);
@@ -503,7 +509,7 @@
 	    }, {
 	        type: "urlencoded",
 	    }).then(data => {
-	        cache.addFollow({
+	        cache$1.addFollow({
 	            id: story.id,
 	            title: story.title,
 	            author: story.author,
@@ -522,7 +528,7 @@
 	    }, {
 	        type: "urlencoded",
 	    }).then(data => {
-	        cache.removeFollow({
+	        cache$1.removeFollow({
 	            id: story.id,
 	            title: story.title,
 	            author: story.author,
@@ -542,7 +548,7 @@
 	    }, {
 	        type: "urlencoded",
 	    }).then(data => {
-	        cache.addFavorite({
+	        cache$1.addFavorite({
 	            id: story.id,
 	            title: story.title,
 	            author: story.author,
@@ -561,7 +567,7 @@
 	    }, {
 	        type: "urlencoded",
 	    }).then(data => {
-	        cache.removeFavorite({
+	        cache$1.removeFavorite({
 	            id: story.id,
 	            title: story.title,
 	            author: story.author,
@@ -592,22 +598,22 @@
 	    }).filter(story => story);
 	}
 	function getFollowedStories() {
-	    const list = cache.follows;
+	    const list = cache$1.follows;
 	    if (list) {
 	        return Promise.resolve(list);
 	    }
 	    return ajaxCall(BASE_URL + "/alert/story.php", "GET", undefined)
 	        .then(parseFollowedStoryList)
-	        .then(fetchedList => cache.follows = fetchedList);
+	        .then(fetchedList => cache$1.follows = fetchedList);
 	}
 	function getFavoritedStories() {
-	    const list = cache.favorites;
+	    const list = cache$1.favorites;
 	    if (list) {
 	        return Promise.resolve(list);
 	    }
 	    return ajaxCall(BASE_URL + "/favorites/story.php", "GET", undefined)
 	        .then(parseFollowedStoryList)
-	        .then(fetchedList => cache.favorites = fetchedList);
+	        .then(fetchedList => cache$1.favorites = fetchedList);
 	}
 	/*export function getComments(storyId: number): Promise<Comment[]> {
 	    // fetch all comment pages, not just the first!
@@ -615,6 +621,50 @@
 	    // url is /r/<storyId>/<chapterId>/<pageNumber>/
 	    // warning: trailing slash is mandatory!
 	}*/
+
+	var css$1 = ".ffe-rating {\n\tbackground: gray;\n\tpadding: 3px 5px;\n\tcolor: #fff !important;\n\tborder: 1px solid rgba(0, 0, 0, 0.2);\n\ttext-shadow: -1px -1px rgba(0, 0, 0, 0.2);\n\tborder-radius: 4px;\n\tmargin-right: 5px;\n\tvertical-align: 2px;\n}\n\n.ffe-rating:hover {\n\tborder-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;\n}\n\n.ffe-rating-k,\n.ffe-rating-kp {\n\tbackground: #78ac40;\n\tbox-shadow: 0 1px 0 #90ce4d inset;\n}\n\n.ffe-rating-t,\n.ffe-rating-m {\n\tbackground: #ffb400;\n\tbox-shadow: 0 1px 0 #ffd800 inset;\n}\n\n.ffe-rating-ma {\n\tbackground: #c03d2f;\n\tbox-shadow: 0 1px 0 #e64938 inset;\n}\n";
+	styleInject(css$1);
+
+	class Rating {
+	    constructor(document) {
+	        this.document = document;
+	    }
+	    createElement(rating) {
+	        const element = this.document.createElement("a");
+	        element.href = "https://www.fictionratings.com/";
+	        element.className = "ffe-rating";
+	        element.rel = "noreferrer";
+	        element.target = "rating";
+	        element.textContent = rating;
+	        switch (rating) {
+	            case "K":
+	                element.title = "General Audience (5+)";
+	                element.classList.add("ffe-rating-k");
+	                break;
+	            case "K+":
+	                element.title = "Young Children (9+)";
+	                element.classList.add("ffe-rating-kp");
+	                break;
+	            case "T":
+	                element.title = "Teens (13+)";
+	                element.classList.add("ffe-rating-t");
+	                break;
+	            case "M":
+	                element.title = "Teens (16+)";
+	                element.classList.add("ffe-rating-m");
+	                break;
+	            case "MA":
+	                element.title = "Mature (18+)";
+	                element.classList.add("ffe-rating-ma");
+	                break;
+	            default:
+	                element.textContent = "?";
+	                element.title = "No Rating Available";
+	                break;
+	        }
+	        return element;
+	    }
+	}
 
 	var css$2 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-sc-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-sc-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
 	styleInject(css$2);
@@ -893,7 +943,7 @@
 	            const amount = document.documentElement.scrollTop;
 	            const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 	            if (amount / (max - 550) >= 1) {
-	                environment.currentChapter.read = true;
+	                environment.currentChapter.read(true);
 	                window.removeEventListener("scroll", markRead);
 	            }
 	        };
@@ -901,4 +951,4 @@
 	    }
 	}
 
-}());
+}(ko,jQuery));
