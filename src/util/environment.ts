@@ -1,5 +1,5 @@
 import {  Chapter, Story } from "../api/data";
-import { StoryProfileParser } from "./StoryProfileParser";
+import { StoryProfileParser } from "./parser";
 
 declare function xtoast(message: string, time?: number): void;
 

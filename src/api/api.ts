@@ -1,6 +1,6 @@
 import { FollowedStory, Story } from "./data";
 import { environment } from "../util/environment";
-import { StoryProfileParser } from "../util/StoryProfileParser";
+import { StoryProfileParser } from "../util/parser";
 
 const BASE_URL = "https://www.fanfiction.net";
 const CACHE_FOLLOWS_KEY = "ffe-api-follows";

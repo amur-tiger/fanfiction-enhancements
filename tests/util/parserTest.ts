@@ -2,7 +2,7 @@ import { assert } from "chai";
 import { JSDOM } from "jsdom";
 
 import { environment } from "../../src/util/environment";
-import { StoryProfileParser } from "../../src/util/StoryProfileParser";
+import { StoryProfileParser } from "../../src/util/parser";
 
 describe("Story Profile Parser", function() {
 	environment.validGenres.push(
