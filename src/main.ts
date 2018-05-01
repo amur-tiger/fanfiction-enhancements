@@ -4,6 +4,10 @@ import { ChapterList } from "./enhance/ChapterList";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { StoryText } from "./enhance/StoryText";
 
+if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
+	// todo
+}
+
 if (environment.currentPageType === Page.Story) {
 	const storyProfileEnhancer = new StoryProfile(document);
 	storyProfileEnhancer.enhance();

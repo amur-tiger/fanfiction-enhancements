@@ -24,6 +24,8 @@ export interface FontasticCookie {
 export const enum Page {
 	Other,
 	User,
+	Alerts,
+	Favorites,
 	Story,
 	Chapter,
 }
@@ -50,15 +52,23 @@ export const environment = Object.freeze({
 });
 
 export function getPage(location: Location): Page {
-	if (location.pathname.indexOf("/u/") == 0) {
+	if (location.pathname.indexOf("/u/") === 0) {
 		return Page.User;
+	}
+
+	if (location.pathname.indexOf("/alert/story.php") === 0) {
+		return Page.Alerts;
+	}
+
+	if (location.pathname.indexOf("/favorites/story.php") === 0) {
+		return Page.Favorites;
 	}
 
 	if (location.pathname.match(/^\/s\/\d+\/?$/i)) {
 		return Page.Story;
 	}
 
-	if (location.pathname.indexOf("/s/") == 0) {
+	if (location.pathname.indexOf("/s/") === 0) {
 		return Page.Chapter;
 	}
 
