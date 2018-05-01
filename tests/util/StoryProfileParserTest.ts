@@ -1,9 +1,16 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
 
+import { environment } from "../../src/util/environment";
 import { StoryProfileParser } from "../../src/util/StoryProfileParser";
 
 describe("Story Profile Parser", function() {
+	environment.validGenres.push(
+		"Adventure",
+		"Fantasy",
+		"Sci-Fi",
+	);
+
 	const params = [
 		{
 			fragment: JSDOM.fragment(`<div id="test-wrapper">

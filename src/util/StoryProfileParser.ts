@@ -1,30 +1,7 @@
 import { Chapter, Story, StoryMetaData } from "../api/data";
+import { environment } from "./environment";
 
 export class StoryProfileParser {
-	private readonly validGenres = [
-		"Adventure",
-		"Angst",
-		"Crime",
-		"Drama",
-		"Family",
-		"Fantasy",
-		"Friendship",
-		"General",
-		"Horror",
-		"Humor",
-		"Hurt/Comfort",
-		"Mystery",
-		"Parody",
-		"Poetry",
-		"Romance",
-		"Sci-Fi",
-		"Spiritual",
-		"Supernatural",
-		"Suspense",
-		"Tragedy",
-		"Western",
-	];
-
 	public parse(profile: Element, chapters: ParentNode): Story {
 		if (!profile) {
 			console.error("Profile node not found. Cannot parse story info.");
@@ -90,8 +67,8 @@ export class StoryProfileParser {
 		result.language = tagsArray[1].trim();
 		result.genre = tagsArray[2].trim().split("/");
 
-		// Some genres might not have a genre tagged. If so, index 2 should be the characters instead.
-		if (result.genre.some(g => !this.validGenres.includes(g))) {
+		// Some stories might not have a genre tagged. If so, index 2 should be the characters instead.
+		if (result.genre.some(g => !environment.validGenres.includes(g))) {
 			result.genre = [];
 			result.characters = this.parseCharacters(tagsArray[2]);
 		}

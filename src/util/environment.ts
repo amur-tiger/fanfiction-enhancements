@@ -10,6 +10,11 @@ declare const userid: number;
 declare const storyid: number;
 declare const chapter: number;
 
+declare const array_censors: string[];
+declare const array_genres: string[];
+declare const array_languages: string[];
+declare const array_status: string[];
+
 export interface FontasticCookie {
 	gui_font?: string;
 	read_dark_texture?: string;
@@ -49,6 +54,9 @@ export const environment = Object.freeze({
 	currentPageType: getPage(location),
 	currentStory: currentStoryTemp,
 	currentChapter: getCurrentChapter(currentStoryTemp),
+
+	validGenres: typeof array_genres === "undefined" ? [] : array_genres.slice(1),
+	validLanguages: typeof array_languages === "undefined" ? [] : array_languages.slice(1),
 });
 
 export function getPage(location: Location): Page {
