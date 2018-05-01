@@ -1,5 +1,5 @@
 import { Story } from "../api/data";
-import { environment } from "../util/environment";
+import { currentStory } from "../util/parser";
 import { Enhancer } from "./Enhancer";
 import { StoryCard } from "./component/StoryCard";
 
@@ -13,7 +13,7 @@ export class StoryProfile implements Enhancer {
 		const profile = this.document.getElementById("profile_top");
 
 		const card = new StoryCard(document);
-		const replacement = card.createElement(environment.currentStory);
+		const replacement = card.createElement(currentStory);
 
 		// profile.parentElement.replaceChild(replacement, profile);
 		profile.parentElement.insertBefore(replacement, profile);

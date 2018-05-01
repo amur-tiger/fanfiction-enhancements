@@ -2,6 +2,7 @@ import { favoriteStory, followStory, getFavoritedStories,
 	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/api";
 import { Story, StoryMetaData } from "../../api/data";
 import { environment, ffnServices } from "../../util/environment";
+import { currentStory } from "../../util/parser";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
 
@@ -78,12 +79,12 @@ export class StoryCard implements Component {
 
 	private clickFollow(event: MouseEvent): void {
 		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFollowStory(environment.currentStory)
+			unFollowStory(currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
 				}) :
-			followStory(environment.currentStory)
+			followStory(currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
@@ -98,12 +99,12 @@ export class StoryCard implements Component {
 
 	private clickFavorite(event: MouseEvent): void {
 		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFavoriteStory(environment.currentStory)
+			unFavoriteStory(currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.remove("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
 				}) :
-			favoriteStory(environment.currentStory)
+			favoriteStory(currentStory)
 				.then(data => {
 					(event.target as HTMLElement).classList.add("ffe-sc-active");
 					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);

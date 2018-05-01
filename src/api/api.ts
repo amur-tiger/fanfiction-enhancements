@@ -1,6 +1,6 @@
 import { FollowedStory, Story } from "./data";
 import { environment } from "../util/environment";
-import { StoryProfileParser } from "../util/parser";
+import { parseFollowedStoryList, parseProfile } from "../util/parser";
 
 const BASE_URL = "https://www.fanfiction.net";
 const CACHE_FOLLOWS_KEY = "ffe-api-follows";
@@ -202,39 +202,13 @@ export function unFavoriteStory(story: Story): Promise<any> {
 	});
 }
 
-function parseFollowedStoryList(body): FollowedStory[] {
-	const template = document.createElement("template");
-	template.innerHTML = body;
-
-	const rows = template.content.querySelectorAll("#gui_table1i tbody tr");
-
-	return Array.from(rows).map((row: HTMLTableRowElement) => {
-		if ((row.firstElementChild as HTMLTableCellElement).colSpan > 1) {
-			return undefined;
-		}
-
-		const storyAnchor = row.children[0].firstElementChild as HTMLAnchorElement;
-		const authorAnchor = row.children[1].firstElementChild as HTMLAnchorElement;
-
-		return {
-			id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-			title: storyAnchor.textContent,
-			author: {
-				id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-				name: authorAnchor.textContent,
-				profileUrl: authorAnchor.href,
-				avatarUrl: "",
-			},
-		};
-	}).filter(story => story);
-}
-
 export function getFollowedStories(): Promise<FollowedStory[]> {
 	const list = cache.follows;
 	if (list) {
 		return Promise.resolve(list);
 	}
 
+	// todo: this only reads the first page
 	return ajaxCall(BASE_URL + "/alert/story.php", "GET", undefined)
 		.then(parseFollowedStoryList)
 		.then(fetchedList => cache.follows = fetchedList);
@@ -246,6 +220,7 @@ export function getFavoritedStories(): Promise<FollowedStory[]> {
 		return Promise.resolve(list);
 	}
 
+	// todo: this only reads the first page
 	return ajaxCall(BASE_URL + "/favorites/story.php", "GET", undefined)
 		.then(parseFollowedStoryList)
 		.then(fetchedList => cache.favorites = fetchedList);
@@ -257,20 +232,7 @@ export function getFavoritedStories(): Promise<FollowedStory[]> {
  */
 export function getStoryInfo(storyid: number): Promise<Story> {
 	return ajaxCall(BASE_URL + "/s/" + storyid, "GET", undefined)
-		.then(body => {
-			const parser = new StoryProfileParser();
-			const template = document.createElement("template");
-			template.innerHTML = body;
-
-			const profile = template.content.getElementById("profile_top");
-			const chapters = template.content.getElementById("chap_select");
-
-			if (!profile) {
-				throw new Error("Story " + storyid + " does not exist.");
-			}
-
-			return parser.parse(profile, chapters);
-		});
+		.then(parseProfile);
 }
 
 /*export function getComments(storyId: number): Promise<Comment[]> {

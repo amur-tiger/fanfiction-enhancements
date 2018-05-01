@@ -1,6 +1,7 @@
 import { environment } from "../util/environment";
 import * as jQueryProxy from "jquery";
 import * as ko from "knockout";
+import { currentStory } from "../util/parser";
 import { Enhancer } from "./Enhancer";
 
 import "./ChapterList.css";
@@ -51,7 +52,7 @@ export class ChapterList implements Enhancer {
 			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
 		profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
 
-		ko.applyBindings(environment.currentStory, this.document.getElementById("content_wrapper_inner"));
+		ko.applyBindings(currentStory, this.document.getElementById("content_wrapper_inner"));
 
 		this.hideLongChapterList();
 	}

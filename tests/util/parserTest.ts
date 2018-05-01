@@ -2,7 +2,7 @@ import { assert } from "chai";
 import { JSDOM } from "jsdom";
 
 import { environment } from "../../src/util/environment";
-import { StoryProfileParser } from "../../src/util/parser";
+import { parseProfile } from "../../src/util/parser";
 
 describe("Story Profile Parser", function() {
 	environment.validGenres.push(
@@ -13,7 +13,7 @@ describe("Story Profile Parser", function() {
 
 	const params = [
 		{
-			fragment: JSDOM.fragment(`<div id="test-wrapper">
+			fragment: `<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
 		<button><!-- follow+fav button --></button>
@@ -33,7 +33,7 @@ describe("Story Profile Parser", function() {
 		<option value="1">Chapter 1</option>
 		<option value="2">Chapter 2</option>
 	</select>
-</div>`).firstChild as HTMLElement,
+</div>`,
 			test: "With Image",
 			title: "title",
 			authorId: 678,
@@ -62,7 +62,7 @@ describe("Story Profile Parser", function() {
 			id: 12345678,
 		},
 		{
-			fragment: JSDOM.fragment(`<div id="test-wrapper">
+			fragment: `<div id="test-wrapper">
 	<div id="profile_top">
 		<button><!-- follow+fav button --></button>
 		<b>story</b>
@@ -80,7 +80,7 @@ describe("Story Profile Parser", function() {
 	<select id="chap_select">
 		<option value="1">Intro</option>
 	</select>
-</div>`).firstChild as HTMLElement,
+</div>`,
 			test: "Without Image",
 			title: "story",
 			authorId: 345,
@@ -106,7 +106,7 @@ describe("Story Profile Parser", function() {
 			id: 12345678,
 		},
 		{
-			fragment: JSDOM.fragment(`<div id="test-wrapper">
+			fragment: `<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/image/12345/75/" width="75" height="100"></span>
 		<button><!-- follow+fav button --></button>
@@ -125,7 +125,7 @@ describe("Story Profile Parser", function() {
 		<option value="1">Intro</option>
 	</select>
 </div>
-`).firstChild as HTMLElement,
+`,
 			test: "Tags with garbage data",
 			title: "The Title",
 			authorId: 12345,
@@ -151,7 +151,7 @@ describe("Story Profile Parser", function() {
 			id: 123456,
 		},
 		{
-			fragment: JSDOM.fragment(`<div id="test-wrapper">
+			fragment: `<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
 		<button><!-- follow+fav button --></button>
@@ -167,7 +167,7 @@ describe("Story Profile Parser", function() {
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 		</span>
 	</div>
-</div>`).firstChild as HTMLElement,
+</div>`,
 			test: "Missing Chapter Select",
 			title: "title",
 			authorId: 678,
@@ -196,7 +196,7 @@ describe("Story Profile Parser", function() {
 			id: 12345678,
 		},
 		{
-			fragment: JSDOM.fragment(`<div id="test-wrapper">
+			fragment: `<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/image/12345/75/" width="75" height="100"></span>
 		<button><!-- follow+fav button --></button>
@@ -215,7 +215,7 @@ describe("Story Profile Parser", function() {
 		<option value="1">Intro</option>
 	</select>
 </div>
-`).firstChild as HTMLElement,
+`,
 			test: "Missing genre tag",
 			title: "The Title",
 			authorId: 12345,
@@ -245,38 +245,28 @@ describe("Story Profile Parser", function() {
 	params.forEach(function(param) {
 		describe("(" + param.test + ")", function() {
 			it("should recognize id", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.id, param.id);
 			});
 
 			it("should recognize title", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.title, param.title);
 			});
 
 			it("should recognize author", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.author.id, param.authorId);
 				assert.equal(result.author.name, param.author);
 			});
 
 			it("should recognize description", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.description, param.description);
 			});
 
 			it("should recognize chapters", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.chapters.length, param.chapters.length);
 				for (let i = 0; i < param.chapters.length; i++) {
 					assert.equal(result.chapters[i].id, param.chapters[i].id);
@@ -285,81 +275,59 @@ describe("Story Profile Parser", function() {
 			});
 
 			it("should recognize image url", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.imageUrl, param.imageUrl);
 			});
 
 			it("should recognize favorites", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.favs, param.favs);
 			});
 
 			it("should recognize follows", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.follows, param.follows);
 			});
 
 			it("should recognize reviews", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.reviews, param.reviews);
 			});
 
 			it("should recognize genre", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.deepEqual(result.meta.genre, param.genre);
 			});
 
 			it("should recognize characters", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.deepEqual(result.meta.characters, param.characters);
 			});
 
 			it("should recognize language", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.language, param.language);
 			});
 
 			it("should recognize publish date", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.published.getTime(), param.published);
 				assert.equal(result.meta.publishedWords, param.publishedWords);
 			});
 
 			it("should recognize update date", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.updated.getTime(), param.updated);
 				assert.equal(result.meta.updatedWords, param.updatedWords);
 			});
 
 			it("should recognize rating", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.rating, param.rating);
 			});
 
 			it("should recognize words", function() {
-				const sut = new StoryProfileParser();
-				const result = sut.parse(param.fragment.querySelector("#profile_top"),
-					param.fragment.querySelector("#chap_select"));
+				const result = parseProfile(param.fragment);
 				assert.equal(result.meta.words, param.words);
 			});
 		});
