@@ -1,12 +1,15 @@
 import { favoriteStory, followStory, getFavoritedStories,
-	getFollowedStories, unFavoriteStory, unFollowStory } from "../../api/api";
+	getFollowedStories, getStoryInfo, unFavoriteStory, unFollowStory } from "../../api/api";
 import { Story, StoryMetaData } from "../../api/data";
 import { environment, ffnServices } from "../../util/environment";
+import * as jQueryProxy from "jquery";
 import { currentStory } from "../../util/parser";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
 
 import "./StoryCard.css";
+
+const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class StoryCard implements Component {
 	constructor(private document: Document) {
@@ -54,22 +57,20 @@ export class StoryCard implements Component {
 
 		const follow = this.document.createElement("span") as HTMLSpanElement;
 		follow.className = "ffe-sc-follow btn icon-bookmark-2";
+		follow.dataset["storyId"] = story.id + "";
 		follow.addEventListener("click", this.clickFollow);
-		getFollowedStories().then(stories => {
-			if (stories.some(s => s.id === environment.currentStoryId)) {
-				follow.classList.add("ffe-sc-active");
-			}
-		}).catch(console.error);
+		if (story.follow()) {
+			follow.classList.add("ffe-sc-active");
+		}
 		mark.appendChild(follow);
 
 		const favorite = this.document.createElement("span") as HTMLSpanElement;
 		favorite.className = "ffe-sc-favorite btn icon-heart";
+		favorite.dataset["storyId"] = story.id + "";
 		favorite.addEventListener("click", this.clickFavorite);
-		getFavoritedStories().then(stories => {
-			if (stories.some(s => s.id === environment.currentStoryId)) {
-				favorite.classList.add("ffe-sc-active");
-			}
-		}).catch(console.error);
+		if (story.favorite()) {
+			favorite.classList.add("ffe-sc-active");
+		}
 		mark.appendChild(favorite);
 
 		header.appendChild(mark);
@@ -78,42 +79,54 @@ export class StoryCard implements Component {
 	}
 
 	private clickFollow(event: MouseEvent): void {
-		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFollowStory(currentStory)
-				.then(data => {
-					(event.target as HTMLElement).classList.remove("ffe-sc-active");
-					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
-				}) :
-			followStory(currentStory)
-				.then(data => {
-					(event.target as HTMLElement).classList.add("ffe-sc-active");
-					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
-				});
+		const promise = getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
+			.then(story => {
+				story.follow(!story.follow());
 
+				return story;
+			})
+			.then(story => story.follow() ?
+				followStory(story)
+					.then(data => {
+						ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+					}) :
+				unFollowStory(story)
+					.then(data => {
+						ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
+					}));
+
+		$(event.target).toggleClass("ffe-sc-active");
 		promise
 			.catch(err => {
 				console.error(err);
-				ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
+				$(event.target).toggleClass("ffe-sc-active");
+				ffnServices.xtoast("We are unable to process your request due to a network error. Please try again later.");
 			});
 	}
 
 	private clickFavorite(event: MouseEvent): void {
-		const promise = ((event.target as HTMLElement).classList.contains("ffe-sc-active")) ?
-			unFavoriteStory(currentStory)
-				.then(data => {
-					(event.target as HTMLElement).classList.remove("ffe-sc-active");
-					ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
-				}) :
-			favoriteStory(currentStory)
-				.then(data => {
-					(event.target as HTMLElement).classList.add("ffe-sc-active");
-					ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
-				});
+		const promise = getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
+			.then(story => {
+				story.favorite(!story.favorite());
 
+				return story;
+			})
+			.then(story => story.favorite() ?
+				favoriteStory(currentStory)
+					.then(data => {
+						ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
+					}) :
+				unFavoriteStory(currentStory)
+					.then(data => {
+						ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
+					}));
+
+		$(event.target).toggleClass("ffe-sc-active");
 		promise
 			.catch(err => {
 				console.error(err);
-				ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
+				$(event.target).toggleClass("ffe-sc-active");
+				ffnServices.xtoast("We are unable to process your request due to a network error. Please try again later.");
 			});
 	}
 

@@ -2,11 +2,13 @@ import { getFollowedStories } from "./api/api";
 import { environment, Page } from "./util/environment";
 import { currentStory } from "./util/parser";
 import { ChapterList } from "./enhance/ChapterList";
+import { FollowsList } from "./enhance/FollowsList";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { StoryText } from "./enhance/StoryText";
 
 if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
-	// todo
+	const followsListEnhancer = new FollowsList();
+	followsListEnhancer.enhance();
 }
 
 if (environment.currentPageType === Page.Story) {

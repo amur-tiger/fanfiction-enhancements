@@ -1,10 +1,11 @@
-import { FollowedStory, Story } from "./data";
-import { environment } from "../util/environment";
-import { parseFollowedStoryList, parseProfile } from "../util/parser";
+import { Chapter, FollowedStory, Story } from "./data";
+import { environment, Page } from "../util/environment";
+import { currentStory, parseFollowedStoryList, parseProfile } from "../util/parser";
 
 const BASE_URL = "https://www.fanfiction.net";
 const CACHE_FOLLOWS_KEY = "ffe-api-follows";
 const CACHE_FAVORITES_KEY = "ffe-api-favorites";
+const CACHE_STORIES_KEY = "ffe-api-stories";
 
 const cache = {
 	get follows(): FollowedStory[] {
@@ -62,7 +63,57 @@ const cache = {
 			localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
 		}
 	},
+
+	getStory(id: number): Story {
+		const cacheRaw = localStorage.getItem(CACHE_STORIES_KEY);
+		const cached = cacheRaw && JSON.parse(cacheRaw);
+		if (!cached || !cached[id]) {
+			return undefined;
+		}
+
+		const cachedStory = cached[id];
+		const story = new Story(
+			cachedStory.id,
+			cachedStory.title,
+			cachedStory.author,
+			cachedStory.description,
+			cachedStory.chapters.map(c => new Chapter(cachedStory.id, c.id, c.name)),
+			cachedStory.meta,
+		);
+
+		if (story.meta.published) {
+			story.meta.published = new Date(story.meta.published);
+		}
+		if (story.meta.updated) {
+			story.meta.updated = new Date(story.meta.updated);
+		}
+
+		return story;
+	},
+
+	putStory(story: Story): Story {
+		const cacheRaw = localStorage.getItem(CACHE_STORIES_KEY);
+		const cached = (cacheRaw && JSON.parse(cacheRaw)) || {};
+		cached[story.id] = story;
+		localStorage.setItem(CACHE_STORIES_KEY, JSON.stringify(cached));
+
+		return story;
+	},
 };
+
+if (currentStory) {
+	cache.putStory(currentStory);
+}
+
+if (environment.currentPageType === Page.Alerts) {
+	const alerts = parseFollowedStoryList(document);
+	cache.follows = alerts;
+}
+
+if (environment.currentPageType === Page.Favorites) {
+	const favorites = parseFollowedStoryList(document);
+	cache.favorites = favorites;
+}
 
 function urlencoded(obj: any): string {
 	const result = [];
@@ -231,8 +282,14 @@ export function getFavoritedStories(): Promise<FollowedStory[]> {
  * @param storyid
  */
 export function getStoryInfo(storyid: number): Promise<Story> {
+	const cached = cache.getStory(storyid);
+	if (cached) {
+		return Promise.resolve(cached);
+	}
+
 	return ajaxCall(BASE_URL + "/s/" + storyid, "GET", undefined)
-		.then(parseProfile);
+		.then(parseProfile)
+		.then(cache.putStory);
 }
 
 /*export function getComments(storyId: number): Promise<Comment[]> {
