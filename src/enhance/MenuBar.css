@@ -1,0 +1,16 @@
+.ffe-mb-separator:before {
+	content: " | ";
+}
+
+.ffe-mb-alerts, .ffe-mb-favorites {
+	display: inline-block;
+	line-height: 2em;
+	margin-top: -.5em;
+	text-align: center;
+	width: 2em;
+}
+
+.ffe-mb-alerts:hover, .ffe-mb-favorites:hover {
+	border-bottom: 0;
+	color: orange !important;
+}

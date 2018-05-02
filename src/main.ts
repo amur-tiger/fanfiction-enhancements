@@ -3,8 +3,12 @@ import { environment, Page } from "./util/environment";
 import { currentStory } from "./util/parser";
 import { ChapterList } from "./enhance/ChapterList";
 import { FollowsList } from "./enhance/FollowsList";
+import { MenuBar } from "./enhance/MenuBar";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { StoryText } from "./enhance/StoryText";
+
+const menuBarEnhancer = new MenuBar();
+menuBarEnhancer.enhance();
 
 if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
 	const followsListEnhancer = new FollowsList();
