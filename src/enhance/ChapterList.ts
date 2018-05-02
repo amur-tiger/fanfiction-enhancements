@@ -1,8 +1,12 @@
 import { environment } from "../util/environment";
+import * as jQueryProxy from "jquery";
 import * as ko from "knockout";
+import { currentStory } from "../util/parser";
 import { Enhancer } from "./Enhancer";
 
 import "./ChapterList.css";
+
+const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class ChapterList implements Enhancer {
 	public constructor(private document: Document) {
@@ -48,6 +52,36 @@ export class ChapterList implements Enhancer {
 			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
 		profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
 
-		ko.applyBindings(environment.currentStory, this.document.getElementById("content_wrapper_inner"));
+		ko.applyBindings(currentStory, this.document.getElementById("content_wrapper_inner"));
+
+		this.hideLongChapterList();
+	}
+
+	private hideLongChapterList() {
+		const $elements = $(this.document.getElementsByClassName("ffe-cl-chapter"));
+		let currentBlockIsRead = !!($elements[0].firstElementChild.firstElementChild as HTMLInputElement).checked;
+		let currentBlockCount = 0;
+
+		for (let i = 0; i < $elements.length; i++) {
+			const element = $elements[i];
+			const read = !!(element.firstElementChild.firstElementChild as HTMLInputElement).checked;
+			if ((currentBlockIsRead !== read || i === $elements.length - 1) && currentBlockCount > 4) {
+				$elements.slice(i - currentBlockCount + 2, i - 2).hide();
+
+				const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
+					(currentBlockCount - 4) + " hidden chapters</a></li>");
+				$showLink.children("a").click(() => {
+					$elements.show();
+					$(".ffe-cl-collapsed").remove();
+				});
+
+				$showLink.insertBefore($elements[i - 2]);
+
+				currentBlockIsRead = read;
+				currentBlockCount = 1;
+			} else {
+				currentBlockCount++;
+			}
+		}
 	}
 }

@@ -1,4 +1,5 @@
 import { cache } from "../util/cache";
+import { environment } from "../util/environment";
 import * as ko from "knockout";
 
 export class Chapter {
@@ -43,6 +44,7 @@ export class Story {
 			}
 		},
 	});
+	public readonly currentChapter;
 
 	constructor(public readonly id: number,
 		public readonly title: string,
@@ -64,6 +66,10 @@ export class Story {
 		this.favorite.subscribe(value => {
 			cache.alerts.setFavorited(this);
 		});
+
+		if (id === environment.currentStoryId) {
+			this.currentChapter = this.chapters.filter(c => c.id === environment.currentChapterId)[0];
+		}
 	}
 }
 
