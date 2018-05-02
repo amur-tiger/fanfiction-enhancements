@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.2.4+41.1d35afb
+// @version      0.3.0+43.e6211ac
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -17,8 +17,47 @@
 // @grant        GM_deleteValue
 // ==/UserScript==
 
-(function (ko,jQuery) {
+(function (ko,jQueryProxy) {
 	'use strict';
+
+	var jQueryProxy__default = jQueryProxy['default'];
+
+	const ffnServices = {
+	    xtoast: typeof xtoast === "undefined" ? () => { } : xtoast,
+	    xwindow: typeof xwindow === "undefined" ? () => { } : xwindow,
+	    fontastic: {
+	        save: (cookie) => {
+	            XCOOKIE = cookie;
+	            _fontastic_save();
+	        },
+	    },
+	};
+	const environment = {
+	    currentUserId: typeof userid === "undefined" ? undefined : userid,
+	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
+	    currentChapterId: typeof chapter === "undefined" ? undefined : chapter,
+	    currentPageType: getPage(location),
+	    validGenres: typeof array_genres === "undefined" ? [] : array_genres.slice(1),
+	    validLanguages: typeof array_languages === "undefined" ? [] : array_languages.slice(1),
+	};
+	function getPage(location) {
+	    if (location.pathname.indexOf("/u/") === 0) {
+	        return 1 /* User */;
+	    }
+	    if (location.pathname.indexOf("/alert/story.php") === 0) {
+	        return 2 /* Alerts */;
+	    }
+	    if (location.pathname.indexOf("/favorites/story.php") === 0) {
+	        return 3 /* Favorites */;
+	    }
+	    if (location.pathname.match(/^\/s\/\d+\/?$/i)) {
+	        return 4 /* Story */;
+	    }
+	    if (location.pathname.indexOf("/s/") === 0) {
+	        return 5 /* Chapter */;
+	    }
+	    return 0 /* Other */;
+	}
 
 	function GM_getObject(key) {
 	    return JSON.parse(GM_getValue(key, "{}"));
@@ -124,202 +163,156 @@
 	        this.favorite.subscribe(value => {
 	            cache.alerts.setFavorited(this);
 	        });
+	        if (id === environment.currentStoryId) {
+	            this.currentChapter = this.chapters.filter(c => c.id === environment.currentChapterId)[0];
+	        }
 	    }
 	}
 
-	class StoryProfileParser {
-	    constructor() {
-	        this.validGenres = [
-	            "Adventure",
-	            "Angst",
-	            "Crime",
-	            "Drama",
-	            "Family",
-	            "Fantasy",
-	            "Friendship",
-	            "General",
-	            "Horror",
-	            "Humor",
-	            "Hurt/Comfort",
-	            "Mystery",
-	            "Parody",
-	            "Poetry",
-	            "Romance",
-	            "Sci-Fi",
-	            "Spiritual",
-	            "Supernatural",
-	            "Suspense",
-	            "Tragedy",
-	            "Western",
-	        ];
+	const currentStory = parseProfile(document);
+	function parseProfile(fragment) {
+	    const container = typeof fragment === "string" ? (() => {
+	        const template = document.createElement("template");
+	        template.innerHTML = fragment;
+	        return template.content;
+	    })() : fragment;
+	    const profileElement = container.getElementById("profile_top");
+	    const chapterElement = container.getElementById("chap_select");
+	    if (!profileElement) {
+	        console.error("Profile node not found. Cannot parse story info.");
+	        return undefined;
 	    }
-	    parse(profile, chapters) {
-	        if (!profile) {
-	            console.error("Profile node not found. Cannot parse story info.");
+	    let offset = 0;
+	    const cover = profileElement.children[0].firstElementChild;
+	    if (!cover || cover.nodeName !== "IMG") {
+	        offset--;
+	    }
+	    const titleElement = profileElement.children[offset + 2];
+	    const authorElement = profileElement.children[offset + 4];
+	    const descriptionElement = profileElement.children[offset + 7];
+	    const tagsElement = profileElement.children[offset + 8];
+	    const resultMeta = parseTags(tagsElement);
+	    if (cover && cover.nodeName === "IMG") {
+	        resultMeta.imageUrl = cover.src;
+	        const oImage = document && document.querySelector("#img_large img");
+	        if (oImage && oImage.nodeName === "IMG") {
+	            resultMeta.imageOriginalUrl = oImage.getAttribute("data-original");
+	        }
+	    }
+	    return new Story(resultMeta.id, titleElement.textContent, {
+	        id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+	        name: authorElement.textContent,
+	        profileUrl: authorElement.href,
+	        avatarUrl: undefined,
+	    }, descriptionElement.textContent, chapterElement ? parseChapters(resultMeta.id, chapterElement) : [
+	        new Chapter(resultMeta.id, 1, titleElement.textContent),
+	    ], resultMeta);
+	}
+	function parseTags(tagsElement) {
+	    const result = {
+	        genre: [],
+	        characters: [],
+	    };
+	    const tagsArray = tagsElement.innerHTML.split(" - ");
+	    const tempElement = document.createElement("div");
+	    tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
+	    result.rating = tempElement.firstElementChild.textContent;
+	    result.language = tagsArray[1].trim();
+	    result.genre = tagsArray[2].trim().split("/");
+	    // Some stories might not have a genre tagged. If so, index 2 should be the characters instead.
+	    if (result.genre.some(g => !environment.validGenres.includes(g))) {
+	        result.genre = [];
+	        result.characters = parseCharacters(tagsArray[2]);
+	    }
+	    for (let i = 3; i < tagsArray.length; i++) {
+	        const tagNameMatch = tagsArray[i].match(/^(\w+):/);
+	        if (!tagNameMatch) {
+	            result.characters = parseCharacters(tagsArray[i]);
+	            continue;
+	        }
+	        const tagName = tagNameMatch[1].toLowerCase();
+	        const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
+	        switch (tagName) {
+	            case "reviews":
+	                tempElement.innerHTML = tagValue;
+	                result.reviews = +tempElement.firstElementChild.textContent.replace(/,/g, "");
+	                break;
+	            case "published":
+	            case "updated":
+	                tempElement.innerHTML = tagValue;
+	                result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
+	                result[tagName + "Words"] = tempElement.firstElementChild.textContent.trim();
+	                break;
+	            default:
+	                if (/^[0-9,.]*$/.test(tagValue)) {
+	                    result[tagName] = +tagValue.replace(/,/g, "");
+	                }
+	                else {
+	                    result[tagName] = tagValue;
+	                }
+	                break;
+	        }
+	    }
+	    return result;
+	}
+	function parseCharacters(tag) {
+	    const result = [];
+	    const pairings = tag.trim().split(/([\[\]])\s*/).filter(pairing => pairing.length);
+	    let inPairing = false;
+	    for (const pairing of pairings) {
+	        if (pairing == "[") {
+	            inPairing = true;
+	            continue;
+	        }
+	        if (pairing == "]") {
+	            inPairing = false;
+	            continue;
+	        }
+	        const characters = pairing.split(/,\s+/);
+	        if (!inPairing || characters.length == 1) {
+	            result.push(...characters);
+	        }
+	        else {
+	            result.push(characters);
+	        }
+	    }
+	    return result;
+	}
+	function parseChapters(storyId, selectElement) {
+	    const result = [];
+	    for (let i = 0; i < selectElement.children.length; i++) {
+	        const option = selectElement.children[i];
+	        if (option.tagName !== "OPTION") {
+	            continue;
+	        }
+	        result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent));
+	    }
+	    return result;
+	}
+	function parseFollowedStoryList(fragment) {
+	    const container = typeof fragment === "string" ? (() => {
+	        const template = document.createElement("template");
+	        template.innerHTML = fragment;
+	        return template.content;
+	    })() : fragment;
+	    const rows = container.querySelectorAll("#gui_table1i tbody tr");
+	    return Array.from(rows).map((row) => {
+	        if (row.firstElementChild.colSpan > 1) {
 	            return undefined;
 	        }
-	        const story = this.parseProfile(profile, chapters);
-	        return story;
-	    }
-	    parseProfile(profileElement, chapterElement) {
-	        let offset = 0;
-	        const icon = profileElement.children[0].firstElementChild;
-	        if (!icon || icon.nodeName !== "IMG") {
-	            offset--;
-	        }
-	        const titleElement = profileElement.children[offset + 2];
-	        const authorElement = profileElement.children[offset + 4];
-	        const descriptionElement = profileElement.children[offset + 7];
-	        const tagsElement = profileElement.children[offset + 8];
-	        const resultMeta = this.parseTags(tagsElement);
-	        if (icon && icon.nodeName === "IMG") {
-	            resultMeta.imageUrl = icon.src;
-	            const oImage = document && document.querySelector("#img_large img");
-	            if (oImage && oImage.nodeName === "IMG") {
-	                resultMeta.imageOriginalUrl = oImage.getAttribute("data-original");
-	            }
-	        }
-	        return new Story(resultMeta.id, titleElement.textContent, {
-	            id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-	            name: authorElement.textContent,
-	            profileUrl: authorElement.href,
-	            avatarUrl: undefined,
-	        }, descriptionElement.textContent, chapterElement ? this.parseChapters(resultMeta.id, chapterElement) : [
-	            new Chapter(resultMeta.id, 1, titleElement.textContent),
-	        ], resultMeta);
-	    }
-	    parseTags(tagsElement) {
-	        const result = {
-	            genre: [],
-	            characters: [],
+	        const storyAnchor = row.children[0].firstElementChild;
+	        const authorAnchor = row.children[1].firstElementChild;
+	        return {
+	            id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
+	            title: storyAnchor.textContent,
+	            author: {
+	                id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
+	                name: authorAnchor.textContent,
+	                profileUrl: authorAnchor.href,
+	                avatarUrl: "",
+	            },
 	        };
-	        const tagsArray = tagsElement.innerHTML.split(" - ");
-	        const tempElement = document.createElement("div");
-	        tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
-	        result.rating = tempElement.firstElementChild.textContent;
-	        result.language = tagsArray[1].trim();
-	        result.genre = tagsArray[2].trim().split("/");
-	        // Some genres might not have a genre tagged. If so, index 2 should be the characters instead.
-	        if (result.genre.some(g => !this.validGenres.includes(g))) {
-	            result.genre = [];
-	            result.characters = this.parseCharacters(tagsArray[2]);
-	        }
-	        for (let i = 3; i < tagsArray.length; i++) {
-	            const tagNameMatch = tagsArray[i].match(/^(\w+):/);
-	            if (!tagNameMatch) {
-	                result.characters = this.parseCharacters(tagsArray[i]);
-	                continue;
-	            }
-	            const tagName = tagNameMatch[1].toLowerCase();
-	            const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
-	            switch (tagName) {
-	                case "reviews":
-	                    tempElement.innerHTML = tagValue;
-	                    result.reviews = +tempElement.firstElementChild.textContent.replace(/,/g, "");
-	                    break;
-	                case "published":
-	                case "updated":
-	                    tempElement.innerHTML = tagValue;
-	                    result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
-	                    result[tagName + "Words"] = tempElement.firstElementChild.textContent.trim();
-	                    break;
-	                default:
-	                    if (/^[0-9,.]*$/.test(tagValue)) {
-	                        result[tagName] = +tagValue.replace(/,/g, "");
-	                    }
-	                    else {
-	                        result[tagName] = tagValue;
-	                    }
-	                    break;
-	            }
-	        }
-	        return result;
-	    }
-	    parseCharacters(tag) {
-	        const result = [];
-	        const ships = tag.trim().split(/([\[\]])\s*/).filter(ship => ship.length);
-	        let inShip = false;
-	        for (const ship of ships) {
-	            if (ship == "[") {
-	                inShip = true;
-	                continue;
-	            }
-	            if (ship == "]") {
-	                inShip = false;
-	                continue;
-	            }
-	            const characters = ship.split(/,\s+/);
-	            if (!inShip || characters.length == 1) {
-	                result.push(...characters);
-	            }
-	            else {
-	                result.push(characters);
-	            }
-	        }
-	        return result;
-	    }
-	    parseChapters(storyId, selectElement) {
-	        const result = [];
-	        for (let i = 0; i < selectElement.children.length; i++) {
-	            const option = selectElement.children[i];
-	            if (option.tagName !== "OPTION") {
-	                continue;
-	            }
-	            result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent));
-	        }
-	        return result;
-	    }
-	}
-
-	const ffnServices = Object.freeze({
-	    xtoast: typeof xtoast === "undefined" ? () => { } : xtoast,
-	    fontastic: Object.freeze({
-	        save: (cookie) => {
-	            XCOOKIE = cookie;
-	            _fontastic_save();
-	        },
-	    }),
-	});
-	const currentStoryTemp = getCurrentStory();
-	const environment = Object.freeze({
-	    currentUserId: typeof userid === "undefined" ? undefined : userid,
-	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
-	    currentChapterId: typeof chapter === "undefined" ? undefined : chapter,
-	    currentPageType: getPage(location),
-	    currentStory: currentStoryTemp,
-	    currentChapter: getCurrentChapter(currentStoryTemp),
-	});
-	function getPage(location) {
-	    if (location.pathname.indexOf("/u/") == 0) {
-	        return 1 /* User */;
-	    }
-	    if (location.pathname.match(/^\/s\/\d+\/?$/i)) {
-	        return 2 /* Story */;
-	    }
-	    if (location.pathname.indexOf("/s/") == 0) {
-	        return 3 /* Chapter */;
-	    }
-	    return 0 /* Other */;
-	}
-	function getCurrentStory() {
-	    const page = getPage(location);
-	    if (page !== 2 /* Story */ && page !== 3 /* Chapter */) {
-	        return undefined;
-	    }
-	    const parser = new StoryProfileParser();
-	    const story = parser.parse(document.getElementById("profile_top"), document.getElementById("chap_select"));
-	    return story;
-	}
-	function getCurrentChapter(story) {
-	    if (story === undefined) {
-	        return undefined;
-	    }
-	    for (let i = 0; i < story.chapters.length; i++) {
-	        if (story.chapters[i].id === chapter) {
-	            return story.chapters[i];
-	        }
-	    }
-	    return undefined;
+	    }).filter(story => story);
 	}
 
 	function styleInject(css, ref) {
@@ -349,9 +342,10 @@
 	  }
 	}
 
-	var css = ".ffe-cl-container {\n\tmargin-bottom: 50px;\n\tpadding: 20px;\n}\n\n.ffe-cl ol {\n\tborder-top: 1px solid #cdcdcd;\n\tlist-style-type: none;\n\tmargin: 0;\n}\n\n.ffe-cl-chapter {\n\tbackground-color: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tfont-size: 1.1em;\n\tline-height: 2em;\n\tpadding: 4px 20px;\n}\n\n.ffe-cl-read {\n\talign-items: center;\n\tdisplay: flex;\n\tflex-flow: column;\n\tfloat: left;\n\theight: 2em;\n\tjustify-content: center;\n\tmargin-right: 18px;\n}\n\n.ffe-cl-read label {\n\tbackground-color: #bbb;\n\tborder-radius: 4px;\n\theight: 16px;\n\twidth: 16px;\n}\n\n.ffe-cl-read label:hover {\n\tbackground-color: #888;\n}\n\n.ffe-cl-read input:checked ~ label {\n\tbackground-color: #0f37a0;\n}\n\n.ffe-cl-read input:checked ~ label:before {\n\tcolor: white;\n\tcontent: \"✓\";\n\tdisplay: block;\n\tfont-size: 1.2em;\n\tmargin-top: -3px;\n\tpadding-right: 2px;\n\ttext-align: right;\n}\n\n.ffe-cl-read input {\n\tdisplay: none;\n}\n";
+	var css = ".ffe-cl-container {\n\tmargin-bottom: 50px;\n\tpadding: 20px;\n}\n\n.ffe-cl ol {\n\tborder-top: 1px solid #cdcdcd;\n\tlist-style-type: none;\n\tmargin: 0;\n}\n\n.ffe-cl-chapter {\n\tbackground-color: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tfont-size: 1.1em;\n\tline-height: 2em;\n\tpadding: 4px 20px;\n}\n\n.ffe-cl-collapsed {\n\ttext-align: center;\n}\n\n.ffe-cl-read {\n\talign-items: center;\n\tdisplay: flex;\n\tflex-flow: column;\n\tfloat: left;\n\theight: 2em;\n\tjustify-content: center;\n\tmargin-right: 18px;\n}\n\n.ffe-cl-read label {\n\tbackground-color: #bbb;\n\tborder-radius: 4px;\n\theight: 16px;\n\twidth: 16px;\n}\n\n.ffe-cl-read label:hover {\n\tbackground-color: #888;\n}\n\n.ffe-cl-read input:checked ~ label {\n\tbackground-color: #0f37a0;\n}\n\n.ffe-cl-read input:checked ~ label:before {\n\tcolor: white;\n\tcontent: \"✓\";\n\tdisplay: block;\n\tfont-size: 1.2em;\n\tmargin-top: -3px;\n\tpadding-right: 2px;\n\ttext-align: right;\n}\n\n.ffe-cl-read input {\n\tdisplay: none;\n}\n";
 	styleInject(css);
 
+	const $ = jQueryProxy__default || jQueryProxy;
 	class ChapterList {
 	    constructor(document) {
 	        this.document = document;
@@ -392,13 +386,39 @@
 	            `<input type="checkbox" data-bind="attr: { id: 'ffe-cl-story-' + id }, checked: read"/>
 			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
 	        profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
-	        ko.applyBindings(environment.currentStory, this.document.getElementById("content_wrapper_inner"));
+	        ko.applyBindings(currentStory, this.document.getElementById("content_wrapper_inner"));
+	        this.hideLongChapterList();
+	    }
+	    hideLongChapterList() {
+	        const $elements = $(this.document.getElementsByClassName("ffe-cl-chapter"));
+	        let currentBlockIsRead = !!$elements[0].firstElementChild.firstElementChild.checked;
+	        let currentBlockCount = 0;
+	        for (let i = 0; i < $elements.length; i++) {
+	            const element = $elements[i];
+	            const read = !!element.firstElementChild.firstElementChild.checked;
+	            if ((currentBlockIsRead !== read || i === $elements.length - 1) && currentBlockCount > 4) {
+	                $elements.slice(i - currentBlockCount + 2, i - 2).hide();
+	                const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
+	                    (currentBlockCount - 4) + " hidden chapters</a></li>");
+	                $showLink.children("a").click(() => {
+	                    $elements.show();
+	                    $(".ffe-cl-collapsed").remove();
+	                });
+	                $showLink.insertBefore($elements[i - 2]);
+	                currentBlockIsRead = read;
+	                currentBlockCount = 1;
+	            }
+	            else {
+	                currentBlockCount++;
+	            }
+	        }
 	    }
 	}
 
 	const BASE_URL = "https://www.fanfiction.net";
 	const CACHE_FOLLOWS_KEY = "ffe-api-follows";
 	const CACHE_FAVORITES_KEY = "ffe-api-favorites";
+	const CACHE_STORIES_KEY = "ffe-api-stories";
 	const cache$1 = {
 	    get follows() {
 	        const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
@@ -446,7 +466,41 @@
 	            localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
 	        }
 	    },
+	    getStory(id) {
+	        const cacheRaw = localStorage.getItem(CACHE_STORIES_KEY);
+	        const cached = cacheRaw && JSON.parse(cacheRaw);
+	        if (!cached || !cached[id]) {
+	            return undefined;
+	        }
+	        const cachedStory = cached[id];
+	        const story = new Story(cachedStory.id, cachedStory.title, cachedStory.author, cachedStory.description, cachedStory.chapters.map(c => new Chapter(cachedStory.id, c.id, c.name)), cachedStory.meta);
+	        if (story.meta.published) {
+	            story.meta.published = new Date(story.meta.published);
+	        }
+	        if (story.meta.updated) {
+	            story.meta.updated = new Date(story.meta.updated);
+	        }
+	        return story;
+	    },
+	    putStory(story) {
+	        const cacheRaw = localStorage.getItem(CACHE_STORIES_KEY);
+	        const cached = (cacheRaw && JSON.parse(cacheRaw)) || {};
+	        cached[story.id] = story;
+	        localStorage.setItem(CACHE_STORIES_KEY, JSON.stringify(cached));
+	        return story;
+	    },
 	};
+	if (currentStory) {
+	    cache$1.putStory(currentStory);
+	}
+	if (environment.currentPageType === 2 /* Alerts */) {
+	    const alerts = parseFollowedStoryList(document);
+	    cache$1.follows = alerts;
+	}
+	if (environment.currentPageType === 3 /* Favorites */) {
+	    const favorites = parseFollowedStoryList(document);
+	    cache$1.favorites = favorites;
+	}
 	function urlencoded(obj) {
 	    const result = [];
 	    for (const key of Object.keys(obj)) {
@@ -575,45 +629,18 @@
 	        return data;
 	    });
 	}
-	function parseFollowedStoryList(body) {
-	    const template = document.createElement("template");
-	    template.innerHTML = body;
-	    const rows = template.content.querySelectorAll("#gui_table1i tbody tr");
-	    return Array.from(rows).map((row) => {
-	        if (row.firstElementChild.colSpan > 1) {
-	            return undefined;
-	        }
-	        const storyAnchor = row.children[0].firstElementChild;
-	        const authorAnchor = row.children[1].firstElementChild;
-	        return {
-	            id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-	            title: storyAnchor.textContent,
-	            author: {
-	                id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-	                name: authorAnchor.textContent,
-	                profileUrl: authorAnchor.href,
-	                avatarUrl: "",
-	            },
-	        };
-	    }).filter(story => story);
-	}
-	function getFollowedStories() {
-	    const list = cache$1.follows;
-	    if (list) {
-	        return Promise.resolve(list);
+	/**
+	 * Returns information about the story with the given id.
+	 * @param storyid
+	 */
+	function getStoryInfo(storyid) {
+	    const cached = cache$1.getStory(storyid);
+	    if (cached) {
+	        return Promise.resolve(cached);
 	    }
-	    return ajaxCall(BASE_URL + "/alert/story.php", "GET", undefined)
-	        .then(parseFollowedStoryList)
-	        .then(fetchedList => cache$1.follows = fetchedList);
-	}
-	function getFavoritedStories() {
-	    const list = cache$1.favorites;
-	    if (list) {
-	        return Promise.resolve(list);
-	    }
-	    return ajaxCall(BASE_URL + "/favorites/story.php", "GET", undefined)
-	        .then(parseFollowedStoryList)
-	        .then(fetchedList => cache$1.favorites = fetchedList);
+	    return ajaxCall(BASE_URL + "/s/" + storyid, "GET", undefined)
+	        .then(parseProfile)
+	        .then(cache$1.putStory);
 	}
 	/*export function getComments(storyId: number): Promise<Comment[]> {
 	    // fetch all comment pages, not just the first!
@@ -669,6 +696,7 @@
 	var css$2 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-sc-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-sc-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n\tpadding-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
 	styleInject(css$2);
 
+	const $$1 = jQueryProxy__default || jQueryProxy;
 	class StoryCard {
 	    constructor(document) {
 	        this.document = document;
@@ -706,59 +734,67 @@
 	        mark.className = "ffe-sc-mark btn-group";
 	        const follow = this.document.createElement("span");
 	        follow.className = "ffe-sc-follow btn icon-bookmark-2";
+	        follow.dataset["storyId"] = story.id + "";
 	        follow.addEventListener("click", this.clickFollow);
-	        getFollowedStories().then(stories => {
-	            if (stories.some(s => s.id === environment.currentStoryId)) {
-	                follow.classList.add("ffe-sc-active");
-	            }
-	        }).catch(console.error);
+	        if (story.follow()) {
+	            follow.classList.add("ffe-sc-active");
+	        }
 	        mark.appendChild(follow);
 	        const favorite = this.document.createElement("span");
 	        favorite.className = "ffe-sc-favorite btn icon-heart";
+	        favorite.dataset["storyId"] = story.id + "";
 	        favorite.addEventListener("click", this.clickFavorite);
-	        getFavoritedStories().then(stories => {
-	            if (stories.some(s => s.id === environment.currentStoryId)) {
-	                favorite.classList.add("ffe-sc-active");
-	            }
-	        }).catch(console.error);
+	        if (story.favorite()) {
+	            favorite.classList.add("ffe-sc-active");
+	        }
 	        mark.appendChild(favorite);
 	        header.appendChild(mark);
 	        element.appendChild(header);
 	    }
 	    clickFollow(event) {
-	        const promise = (event.target.classList.contains("ffe-sc-active")) ?
-	            unFollowStory(environment.currentStory)
+	        const promise = getStoryInfo(+event.target.dataset["storyId"])
+	            .then(story => {
+	            story.follow(!story.follow());
+	            return story;
+	        })
+	            .then(story => story.follow() ?
+	            followStory(story)
 	                .then(data => {
-	                event.target.classList.remove("ffe-sc-active");
-	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
-	            }) :
-	            followStory(environment.currentStory)
-	                .then(data => {
-	                event.target.classList.add("ffe-sc-active");
 	                ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
-	            });
+	            }) :
+	            unFollowStory(story)
+	                .then(data => {
+	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
+	            }));
+	        $$1(event.target).toggleClass("ffe-sc-active");
 	        promise
 	            .catch(err => {
 	            console.error(err);
-	            ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
+	            $$1(event.target).toggleClass("ffe-sc-active");
+	            ffnServices.xtoast("We are unable to process your request due to a network error. Please try again later.");
 	        });
 	    }
 	    clickFavorite(event) {
-	        const promise = (event.target.classList.contains("ffe-sc-active")) ?
-	            unFavoriteStory(environment.currentStory)
+	        const promise = getStoryInfo(+event.target.dataset["storyId"])
+	            .then(story => {
+	            story.favorite(!story.favorite());
+	            return story;
+	        })
+	            .then(story => story.favorite() ?
+	            favoriteStory(currentStory)
 	                .then(data => {
-	                event.target.classList.remove("ffe-sc-active");
-	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
-	            }) :
-	            favoriteStory(environment.currentStory)
-	                .then(data => {
-	                event.target.classList.add("ffe-sc-active");
 	                ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
-	            });
+	            }) :
+	            unFavoriteStory(currentStory)
+	                .then(data => {
+	                ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
+	            }));
+	        $$1(event.target).toggleClass("ffe-sc-active");
 	        promise
 	            .catch(err => {
 	            console.error(err);
-	            ffnServices.xtoast("We are unable to process your request due to an network error. Please try again later.");
+	            $$1(event.target).toggleClass("ffe-sc-active");
+	            ffnServices.xtoast("We are unable to process your request due to a network error. Please try again later.");
 	        });
 	    }
 	    addImage(element, story) {
@@ -864,8 +900,31 @@
 	    }
 	}
 
-	var css$3 = "";
+	var css$3 = ".ffe-follows-list {\n\tlist-style: none;\n\tmargin: 0;\n}\n\n.ffe-follows-item {\n\tmargin-bottom: 8px;\n}\n\n.ffe-follows-item .ffe-sc {\n\tborder-left: 1px solid #aaa;\n\tborder-top: 1px solid #aaa;\n\tborder-top-left-radius: 4px;\n\tpadding-left: .5em;\n\tpadding-top: 5px;\n}\n";
 	styleInject(css$3);
+
+	const $$2 = jQueryProxy__default || jQueryProxy;
+	class FollowsList {
+	    enhance() {
+	        const cardFactory = new StoryCard(document);
+	        const list = parseFollowedStoryList(document);
+	        const $container = $$2("<ul class='ffe-follows-list'></ul>");
+	        for (const followedStory of list) {
+	            const $item = $$2("<li class='ffe-follows-item'></li>");
+	            $container.append($item);
+	            getStoryInfo(followedStory.id)
+	                .then(story => {
+	                const card = cardFactory.createElement(story);
+	                $item.append(card);
+	            });
+	        }
+	        const table = document.getElementById("gui_table1i").parentElement;
+	        table.parentElement.replaceChild($container[0], table);
+	    }
+	}
+
+	var css$4 = "";
+	styleInject(css$4);
 
 	class StoryProfile {
 	    constructor(document) {
@@ -874,15 +933,15 @@
 	    enhance() {
 	        const profile = this.document.getElementById("profile_top");
 	        const card = new StoryCard(document);
-	        const replacement = card.createElement(environment.currentStory);
+	        const replacement = card.createElement(currentStory);
 	        // profile.parentElement.replaceChild(replacement, profile);
 	        profile.parentElement.insertBefore(replacement, profile);
 	        profile.style.display = "none";
 	    }
 	}
 
-	var css$4 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
-	styleInject(css$4);
+	var css$5 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
+	styleInject(css$5);
 
 	class StoryText {
 	    constructor(document) {
@@ -894,7 +953,7 @@
 	            throw new Error("Could not find text container element.");
 	        }
 	        this.fixUserSelect(textContainer);
-	        if (!jQuery.cookie("xcookie2")) {
+	        if (!jQueryProxy.cookie("xcookie2")) {
 	            const cookie = {
 	                read_font: "Open Sans",
 	                read_font_size: "1.2",
@@ -927,23 +986,27 @@
 	    }
 	}
 
-	if (environment.currentPageType === 2 /* Story */) {
+	if (environment.currentPageType === 2 /* Alerts */ || environment.currentPageType === 3 /* Favorites */) {
+	    const followsListEnhancer = new FollowsList();
+	    followsListEnhancer.enhance();
+	}
+	if (environment.currentPageType === 4 /* Story */) {
 	    const storyProfileEnhancer = new StoryProfile(document);
 	    storyProfileEnhancer.enhance();
 	    const chapterListEnhancer = new ChapterList(document);
 	    chapterListEnhancer.enhance();
 	}
-	if (environment.currentPageType === 3 /* Chapter */) {
+	if (environment.currentPageType === 5 /* Chapter */) {
 	    const storyProfileEnhancer = new StoryProfile(document);
 	    storyProfileEnhancer.enhance();
 	    const storyTextEnhancer = new StoryText(document);
 	    storyTextEnhancer.enhance();
-	    if (environment.currentChapter) {
+	    if (currentStory.currentChapter) {
 	        const markRead = () => {
 	            const amount = document.documentElement.scrollTop;
 	            const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 	            if (amount / (max - 550) >= 1) {
-	                environment.currentChapter.read(true);
+	                currentStory.currentChapter.read(true);
 	                window.removeEventListener("scroll", markRead);
 	            }
 	        };
