@@ -1,3 +1,4 @@
+import { Story } from "../api/data";
 import { environment } from "../util/environment";
 import * as jQueryProxy from "jquery";
 import * as ko from "knockout";
@@ -9,6 +10,8 @@ import "./ChapterList.css";
 const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class ChapterList implements Enhancer {
+	private currentStory: Story = currentStory;
+
 	public constructor(private document: Document) {
 	}
 
@@ -52,36 +55,70 @@ export class ChapterList implements Enhancer {
 			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
 		profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
 
-		ko.applyBindings(currentStory, this.document.getElementById("content_wrapper_inner"));
+		ko.applyBindings(this.currentStory, this.document.getElementById("content_wrapper_inner"));
 
 		this.hideLongChapterList();
 	}
 
 	private hideLongChapterList() {
 		const $elements = $(this.document.getElementsByClassName("ffe-cl-chapter"));
-		let currentBlockIsRead = !!($elements[0].firstElementChild.firstElementChild as HTMLInputElement).checked;
+		const isRead = (e: HTMLElement) => !!(e.firstElementChild.firstElementChild as HTMLInputElement).checked;
+
+		let currentBlockIsRead = isRead($elements[0]);
 		let currentBlockCount = 0;
 
 		for (let i = 0; i < $elements.length; i++) {
-			const element = $elements[i];
-			const read = !!(element.firstElementChild.firstElementChild as HTMLInputElement).checked;
-			if ((currentBlockIsRead !== read || i === $elements.length - 1) && currentBlockCount > 4) {
-				$elements.slice(i - currentBlockCount + 2, i - 2).hide();
+			const read = isRead($elements[i]);
+			if (read === currentBlockIsRead) {
+				// no change from previous chapter, continue
+				currentBlockCount++;
+				continue;
+			}
 
-				const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
-					(currentBlockCount - 4) + " hidden chapters</a></li>");
-				$showLink.children("a").click(() => {
-					$elements.show();
-					$(".ffe-cl-collapsed").remove();
-				});
-
-				$showLink.insertBefore($elements[i - 2]);
-
+			if (!currentBlockIsRead && currentBlockCount < 5) {
+				// didn't go over enough chapters to hide any
 				currentBlockIsRead = read;
 				currentBlockCount = 1;
-			} else {
-				currentBlockCount++;
+
+				continue;
 			}
+
+			let off = 0;
+			if (currentBlockIsRead) {
+				// we can hide more chapters if they are already read
+				$elements.slice(i - currentBlockCount, i).hide();
+			} else {
+				// some unread chapters here, show a bit more of them
+				$elements.slice(i - currentBlockCount + 2, i - 2).hide();
+				off = 2;
+			}
+
+			// insert a link to show the hidden chapters
+			const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
+				(currentBlockCount - off * 2) + " hidden chapters</a></li>");
+			$showLink.children("a").click(() => {
+				$elements.show();
+				$(".ffe-cl-collapsed").remove();
+			});
+
+			$showLink.insertBefore($elements[i - off]);
+
+			currentBlockIsRead = read;
+			currentBlockCount = 1;
+		}
+
+		// the last visited block might be long enough to hide
+		if (currentBlockCount > 6) {
+			$elements.slice($elements.length - currentBlockCount + 2, $elements.length - 3).hide();
+
+			const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
+				(currentBlockCount - 5) + " hidden chapters</a></li>");
+			$showLink.children("a").click(() => {
+				$elements.show();
+				$(".ffe-cl-collapsed").remove();
+			});
+
+			$showLink.insertBefore($elements[$elements.length - 3]);
 		}
 	}
 }
