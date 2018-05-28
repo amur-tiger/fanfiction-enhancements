@@ -7,6 +7,7 @@ declare function _fontastic_save(): void;
 declare let XCOOKIE: FontasticCookie;
 
 declare const userid: number;
+declare const XUNAME: string;
 declare const storyid: number;
 declare const chapter: number;
 
@@ -48,6 +49,7 @@ export const ffnServices = {
 
 export const environment = {
 	currentUserId: typeof userid === "undefined" ? undefined : userid,
+	currentUserName: typeof XUNAME === "undefined" ? undefined : XUNAME,
 	currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
 	currentChapterId: typeof chapter === "undefined" ? undefined : chapter,
 
