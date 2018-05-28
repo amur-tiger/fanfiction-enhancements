@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.3.0+43.e6211ac
+// @version      0.3.1+45.cd55be9
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -20,7 +20,7 @@
 (function (ko,jQueryProxy) {
 	'use strict';
 
-	var jQueryProxy__default = jQueryProxy['default'];
+	var jQueryProxy__default = 'default' in jQueryProxy ? jQueryProxy['default'] : jQueryProxy;
 
 	const ffnServices = {
 	    xtoast: typeof xtoast === "undefined" ? () => { } : xtoast,
@@ -34,6 +34,7 @@
 	};
 	const environment = {
 	    currentUserId: typeof userid === "undefined" ? undefined : userid,
+	    currentUserName: typeof XUNAME === "undefined" ? undefined : XUNAME,
 	    currentStoryId: typeof storyid === "undefined" ? undefined : storyid,
 	    currentChapterId: typeof chapter === "undefined" ? undefined : chapter,
 	    currentPageType: getPage(location),
@@ -349,6 +350,7 @@
 	class ChapterList {
 	    constructor(document) {
 	        this.document = document;
+	        this.currentStory = currentStory;
 	    }
 	    enhance() {
 	        const contentWrapper = this.document.getElementById("content_wrapper_inner");
@@ -386,31 +388,58 @@
 	            `<input type="checkbox" data-bind="attr: { id: 'ffe-cl-story-' + id }, checked: read"/>
 			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
 	        profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
-	        ko.applyBindings(currentStory, this.document.getElementById("content_wrapper_inner"));
+	        ko.applyBindings(this.currentStory, this.document.getElementById("content_wrapper_inner"));
 	        this.hideLongChapterList();
 	    }
 	    hideLongChapterList() {
 	        const $elements = $(this.document.getElementsByClassName("ffe-cl-chapter"));
-	        let currentBlockIsRead = !!$elements[0].firstElementChild.firstElementChild.checked;
+	        const isRead = (e) => !!e.firstElementChild.firstElementChild.checked;
+	        let currentBlockIsRead = isRead($elements[0]);
 	        let currentBlockCount = 0;
 	        for (let i = 0; i < $elements.length; i++) {
-	            const element = $elements[i];
-	            const read = !!element.firstElementChild.firstElementChild.checked;
-	            if ((currentBlockIsRead !== read || i === $elements.length - 1) && currentBlockCount > 4) {
-	                $elements.slice(i - currentBlockCount + 2, i - 2).hide();
-	                const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
-	                    (currentBlockCount - 4) + " hidden chapters</a></li>");
-	                $showLink.children("a").click(() => {
-	                    $elements.show();
-	                    $(".ffe-cl-collapsed").remove();
-	                });
-	                $showLink.insertBefore($elements[i - 2]);
+	            const read = isRead($elements[i]);
+	            if (read === currentBlockIsRead) {
+	                // no change from previous chapter, continue
+	                currentBlockCount++;
+	                continue;
+	            }
+	            if (!currentBlockIsRead && currentBlockCount < 5) {
+	                // didn't go over enough chapters to hide any
 	                currentBlockIsRead = read;
 	                currentBlockCount = 1;
+	                continue;
+	            }
+	            let off = 0;
+	            if (currentBlockIsRead) {
+	                // we can hide more chapters if they are already read
+	                $elements.slice(i - currentBlockCount, i).hide();
 	            }
 	            else {
-	                currentBlockCount++;
+	                // some unread chapters here, show a bit more of them
+	                $elements.slice(i - currentBlockCount + 2, i - 2).hide();
+	                off = 2;
 	            }
+	            // insert a link to show the hidden chapters
+	            const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
+	                (currentBlockCount - off * 2) + " hidden chapters</a></li>");
+	            $showLink.children("a").click(() => {
+	                $elements.show();
+	                $(".ffe-cl-collapsed").remove();
+	            });
+	            $showLink.insertBefore($elements[i - off]);
+	            currentBlockIsRead = read;
+	            currentBlockCount = 1;
+	        }
+	        // the last visited block might be long enough to hide
+	        if (currentBlockCount > 6) {
+	            $elements.slice($elements.length - currentBlockCount + 2, $elements.length - 3).hide();
+	            const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
+	                (currentBlockCount - 5) + " hidden chapters</a></li>");
+	            $showLink.children("a").click(() => {
+	                $elements.show();
+	                $(".ffe-cl-collapsed").remove();
+	            });
+	            $showLink.insertBefore($elements[$elements.length - 3]);
 	        }
 	    }
 	}
@@ -923,8 +952,27 @@
 	    }
 	}
 
-	var css$4 = "";
+	var css$4 = ".ffe-mb-separator:before {\n\tcontent: \" | \";\n}\n\n.ffe-mb-alerts, .ffe-mb-favorites {\n\tdisplay: inline-block;\n\tline-height: 2em;\n\tmargin-top: -.5em;\n\ttext-align: center;\n\twidth: 2em;\n}\n\n.ffe-mb-alerts:hover, .ffe-mb-favorites:hover {\n\tborder-bottom: 0;\n\tcolor: orange !important;\n}\n";
 	styleInject(css$4);
+
+	const $$3 = jQueryProxy__default || jQueryProxy;
+	class MenuBar {
+	    enhance() {
+	        if (!environment.currentUserName) {
+	            return;
+	        }
+	        const $loginElement = $$3("#name_login a");
+	        const $separator = $$3(`<span class="ffe-mb-separator"></span>`);
+	        const $toAlerts = $$3(`<a class="ffe-mb-alerts icon-bookmark-2" href="/alert/story.php"></a>`);
+	        const $toFavorites = $$3(`<a class="ffe-mb-favorites icon-heart" href="/favorites/story.php"></a>`);
+	        $separator.insertAfter($loginElement);
+	        $toAlerts.insertAfter($separator);
+	        $toFavorites.insertAfter($toAlerts);
+	    }
+	}
+
+	var css$5 = "";
+	styleInject(css$5);
 
 	class StoryProfile {
 	    constructor(document) {
@@ -940,8 +988,8 @@
 	    }
 	}
 
-	var css$5 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
-	styleInject(css$5);
+	var css$6 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
+	styleInject(css$6);
 
 	class StoryText {
 	    constructor(document) {
@@ -986,6 +1034,8 @@
 	    }
 	}
 
+	const menuBarEnhancer = new MenuBar();
+	menuBarEnhancer.enhance();
 	if (environment.currentPageType === 2 /* Alerts */ || environment.currentPageType === 3 /* Favorites */) {
 	    const followsListEnhancer = new FollowsList();
 	    followsListEnhancer.enhance();
