@@ -1,35 +1,13 @@
 import { assert } from "chai";
 
+import { Api } from "../../../src/api/api";
 import { Chapter, Story } from "../../../src/api/data";
 import { StoryCard } from "../../../src/enhance/component/StoryCard";
 
 describe("StoryCard Component", function() {
-	beforeEach(function() {
-		const store = {};
-		const noOp = () => {
-			// no operation
-		};
-
-		global["localStorage"] = {
-			getItem: function(key: string): string {
-				return store[key];
-			},
-
-			setItem: function(key: string, value: string): void {
-				store[key] = value;
-			},
-		};
-
-		global["XMLHttpRequest"] = function() {
-			this.addEventListener = noOp;
-			this.open = noOp;
-			this.setRequestHeader = noOp;
-			this.send = noOp;
-		};
-	});
-
 	it("should create a div element", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 				id: 0,
 				name: "",
 				profileUrl: "",
@@ -40,7 +18,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert a rating", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
@@ -51,7 +30,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert title", function() {
-		const element = new StoryCard(document).createElement(new Story(123, "the title", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(123, "the title", {
 			id: 0,
 			name: "",
 			profileUrl: "",
@@ -65,7 +45,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert author", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 456,
 			name: "author",
 			profileUrl: "/u/456",
@@ -79,7 +60,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert buttons", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
@@ -95,7 +77,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert image", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
@@ -111,7 +94,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert description", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
@@ -124,7 +108,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert relevant tags", function() {
-		const element = new StoryCard(document).createElement(new Story(123, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(123, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
@@ -166,7 +151,8 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert footer", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",

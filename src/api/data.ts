@@ -2,6 +2,10 @@ import { cache } from "../util/cache";
 import { environment } from "../util/environment";
 import * as ko from "knockout";
 
+export interface Identifiable {
+	id: number;
+}
+
 export class Chapter {
 	public readonly read = ko.observable();
 
@@ -19,13 +23,13 @@ export interface Comment {
 	text: string;
 }
 
-export interface FollowedStory {
+export interface FollowedStory extends Identifiable {
 	id: number;
 	title: string;
 	author: User;
 }
 
-export class Story {
+export class Story implements FollowedStory {
 	public readonly follow = ko.observable();
 	public readonly favorite = ko.observable();
 	public readonly read = ko.pureComputed({
@@ -56,16 +60,6 @@ export class Story {
 		if (chapters.length === 0) {
 			throw new Error("A story must have at least one chapter.");
 		}
-
-		this.follow(cache.alerts.isFollowed(this));
-		this.follow.subscribe(value => {
-			cache.alerts.setFollowed(this);
-		});
-
-		this.favorite(cache.alerts.isFavorited(this));
-		this.favorite.subscribe(value => {
-			cache.alerts.setFavorited(this);
-		});
 
 		if (id === environment.currentStoryId) {
 			this.currentChapter = this.chapters.filter(c => c.id === environment.currentChapterId)[0];

@@ -1,5 +1,4 @@
 import { assert } from "chai";
-import { JSDOM } from "jsdom";
 
 import { environment } from "../../src/util/environment";
 import { parseProfile } from "../../src/util/parser";

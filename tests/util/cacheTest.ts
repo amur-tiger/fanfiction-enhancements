@@ -1,5 +1,4 @@
 import { assert } from "chai";
-import { JSDOM } from "jsdom";
 import * as sinon from "sinon";
 
 import { Cache } from "../../src/util/cache";

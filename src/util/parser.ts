@@ -1,8 +1,6 @@
 import { Chapter, FollowedStory, Story, StoryMetaData } from "../api/data";
 import { environment } from "./environment";
 
-export const currentStory: Story = parseProfile(document);
-
 export function parseProfile(fragment: string | Document | DocumentFragment): Story {
 	const container = typeof fragment === "string" ? (() => {
 		const template = document.createElement("template");

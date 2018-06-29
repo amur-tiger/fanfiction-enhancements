@@ -3,7 +3,6 @@ import * as jQuery from "jquery";
 import { JSDOM } from "jsdom";
 import * as sinon from "sinon";
 
-import { setCookie } from "../../src/utils";
 import { StoryText } from "../../src/enhance/StoryText";
 
 describe("Story Text", function() {

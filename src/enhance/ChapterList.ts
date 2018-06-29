@@ -1,8 +1,7 @@
-import { Story } from "../api/data";
+import { Api } from "../api/api";
 import { environment } from "../util/environment";
 import * as jQueryProxy from "jquery";
 import * as ko from "knockout";
-import { currentStory } from "../util/parser";
 import { Enhancer } from "./Enhancer";
 
 import "./ChapterList.css";
@@ -10,12 +9,10 @@ import "./ChapterList.css";
 const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class ChapterList implements Enhancer {
-	private currentStory: Story = currentStory;
-
-	public constructor(private document: Document) {
+	public constructor(private readonly document: Document, private readonly api: Api) {
 	}
 
-	public enhance() {
+	public enhance(): Promise<any> {
 		const contentWrapper = this.document.getElementById("content_wrapper_inner");
 
 		// clean up content
@@ -45,19 +42,21 @@ export class ChapterList implements Enhancer {
 			</div>`;
 		contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
 
-		const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
-		const allReadContainer = this.document.createElement("span");
-		allReadContainer.className = "ffe-cl-read";
-		allReadContainer.style.height = "auto";
-		allReadContainer.style.marginLeft = "10px";
-		allReadContainer.innerHTML =
-			`<input type="checkbox" data-bind="attr: { id: 'ffe-cl-story-' + id }, checked: read"/>
-			<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
-		profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
+		// const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
+		// const allReadContainer = this.document.createElement("span");
+		// allReadContainer.className = "ffe-cl-read";
+		// allReadContainer.style.height = "auto";
+		// allReadContainer.style.marginLeft = "10px";
+		// allReadContainer.innerHTML =
+		// 	`<input type="checkbox" data-bind="attr: { id: 'ffe-cl-story-' + id }, checked: read"/>
+		// 	<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
+		// profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
 
-		ko.applyBindings(this.currentStory, this.document.getElementById("content_wrapper_inner"));
-
-		this.hideLongChapterList();
+		return this.api.getStoryInfo(environment.currentStoryId)
+			.then(story => {
+				ko.applyBindings(story, this.document.getElementById("content_wrapper_inner"));
+				this.hideLongChapterList();
+			});
 	}
 
 	private hideLongChapterList() {

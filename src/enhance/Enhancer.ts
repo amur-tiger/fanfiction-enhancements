@@ -1,3 +1,3 @@
 export interface Enhancer {
-	enhance();
+	enhance(): Promise<any>;
 }
