@@ -9,8 +9,8 @@ function values(obj: any): any[] {
 }
 
 export class Cache {
-	// one day in milliseconds
-	private static readonly ITEM_LIFETIME = 86400000;
+	private static readonly FOLLOWS_LIFETIME = 86400000; // one day in milliseconds
+	private static readonly STORIES_LIFETIME = 604800000; // one week in milliseconds
 	private static readonly ALERTS_KEY = "ffe-cache-alerts";
 	private static readonly ALERTS_LAST_SCAN_KEY = "ffe-cache-alerts-scan";
 	private static readonly FAVORITES_KEY = "ffe-cache-favorites";
@@ -27,7 +27,7 @@ export class Cache {
 	 * @returns {Promise<FollowedStory[]>}
 	 */
 	public getAlerts(): Promise<FollowedStory[]> {
-		const items = this.getMap(Cache.ALERTS_KEY);
+		const items = this.getMap(Cache.ALERTS_KEY, Cache.FOLLOWS_LIFETIME);
 		const array = values(items).map(item => item.data);
 
 		return Promise.resolve(array);
@@ -41,7 +41,7 @@ export class Cache {
 	 */
 	public hasAlert(story: FollowedStory | number): Promise<boolean> {
 		const id = (story as any).id || story;
-		const items = this.getMap(Cache.ALERTS_KEY);
+		const items = this.getMap(Cache.ALERTS_KEY, Cache.FOLLOWS_LIFETIME);
 
 		return Promise.resolve(items.hasOwnProperty(id));
 	}
@@ -54,9 +54,9 @@ export class Cache {
 	 */
 	public putAlert(story: Story): Promise<Story> {
 		if (story.follow()) {
-			this.addToMap(Cache.ALERTS_KEY, story);
+			this.addToMap(Cache.ALERTS_KEY, story, Cache.FOLLOWS_LIFETIME);
 		} else {
-			this.removeFromMap(Cache.ALERTS_KEY, story);
+			this.removeFromMap(Cache.ALERTS_KEY, story, Cache.FOLLOWS_LIFETIME);
 		}
 
 		return Promise.resolve(story);
@@ -72,7 +72,7 @@ export class Cache {
 	public isAlertsFresh(): Promise<boolean> {
 		const timestamp = +this.storage.getItem(Cache.ALERTS_LAST_SCAN_KEY);
 
-		return Promise.resolve(timestamp + Cache.ITEM_LIFETIME > new Date().getTime());
+		return Promise.resolve(timestamp + Cache.FOLLOWS_LIFETIME > new Date().getTime());
 	}
 
 	/**
@@ -104,7 +104,7 @@ export class Cache {
 	 * @returns {Promise<FollowedStory[]>}
 	 */
 	public getFavorites(): Promise<FollowedStory[]> {
-		const items = this.getMap(Cache.FAVORITES_KEY);
+		const items = this.getMap(Cache.FAVORITES_KEY, Cache.FOLLOWS_LIFETIME);
 		const array = values(items).map(item => item.data);
 
 		return Promise.resolve(array);
@@ -118,7 +118,7 @@ export class Cache {
 	 */
 	public isFavorite(story: FollowedStory | number): Promise<boolean> {
 		const id = (story as any).id || story;
-		const items = this.getMap(Cache.FAVORITES_KEY);
+		const items = this.getMap(Cache.FAVORITES_KEY, Cache.FOLLOWS_LIFETIME);
 
 		return Promise.resolve(items.hasOwnProperty(id));
 	}
@@ -131,9 +131,9 @@ export class Cache {
 	 */
 	public putFavorite(story: Story): Promise<Story> {
 		if (story.favorite()) {
-			this.addToMap(Cache.FAVORITES_KEY, story);
+			this.addToMap(Cache.FAVORITES_KEY, story, Cache.FOLLOWS_LIFETIME);
 		} else {
-			this.removeFromMap(Cache.FAVORITES_KEY, story);
+			this.removeFromMap(Cache.FAVORITES_KEY, story, Cache.FOLLOWS_LIFETIME);
 		}
 
 		return Promise.resolve(story);
@@ -149,7 +149,7 @@ export class Cache {
 	public isFavoritesFresh(): Promise<boolean> {
 		const timestamp = +this.storage.getItem(Cache.FAVORITES_LAST_SCAN_KEY);
 
-		return Promise.resolve(timestamp + Cache.ITEM_LIFETIME > new Date().getTime());
+		return Promise.resolve(timestamp + Cache.FOLLOWS_LIFETIME > new Date().getTime());
 	}
 
 	/**
@@ -182,7 +182,7 @@ export class Cache {
 	 * @returns {Promise<Story>}
 	 */
 	public getStory(id: number): Promise<Story> {
-		const items = this.getMap(Cache.STORIES_KEY);
+		const items = this.getMap(Cache.STORIES_KEY, Cache.STORIES_LIFETIME);
 		if (!items.hasOwnProperty(id)) {
 			return Promise.reject(new Error(`Story with id '${id}' does not exist in cache.`));
 		}
@@ -234,12 +234,12 @@ export class Cache {
 		cacheStory.follow = story.follow();
 		cacheStory.favorite = story.favorite();
 
-		this.addToMap(Cache.STORIES_KEY, cacheStory);
+		this.addToMap(Cache.STORIES_KEY, cacheStory, Cache.STORIES_LIFETIME);
 
 		return Promise.resolve(story);
 	}
 
-	private getMap<T extends Identifiable>(key: string): Map<CacheItem<T>> {
+	private getMap<T extends Identifiable>(key: string, lifetime: number): Map<CacheItem<T>> {
 		const raw = this.storage.getItem(key);
 		const items: Map<CacheItem<T>> = (raw && JSON.parse(raw)) || {};
 
@@ -249,7 +249,7 @@ export class Cache {
 				continue;
 			}
 
-			if (this.isExpired(items[id])) {
+			if (this.isExpired(items[id], lifetime)) {
 				delete items[id];
 				flush = true;
 			}
@@ -276,8 +276,8 @@ export class Cache {
 		this.storage.setItem(key, JSON.stringify(data));
 	}
 
-	private addToMap<T extends Identifiable>(key: string, data: T): void {
-		const items = this.getMap(key);
+	private addToMap<T extends Identifiable>(key: string, data: T, lifetime: number): void {
+		const items = this.getMap(key, lifetime);
 		items[data.id] = {
 			data: data,
 			timestamp: new Date().getTime(),
@@ -286,14 +286,14 @@ export class Cache {
 		this.setMap(key, items);
 	}
 
-	private removeFromMap<T extends Identifiable>(key: string, data: T): void {
-		const items = this.getMap(key);
+	private removeFromMap<T extends Identifiable>(key: string, data: T, lifetime: number): void {
+		const items = this.getMap(key, lifetime);
 		delete items[data.id];
 		this.setMap(key, items);
 	}
 
-	private isExpired<T>(item: CacheItem<T>): boolean {
-		return item.timestamp + Cache.ITEM_LIFETIME < new Date().getTime();
+	private isExpired<T>(item: CacheItem<T>, lifetime: number): boolean {
+		return item.timestamp + lifetime < new Date().getTime();
 	}
 }
 
