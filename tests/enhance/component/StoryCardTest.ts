@@ -1,62 +1,42 @@
 import { assert } from "chai";
 
+import { Api } from "../../../src/api/api";
 import { Chapter, Story } from "../../../src/api/data";
 import { StoryCard } from "../../../src/enhance/component/StoryCard";
 
 describe("StoryCard Component", function() {
-	beforeEach(function() {
-		const store = {};
-		const noOp = () => {
-			// no operation
-		};
-
-		global["localStorage"] = {
-			getItem: function(key: string): string {
-				return store[key];
-			},
-
-			setItem: function(key: string, value: string): void {
-				store[key] = value;
-			},
-		};
-
-		global["XMLHttpRequest"] = function() {
-			this.addEventListener = noOp;
-			this.open = noOp;
-			this.setRequestHeader = noOp;
-			this.send = noOp;
-		};
-	});
-
 	it("should create a div element", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 				id: 0,
 				name: "",
 				profileUrl: "",
 				avatarUrl: "",
-			}, "", [new Chapter(0, 0, "")], {}));
+			}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		assert.equal(element.tagName, "DIV");
 	});
 
 	it("should insert a rating", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		assert.isDefined(element.querySelector(".ffe-rating"));
 	});
 
 	it("should insert title", function() {
-		const element = new StoryCard(document).createElement(new Story(123, "the title", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(123, "the title", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
 		assert.equal(title.tagName, "A");
@@ -65,12 +45,13 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert author", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 456,
 			name: "author",
 			profileUrl: "/u/456",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
 		assert.equal(author.tagName, "A");
@@ -79,12 +60,13 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert buttons", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
 		const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
@@ -95,12 +77,13 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert image", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {
+		}, "", [new Chapter(0, 0, "", 0)], {
 			imageUrl: "/src/img.jpg",
 			imageOriginalUrl: "/src/imgBig.jpg",
 		}));
@@ -111,12 +94,13 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert description", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "this is a description", [new Chapter(0, 0, "")], {}));
+		}, "this is a description", [new Chapter(0, 0, "", 0)], {}));
 
 		const description = element.querySelector(".ffe-sc-description");
 		assert.equal(description.tagName, "DIV");
@@ -124,12 +108,13 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert relevant tags", function() {
-		const element = new StoryCard(document).createElement(new Story(123, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(123, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {
+		}, "", [new Chapter(0, 0, "", 0)], {
 			language: "Elvish",
 			genre: ["Adventure", "Fantasy"],
 			characters: [
@@ -166,12 +151,13 @@ describe("StoryCard Component", function() {
 	});
 
 	it("should insert footer", function() {
-		const element = new StoryCard(document).createElement(new Story(0, "", {
+		const api: Api = {} as any;
+		const element = new StoryCard(document, api).createElement(new Story(0, "", {
 			id: 0,
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {
+		}, "", [new Chapter(0, 0, "", 0)], {
 			words: 12345,
 			status: "Complete",
 			published: new Date(),

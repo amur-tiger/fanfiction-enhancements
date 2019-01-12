@@ -69,6 +69,10 @@ class Alerts {
 
 export class Cache {
 	public readonly read: Read = new Read();
+	/**
+	 * @deprecated
+	 * @type {Alerts}
+	 */
 	public readonly alerts: Alerts = new Alerts();
 }
 

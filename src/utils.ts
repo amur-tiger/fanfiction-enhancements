@@ -104,3 +104,25 @@ export function setCookie(name: string, value: string, days?: number): void {
 export function deleteCookie(name: string): void {
 	document.cookie = name + "=; path=/; max-age=0;";
 }
+
+/**
+ * Parses an URL and retrieves key/value pairs from it.
+ * @param {string} url
+ */
+export function parseGetParams(url: string): { [key: string]: string } {
+	try {
+		const params = new URL(url).search.substr(1).split("&");
+		const result = {};
+
+		for (const param of params) {
+			const parts = param.split("=");
+			result[decodeURIComponent(parts[0])] = parts.length > 1 ? decodeURIComponent(parts[1]) : true;
+		}
+
+		return result;
+	} catch (e) {
+		console.error(e);
+
+		return {};
+	}
+}

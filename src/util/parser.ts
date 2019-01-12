@@ -1,8 +1,6 @@
 import { Chapter, FollowedStory, Story, StoryMetaData } from "../api/data";
 import { environment } from "./environment";
 
-export const currentStory: Story = parseProfile(document);
-
 export function parseProfile(fragment: string | Document | DocumentFragment): Story {
 	const container = typeof fragment === "string" ? (() => {
 		const template = document.createElement("template");
@@ -51,7 +49,8 @@ export function parseProfile(fragment: string | Document | DocumentFragment): St
 		},
 		descriptionElement.textContent,
 		chapterElement ? parseChapters(resultMeta.id, chapterElement) : [
-			new Chapter(resultMeta.id, 1, titleElement.textContent),
+			new Chapter(resultMeta.id, 1, titleElement.textContent,
+				container.getElementById("storytext").textContent.trim().split(/\s+/).length),
 		],
 		resultMeta,
 	);
@@ -139,6 +138,13 @@ function parseCharacters(tag: string): (string | string[])[] {
 	return result;
 }
 
+/**
+ * Parses chapters of the currently opened story. Warning: chapter word counts will not be set!
+ *
+ * @param {number} storyId
+ * @param {ParentNode} selectElement
+ * @returns {Chapter[]}
+ */
 function parseChapters(storyId: number, selectElement: ParentNode): Chapter[] {
 	const result: Chapter[] = [];
 
@@ -148,7 +154,7 @@ function parseChapters(storyId: number, selectElement: ParentNode): Chapter[] {
 			continue;
 		}
 
-		result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent));
+		result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent, undefined));
 	}
 
 	return result;

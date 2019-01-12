@@ -1,9 +1,7 @@
-import { favoriteStory, followStory, getFavoritedStories,
-	getFollowedStories, getStoryInfo, unFavoriteStory, unFollowStory } from "../../api/api";
+import { Api } from "../../api/api";
 import { Story, StoryMetaData } from "../../api/data";
-import { environment, ffnServices } from "../../util/environment";
+import { ffnServices } from "../../util/environment";
 import * as jQueryProxy from "jquery";
-import { currentStory } from "../../util/parser";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
 
@@ -12,7 +10,7 @@ import "./StoryCard.css";
 const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class StoryCard implements Component {
-	constructor(private document: Document) {
+	constructor(private readonly document: Document, private readonly api: Api) {
 	}
 
 	public createElement(story: Story): HTMLElement {
@@ -62,6 +60,13 @@ export class StoryCard implements Component {
 		if (story.follow()) {
 			follow.classList.add("ffe-sc-active");
 		}
+		story.follow.subscribe(f => {
+			if (f) {
+				follow.classList.add("ffe-sc-active");
+			} else {
+				follow.classList.remove("ffe-sc-active");
+			}
+		});
 		mark.appendChild(follow);
 
 		const favorite = this.document.createElement("span") as HTMLSpanElement;
@@ -71,6 +76,13 @@ export class StoryCard implements Component {
 		if (story.favorite()) {
 			favorite.classList.add("ffe-sc-active");
 		}
+		story.favorite.subscribe(f => {
+			if (f) {
+				favorite.classList.add("ffe-sc-active");
+			} else {
+				favorite.classList.remove("ffe-sc-active");
+			}
+		});
 		mark.appendChild(favorite);
 
 		header.appendChild(mark);
@@ -79,24 +91,14 @@ export class StoryCard implements Component {
 	}
 
 	private clickFollow(event: MouseEvent): void {
-		const promise = getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
+		$(event.target).toggleClass("ffe-sc-active");
+		this.api.getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
 			.then(story => {
 				story.follow(!story.follow());
 
 				return story;
 			})
-			.then(story => story.follow() ?
-				followStory(story)
-					.then(data => {
-						ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
-					}) :
-				unFollowStory(story)
-					.then(data => {
-						ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfollowing the story</li></ul>", 3500);
-					}));
-
-		$(event.target).toggleClass("ffe-sc-active");
-		promise
+			.then(story => this.api.putAlert(story))
 			.catch(err => {
 				console.error(err);
 				$(event.target).toggleClass("ffe-sc-active");
@@ -105,24 +107,14 @@ export class StoryCard implements Component {
 	}
 
 	private clickFavorite(event: MouseEvent): void {
-		const promise = getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
+		$(event.target).toggleClass("ffe-sc-active");
+		this.api.getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
 			.then(story => {
 				story.favorite(!story.favorite());
 
 				return story;
 			})
-			.then(story => story.favorite() ?
-				favoriteStory(currentStory)
-					.then(data => {
-						ffnServices.xtoast("We have successfully processed the following: " + data.payload_data, 3500);
-					}) :
-				unFavoriteStory(currentStory)
-					.then(data => {
-						ffnServices.xtoast("We have successfully processed the following: <ul><li>Unfavoring the story</li></ul>", 3500);
-					}));
-
-		$(event.target).toggleClass("ffe-sc-active");
-		promise
+			.then(story => this.api.putFavorite(story))
 			.catch(err => {
 				console.error(err);
 				$(event.target).toggleClass("ffe-sc-active");
@@ -139,8 +131,17 @@ export class StoryCard implements Component {
 		imageContainer.className = "ffe-sc-image";
 
 		const image = this.document.createElement("img");
-		image.addEventListener("error", () => image.src = story.imageUrl);
-		image.src = story.imageOriginalUrl;
+		if (story.imageOriginalUrl) {
+			const imageUrlReplacer = () => {
+				image.removeEventListener("error", imageUrlReplacer);
+				image.src = story.imageUrl;
+			};
+
+			image.addEventListener("error", imageUrlReplacer);
+			image.src = story.imageOriginalUrl;
+		} else {
+			image.src = story.imageUrl;
+		}
 		imageContainer.appendChild(image);
 
 		element.appendChild(imageContainer);

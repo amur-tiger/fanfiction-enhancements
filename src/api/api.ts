@@ -1,300 +1,326 @@
-import { Chapter, FollowedStory, Story } from "./data";
-import { environment, Page } from "../util/environment";
-import { currentStory, parseFollowedStoryList, parseProfile } from "../util/parser";
+import { Cache } from "./cache";
+import { FollowedStory, Story } from "./data";
+import { environment } from "../util/environment";
+import * as jQueryProxy from "jquery";
+import { parseFollowedStoryList, parseProfile } from "../util/parser";
+import { parseGetParams } from "../utils";
 
-const BASE_URL = "https://www.fanfiction.net";
-const CACHE_FOLLOWS_KEY = "ffe-api-follows";
-const CACHE_FAVORITES_KEY = "ffe-api-favorites";
-const CACHE_STORIES_KEY = "ffe-api-stories";
+const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
-const cache = {
-	get follows(): FollowedStory[] {
-		const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
-
-		return value && JSON.parse(value);
-	},
-
-	set follows(value: FollowedStory[]) {
-		localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(value));
-	},
-
-	addFollow: (story: FollowedStory) => {
-		const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
-		const list = (value && JSON.parse(value)) as FollowedStory[];
-		if (list && list.every(f => f.id !== story.id)) {
-			list.push(story);
-			localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(list));
-		}
-	},
-
-	removeFollow: (story: FollowedStory) => {
-		const value = localStorage.getItem(CACHE_FOLLOWS_KEY);
-		let list = (value && JSON.parse(value)) as FollowedStory[];
-		if (list) {
-			list = list.filter(f => f.id !== story.id);
-			localStorage.setItem(CACHE_FOLLOWS_KEY, JSON.stringify(list));
-		}
-	},
-
-	get favorites(): FollowedStory[] {
-		const value = localStorage.getItem(CACHE_FAVORITES_KEY);
-
-		return value && JSON.parse(value);
-	},
-
-	set favorites(value: FollowedStory[]) {
-		localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(value));
-	},
-
-	addFavorite: (story: FollowedStory) => {
-		const value = localStorage.getItem(CACHE_FAVORITES_KEY);
-		const list = (value && JSON.parse(value)) as FollowedStory[];
-		if (list && list.every(f => f.id !== story.id)) {
-			list.push(story);
-			localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
-		}
-	},
-
-	removeFavorite: (story: FollowedStory) => {
-		const value = localStorage.getItem(CACHE_FAVORITES_KEY);
-		let list = (value && JSON.parse(value)) as FollowedStory[];
-		if (list) {
-			list = list.filter(f => f.id !== story.id);
-			localStorage.setItem(CACHE_FAVORITES_KEY, JSON.stringify(list));
-		}
-	},
-
-	getStory(id: number): Story {
-		const cacheRaw = localStorage.getItem(CACHE_STORIES_KEY);
-		const cached = cacheRaw && JSON.parse(cacheRaw);
-		if (!cached || !cached[id]) {
-			return undefined;
-		}
-
-		const cachedStory = cached[id];
-		const story = new Story(
-			cachedStory.id,
-			cachedStory.title,
-			cachedStory.author,
-			cachedStory.description,
-			cachedStory.chapters.map(c => new Chapter(cachedStory.id, c.id, c.name)),
-			cachedStory.meta,
-		);
-
-		if (story.meta.published) {
-			story.meta.published = new Date(story.meta.published);
-		}
-		if (story.meta.updated) {
-			story.meta.updated = new Date(story.meta.updated);
-		}
-
-		return story;
-	},
-
-	putStory(story: Story): Story {
-		const cacheRaw = localStorage.getItem(CACHE_STORIES_KEY);
-		const cached = (cacheRaw && JSON.parse(cacheRaw)) || {};
-		cached[story.id] = story;
-		localStorage.setItem(CACHE_STORIES_KEY, JSON.stringify(cached));
-
-		return story;
-	},
+const debug = (message, ...args) => {
+	args.unshift("color: inherit;");
+	args.unshift("color: gray;");
+	args.unshift("%c[Api] %c" + message);
+	console.debug.apply(console, args);
 };
 
-if (currentStory) {
-	cache.putStory(currentStory);
-}
+export class Api {
+	private updatingFollowState = false;
 
-if (environment.currentPageType === Page.Alerts) {
-	const alerts = parseFollowedStoryList(document);
-	cache.follows = alerts;
-}
-
-if (environment.currentPageType === Page.Favorites) {
-	const favorites = parseFollowedStoryList(document);
-	cache.favorites = favorites;
-}
-
-function urlencoded(obj: any): string {
-	const result = [];
-	for (const key of Object.keys(obj)) {
-		result.push(encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]));
+	public constructor(
+		private readonly cache: Cache,
+		private readonly api: ApiImmediate) {
 	}
 
-	return result.join("&");
-}
+	/**
+	 * Updates the FFN alert state of a story according to the given story object.
+	 * @param story
+	 */
+	public putAlert(story: Story): Promise<Story> {
+		return Promise.all([
+			this.api.putAlert(story),
+			this.cache.putAlert(story),
+		])
+			.then(() => story);
+	}
 
-function ajaxCall(url: string, method: string, body: any, options?: any): Promise<string> {
-	return new Promise<string>((resolve, reject) => {
-		const xhr = new XMLHttpRequest();
-		xhr.addEventListener("load", () => {
-			if (xhr.status >= 200 && xhr.status < 300) {
-				resolve(xhr.response);
-			} else {
-				reject(xhr.response);
-			}
-		});
-		xhr.addEventListener("error", () => {
-			reject(xhr.response);
-		});
-		xhr.open(method, url, true);
-		let content = body;
-		if (options) {
-			if (options.headers) {
-				Object.keys(options.headers).forEach(key => {
-					xhr.setRequestHeader(key, options.headers[key]);
-				});
-			}
-
-			if ((!options.headers || !options.headers["content-type"]) && options.type) {
-				switch (options.type) {
-					case "json":
-						xhr.setRequestHeader("content-type", "application/json; encoding=utf-8");
-						content = JSON.stringify(content);
-						break;
-					case "urlencoded":
-						xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded; encoding=utf8");
-						content = urlencoded(content);
-						break;
+	/**
+	 * Checks whether the given story has alerts enabled.
+	 * @param {Story} story
+	 * @returns {Promise<boolean>}
+	 */
+	public hasAlert(story: Story): Promise<boolean> {
+		return this.cache.isAlertsFresh()
+			.then(fresh => {
+				if (!fresh) {
+					return this.api.getStoryAlerts()
+						.then(alerts => this.cache.putAlerts(alerts));
 				}
-			}
-		}
-		if (content) {
-			xhr.send(content);
-		} else {
-			xhr.send();
-		}
-	});
-}
-
-/**
- * Follows the story with the given id.
- * @param storyid
- */
-export function followStory(story: Story): Promise<any> {
-	return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
-		storyid: story.id,
-		userid: environment.currentUserId,
-		storyalert: 1,
-	}, {
-		type: "urlencoded",
-	}).then(data => {
-		cache.addFollow({
-			id: story.id,
-			title: story.title,
-			author: story.author,
-		});
-
-		return JSON.parse(data);
-	});
-}
-
-/**
- * Stops following the story with the given id.
- * @param storyid
- */
-export function unFollowStory(story: Story): Promise<any> {
-	return ajaxCall(BASE_URL + "/alert/story.php", "POST", {
-		action: "remove-multi",
-		"rids[]": story.id,
-	}, {
-		type: "urlencoded",
-	}).then(data => {
-		cache.removeFollow({
-			id: story.id,
-			title: story.title,
-			author: story.author,
-		});
-
-		return data;
-	});
-}
-
-/**
- * Favorites the story with the given id.
- * @param storyid
- */
-export function favoriteStory(story: Story): Promise<any> {
-	return ajaxCall(BASE_URL + "/api/ajax_subs.php", "POST", {
-		storyid: story.id,
-		userid: environment.currentUserId,
-		favstory: 1,
-	}, {
-		type: "urlencoded",
-	}).then(data => {
-		cache.addFavorite({
-			id: story.id,
-			title: story.title,
-			author: story.author,
-		});
-
-		return JSON.parse(data);
-	});
-}
-
-/**
- * Removes the story with the given id from favorites.
- * @param storyid
- */
-export function unFavoriteStory(story: Story): Promise<any> {
-	return ajaxCall(BASE_URL + "/favorites/story.php", "POST", {
-		action: "remove-multi",
-		"rids[]": story.id,
-	}, {
-		type: "urlencoded",
-	}).then(data => {
-		cache.removeFavorite({
-			id: story.id,
-			title: story.title,
-			author: story.author,
-		});
-
-		return data;
-	});
-}
-
-export function getFollowedStories(): Promise<FollowedStory[]> {
-	const list = cache.follows;
-	if (list) {
-		return Promise.resolve(list);
+			})
+			.then(() => this.cache.hasAlert(story));
 	}
 
-	// todo: this only reads the first page
-	return ajaxCall(BASE_URL + "/alert/story.php", "GET", undefined)
-		.then(parseFollowedStoryList)
-		.then(fetchedList => cache.follows = fetchedList);
-}
-
-export function getFavoritedStories(): Promise<FollowedStory[]> {
-	const list = cache.favorites;
-	if (list) {
-		return Promise.resolve(list);
+	/**
+	 * Updates the FFN favorite state of a story according to the given story object.
+	 * @param story
+	 */
+	public putFavorite(story: Story): Promise<Story> {
+		return Promise.all([
+			this.api.putFavorite(story),
+			this.cache.putFavorite(story),
+		])
+			.then(() => story);
 	}
 
-	// todo: this only reads the first page
-	return ajaxCall(BASE_URL + "/favorites/story.php", "GET", undefined)
-		.then(parseFollowedStoryList)
-		.then(fetchedList => cache.favorites = fetchedList);
-}
-
-/**
- * Returns information about the story with the given id.
- * @param storyid
- */
-export function getStoryInfo(storyid: number): Promise<Story> {
-	const cached = cache.getStory(storyid);
-	if (cached) {
-		return Promise.resolve(cached);
+	/**
+	 * Checks whether the given story is a favorite.
+	 * @param {Story} story
+	 * @returns {Promise<boolean>}
+	 */
+	public isFavorite(story: Story): Promise<boolean> {
+		return this.cache.isFavoritesFresh()
+			.then(fresh => {
+				if (!fresh) {
+					return this.api.getStoryFavorites()
+						.then(favorites => this.cache.putFavorites(favorites));
+				}
+			})
+			.then(() => this.cache.isFavorite(story));
 	}
 
-	return ajaxCall(BASE_URL + "/s/" + storyid, "GET", undefined)
-		.then(parseProfile)
-		.then(cache.putStory);
+	/**
+	 * Retrieves all story alerts that are set on FFN for the current user.
+	 */
+	public getStoryAlerts(): Promise<FollowedStory[]> {
+		return this.cache.isAlertsFresh()
+			.then(fresh => {
+				if (fresh) {
+					return this.cache.getAlerts();
+				} else {
+					return this.api.getStoryAlerts()
+						.then(alerts => this.cache.putAlerts(alerts));
+				}
+			});
+	}
+
+	/**
+	 * Retrieves all favorites that are set on FFN for the current user.
+	 */
+	public getStoryFavorites(): Promise<FollowedStory[]> {
+		return this.cache.isFavoritesFresh()
+			.then(fresh => {
+				if (fresh) {
+					return this.cache.getFavorites();
+				} else {
+					return this.api.getStoryFavorites()
+						.then(favorites => this.cache.putFavorites(favorites));
+				}
+			});
+	}
+
+	public getStoryInfo(id: number): Promise<Story> {
+		const attachHandlers = (story: Story) => {
+			// todo better error handling
+			story.follow.subscribe(follow => {
+				if (this.updatingFollowState) {
+					return;
+				}
+
+				this.putAlert(story)
+					.catch(console.error);
+			});
+			story.favorite.subscribe(favorite => {
+				if (this.updatingFollowState) {
+					return;
+				}
+
+				this.putFavorite(story)
+					.catch(console.error);
+			});
+
+			return story;
+		};
+
+		return this.cache.getStory(id)
+			.then(story => {
+				if (story.chapters.find(chapter => chapter.words === undefined)) {
+					return this.api.applyChapterLengths(story)
+						.then(s => this.cache.putStory(s));
+				}
+
+				return story;
+			})
+			.then(attachHandlers)
+			.catch(e => {
+				return this.api.getStoryInfo(id)
+					.then(story => this.api.applyChapterLengths(story))
+					.then(story => this.applyFollowStates(story))
+					.then(attachHandlers);
+			});
+	}
+
+	public putStoryInfo(story: Story): Promise<Story> {
+		return this.applyFollowStates(story)
+			// .then(s => this.api.applyChapterLengths(s))
+			.then(s => this.cache.putStory(s));
+	}
+
+	private applyFollowStates(story: Story): Promise<Story> {
+		return Promise.all([
+			this.hasAlert(story),
+			this.isFavorite(story),
+		]).then(array => {
+			this.updatingFollowState = true;
+			story.follow(array[0]);
+			story.favorite(array[1]);
+			this.updatingFollowState = false;
+		}).then(() => this.cache.putStory(story));
+	}
 }
 
-/*export function getComments(storyId: number): Promise<Comment[]> {
-	// fetch all comment pages, not just the first!
-	// to do that, fetch first and find out how many there are
-	// url is /r/<storyId>/<chapterId>/<pageNumber>/
-	// warning: trailing slash is mandatory!
-}*/
+export class ApiImmediate {
+	/**
+	 * Updates the FFN alert state of a story according to the given story object.
+	 * @param story
+	 */
+	public putAlert(story: Story): Promise<Story> {
+		return story.follow() ? this.followStory(story) : this.unFollowStory(story);
+	}
+
+	/**
+	 * Updates the FFN favorite state of a story according to the given story object.
+	 * @param story
+	 */
+	public putFavorite(story: Story): Promise<Story> {
+		return story.favorite() ? this.favoriteStory(story) : this.unFavoriteStory(story);
+	}
+
+	/**
+	 * Retrieves all story alerts that are set on FFN for the current user.
+	 */
+	public getStoryAlerts(): Promise<FollowedStory[]> {
+		return this.getMultiPage("/alert/story.php")
+			.then(fragments => {
+				const result = [];
+				for (const fragment of fragments) {
+					result.push(...parseFollowedStoryList(fragment));
+				}
+
+				return result;
+			});
+	}
+
+	/**
+	 * Retrieves all favorites that are set on FFN for the current user.
+	 */
+	public getStoryFavorites(): Promise<FollowedStory[]> {
+		return this.getMultiPage("/favorites/story.php")
+			.then(fragments => {
+				const result = [];
+				for (const fragment of fragments) {
+					result.push(...parseFollowedStoryList(fragment));
+				}
+
+				return result;
+			});
+	}
+
+	/**
+	 * Retrieves information about the story. Warning: the alert and favorite state of the story are not set!
+	 *
+	 * @param {number} id
+	 * @returns {Promise<Story>}
+	 */
+	public getStoryInfo(id: number): Promise<Story> {
+		return this.apiCall("GET", "/s/" + id)
+			.then(parseProfile)
+			.then(story => this.applyChapterLengths(story));
+	}
+
+	public applyChapterLengths(story: Story): Promise<Story> {
+		return Promise.all(story.chapters
+			.filter(chapter => chapter.words === undefined)
+			.map(chapter => {
+				return this.apiCall("GET", "/s/" + story.id + "/" + chapter.id)
+					.then(body => {
+						const template = document.createElement("template");
+						template.innerHTML = body;
+						(chapter as any).words = template.content.getElementById("storytext")
+							.textContent.trim().split(/\s+/).length;
+					});
+			}))
+			.then(() => story);
+	}
+
+	private getMultiPage(url: string): Promise<DocumentFragment[]> {
+		return this.apiCall("GET", url)
+			.then(body => {
+				const template = document.createElement("template");
+				template.innerHTML = body;
+
+				const pageCenter = template.content.querySelector("#content_wrapper_inner center");
+				if (!pageCenter) {
+					debug("Number of pages = 1");
+
+					return [template.content];
+				}
+
+				const nextLink = pageCenter.lastElementChild as HTMLAnchorElement;
+				const lastLink = nextLink.previousElementSibling as HTMLAnchorElement;
+				const relevantLink = lastLink && lastLink.textContent === "Last" ? lastLink : nextLink;
+				const max = +parseGetParams(relevantLink.href).p;
+				debug("Number of pages = %s", max);
+
+				const result = [Promise.resolve(template.content)];
+				for (let i = 2; i <= max; i++) {
+					result.push(this.apiCall("GET", url + "?p=" + i)
+						.then(nextBody => {
+							const nextTemplate = document.createElement("template");
+							nextTemplate.innerHTML = nextBody;
+
+							return nextTemplate.content;
+						}));
+				}
+
+				return Promise.all(result);
+			});
+	}
+
+	private apiCall(method: string, url: string, data?: any): Promise<any> {
+		debug("%s %s", method, url);
+
+		return Promise.resolve($.ajax({
+			method: method,
+			url: url,
+			data: data,
+		}));
+	}
+
+	private followStory(story: Story): Promise<Story> {
+		debug("Following story %s (id: %s)", story.title, story.id);
+
+		return this.apiCall("POST", "/api/ajax_subs.php", {
+			storyid: story.id,
+			userid: environment.currentUserId,
+			storyalert: 1,
+		}).then(() => story);
+	}
+
+	private unFollowStory(story: Story): Promise<Story> {
+		debug("Un-following story %s (id: %s)", story.title, story.id);
+
+		return this.apiCall("POST", "/alert/story.php", {
+			action: "remove-multi",
+			"rids[]": story.id,
+		}).then(() => story);
+	}
+
+	private favoriteStory(story: Story): Promise<Story> {
+		debug("Favoriting story %s (id: %s)", story.title, story.id);
+
+		return this.apiCall("POST", "/api/ajax_subs.php", {
+			storyid: story.id,
+			userid: environment.currentUserId,
+			favstory: 1,
+		}).then(() => story);
+	}
+
+	private unFavoriteStory(story: Story): Promise<Story> {
+		debug("Un-favoriting story %s (id: %s)", story.title, story.id);
+
+		return this.apiCall("POST", "/favorites/story.php", {
+			action: "remove-multi",
+			"rids[]": story.id,
+		}).then(() => story);
+	}
+}

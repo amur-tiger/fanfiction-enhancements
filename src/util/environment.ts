@@ -1,5 +1,3 @@
-import {  Chapter, Story } from "../api/data";
-
 declare function xtoast(message: string, time?: number): void;
 declare function xwindow(url: string, width: number, height: number): Window;
 
@@ -11,10 +9,10 @@ declare const XUNAME: string;
 declare const storyid: number;
 declare const chapter: number;
 
-declare const array_censors: string[];
+// declare const array_censors: string[];
 declare const array_genres: string[];
 declare const array_languages: string[];
-declare const array_status: string[];
+// declare const array_status: string[];
 
 export interface FontasticCookie {
 	gui_font?: string;
@@ -37,8 +35,8 @@ export const enum Page {
 }
 
 export const ffnServices = {
-	xtoast: typeof xtoast === "undefined" ? () => {/*noop*/} : xtoast,
-	xwindow: typeof xwindow === "undefined" ? () => {/*noop*/} : xwindow,
+	xtoast: typeof xtoast === "undefined" ? () => undefined : xtoast,
+	xwindow: typeof xwindow === "undefined" ? () => undefined : xwindow,
 	fontastic: {
 		save: (cookie: FontasticCookie) => {
 			XCOOKIE = cookie;

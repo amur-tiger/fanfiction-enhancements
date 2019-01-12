@@ -1,5 +1,4 @@
 import { assert } from "chai";
-import { JSDOM } from "jsdom";
 import * as ko from "knockout";
 import * as sinon from "sinon";
 
@@ -85,62 +84,6 @@ describe("Data Objects", function() {
 			assert.isFalse(a.read());
 			assert.isFalse(b.read());
 		});
-
-		it("should retrieve follow value via cache", function() {
-			isFollowed.returns(true);
-
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [{ read: ko.observable(false) }] as any, {});
-
-			sinon.assert.calledOnce(isFollowed);
-			sinon.assert.notCalled(setFollowed);
-		});
-
-		it("should set follow value via cache", function() {
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [{ read: ko.observable(false) }] as any, {});
-
-			sut.follow(true);
-
-			sinon.assert.calledOnce(isFollowed);
-			sinon.assert.calledWith(setFollowed, sut);
-		});
-
-		it("should retrieve favorite value via cache", function() {
-			isFavorited.returns(true);
-
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [{ read: ko.observable(false) }] as any, {});
-
-			sinon.assert.calledOnce(isFavorited);
-			sinon.assert.notCalled(setFavorited);
-		});
-
-		it("should set favorite value via cache", function() {
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [{ read: ko.observable(false) }] as any, {});
-
-			sut.favorite(true);
-
-			sinon.assert.calledOnce(isFavorited);
-			sinon.assert.calledWith(setFavorited, sut);
-		});
 	});
 
 	describe("Chapter", function() {
@@ -155,7 +98,7 @@ describe("Data Objects", function() {
 		it("should retrieve read value via cache", function() {
 			isRead.returns(true);
 
-			const sut = new Chapter(123, 1, "chapter");
+			const sut = new Chapter(123, 1, "chapter", 0);
 
 			assert.isTrue(sut.read());
 			sinon.assert.calledOnce(isRead);
@@ -165,7 +108,7 @@ describe("Data Objects", function() {
 		it("should set read value via cache", function() {
 			isRead.returns(false);
 
-			const sut = new Chapter(123, 1, "chapter");
+			const sut = new Chapter(123, 1, "chapter", 0);
 			sut.read(true);
 
 			sinon.assert.calledOnce(isRead);

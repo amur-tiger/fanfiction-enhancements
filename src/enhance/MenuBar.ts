@@ -7,7 +7,7 @@ import "./MenuBar.css";
 const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class MenuBar implements Enhancer {
-	public enhance() {
+	public enhance(): Promise<any> {
 		if (!environment.currentUserName) {
 			return;
 		}
@@ -21,5 +21,7 @@ export class MenuBar implements Enhancer {
 		$separator.insertAfter($loginElement);
 		$toAlerts.insertAfter($separator);
 		$toFavorites.insertAfter($toAlerts);
+
+		return Promise.resolve();
 	}
 }

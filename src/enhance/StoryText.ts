@@ -1,7 +1,6 @@
 import { ffnServices } from "../util/environment";
 import * as jQuery from "jquery";
 import "jquery.cookie";
-import { getCookie } from "../utils";
 import { Enhancer } from "./Enhancer";
 
 import "./StoryText.css";
@@ -10,7 +9,7 @@ export class StoryText implements Enhancer {
 	constructor(private document: Document) {
 	}
 
-	public enhance() {
+	public enhance(): Promise<any> {
 		const textContainer = this.document.getElementById("storytextp");
 		if (!textContainer) {
 			throw new Error("Could not find text container element.");
@@ -33,6 +32,8 @@ export class StoryText implements Enhancer {
 			text.style.lineHeight = cookie.read_line_height;
 			text.style.width = cookie.read_width + "%";
 		}
+
+		return Promise.resolve();
 	}
 
 	private fixUserSelect(textContainer: HTMLElement) {
