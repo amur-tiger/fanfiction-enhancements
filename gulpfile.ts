@@ -37,8 +37,6 @@ function getHeader(): string {
 	return header;
 }
 
-gulp.task("build", ["build-source", "build-meta", "build-copy-other"]);
-
 gulp.task("build-source", () => {
 	return rollup.rollup({
 		input: "./src/main.ts",
@@ -69,8 +67,6 @@ gulp.task("build-meta", done => {
 	done();
 });
 
-gulp.task("build-copy-other", ["build-copy-readme", "build-copy-license"]);
-
 gulp.task("build-copy-readme", () => {
 	return gulp.src("./README.md").pipe(gulp.dest(OUT_FOLDER));
 });
@@ -79,12 +75,16 @@ gulp.task("build-copy-license", () => {
 	return gulp.src("./LICENSE").pipe(gulp.dest(OUT_FOLDER));
 });
 
-gulp.task("clean", ["clean-js-map", "clean-target"]);
+gulp.task("build-copy-other", gulp.parallel("build-copy-readme", "build-copy-license"));
+
+gulp.task("build", gulp.parallel("build-source", "build-meta", "build-copy-other"));
 
 gulp.task("clean-js-map", () => {
 	return gulp.src(["src/**/*.{js,map}", "tests/**/*.{js,map}"]).pipe(clean());
 });
 
 gulp.task("clean-target", () => {
-	return gulp.src(OUT_FOLDER).pipe(clean());
+	return gulp.src(OUT_FOLDER, { allowEmpty: true }).pipe(clean());
 });
+
+gulp.task("clean", gulp.parallel("clean-js-map", "clean-target"));

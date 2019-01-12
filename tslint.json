@@ -88,9 +88,6 @@
 		],
 		"no-unnecessary-callback-wrapper": true,
 		"no-unsafe-finally": true,
-		"no-unused-variable": [true, {
-			"ignore-pattern": "^XCOOKIE$"
-		}],
 		"no-var-keyword": true,
 		"no-var-requires": true,
 		"object-literal-key-quotes": [
