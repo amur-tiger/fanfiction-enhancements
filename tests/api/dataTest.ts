@@ -98,7 +98,7 @@ describe("Data Objects", function() {
 		it("should retrieve read value via cache", function() {
 			isRead.returns(true);
 
-			const sut = new Chapter(123, 1, "chapter");
+			const sut = new Chapter(123, 1, "chapter", 0);
 
 			assert.isTrue(sut.read());
 			sinon.assert.calledOnce(isRead);
@@ -108,7 +108,7 @@ describe("Data Objects", function() {
 		it("should set read value via cache", function() {
 			isRead.returns(false);
 
-			const sut = new Chapter(123, 1, "chapter");
+			const sut = new Chapter(123, 1, "chapter", 0);
 			sut.read(true);
 
 			sinon.assert.calledOnce(isRead);

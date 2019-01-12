@@ -196,6 +196,11 @@ describe("Api", function () {
 			cache.getStory = fake.resolves({
 				id: 123,
 				title: "Title",
+				chapters: [
+					{
+						words: 1,
+					},
+				],
 				follow: {
 					subscribe: fake(),
 				},
@@ -229,12 +234,18 @@ describe("Api", function () {
 			const story = {
 				id: 123,
 				title: "Title",
+				chapters: [
+					{
+						words: 1,
+					},
+				],
 				follow: fake(),
 				favorite: fake(),
 			};
 			(story.follow as any).subscribe = fake();
 			(story.favorite as any).subscribe = fake();
 			api.getStoryInfo = fake.resolves(story);
+			api.applyChapterLengths = fake.resolves(story);
 			const sut = new Api(cache, api);
 
 			const result = sut.getStoryInfo(123);
@@ -270,6 +281,11 @@ describe("Api", function () {
 			} as any;
 			const story = {
 				id: 123,
+				chapters: [
+					{
+						words: 1,
+					},
+				],
 				follow: fake(),
 				favorite: fake(),
 			};
@@ -304,6 +320,11 @@ describe("Api", function () {
 			} as any;
 			const story = {
 				id: 123,
+				chapters: [
+					{
+						words: 1,
+					},
+				],
 				follow: fake(),
 				favorite: fake(),
 			};
@@ -630,6 +651,7 @@ describe("ApiImmediate", function () {
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 123
 		</span>
 	</div>
+	<div id="storytext">Two words.</div>
 </div>`);
 			const sut = new ApiImmediate();
 

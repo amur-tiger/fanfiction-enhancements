@@ -166,6 +166,7 @@ describe("Story Profile Parser", function() {
 			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 12345678
 		</span>
 	</div>
+	<div id="storytext">Two words.</div>
 </div>`,
 			test: "Missing Chapter Select",
 			title: "title",

@@ -63,9 +63,9 @@ describe("Chapter List", function () {
 			"description",
 			chapters ? chapters :
 				[
-					new Chapter(0, 0, "prologue"),
-					new Chapter(0, 1, "chapter 1"),
-					new Chapter(0, 2, "epilogue"),
+					new Chapter(0, 0, "prologue", 1),
+					new Chapter(0, 1, "chapter 1", 2),
+					new Chapter(0, 2, "epilogue", 3),
 				],
 			undefined,
 		);
@@ -121,20 +121,23 @@ describe("Chapter List", function () {
 				const items = document.getElementsByClassName("ffe-cl-chapter");
 				assert.lengthOf(items, 3);
 
-				const prologue = items[0].lastElementChild.firstElementChild;
-				assert.equal(prologue.nodeName, "A");
-				assert.equal(prologue.href, "/s/0/0");
-				assert.equal(prologue.textContent, "prologue");
+				const prologue = items[0];
+				assert.equal(prologue.children[1].firstElementChild.nodeName, "A");
+				assert.equal(prologue.children[1].firstElementChild.href, "/s/0/0");
+				assert.equal(prologue.children[1].textContent.trim(), "prologue");
+				assert.equal(prologue.children[2].textContent.trim(), "1 words");
 
-				const chapter = items[1].lastElementChild.firstElementChild;
-				assert.equal(chapter.nodeName, "A");
-				assert.equal(chapter.href, "/s/0/1");
-				assert.equal(chapter.textContent, "chapter 1");
+				const chapter = items[1];
+				assert.equal(chapter.children[1].firstElementChild.nodeName, "A");
+				assert.equal(chapter.children[1].firstElementChild.href, "/s/0/1");
+				assert.equal(chapter.children[1].textContent.trim(), "chapter 1");
+				assert.equal(chapter.children[2].textContent.trim(), "2 words");
 
-				const epilogue = items[2].lastElementChild.firstElementChild;
-				assert.equal(epilogue.nodeName, "A");
-				assert.equal(epilogue.href, "/s/0/2");
-				assert.equal(epilogue.textContent, "epilogue");
+				const epilogue = items[2];
+				assert.equal(epilogue.children[1].firstElementChild.nodeName, "A");
+				assert.equal(epilogue.children[1].firstElementChild.href, "/s/0/2");
+				assert.equal(epilogue.children[1].textContent.trim(), "epilogue");
+				assert.equal(epilogue.children[2].textContent.trim(), "3 words");
 			});
 	});
 
@@ -151,6 +154,7 @@ describe("Chapter List", function () {
 						id: chapterRunningIndex++,
 						name: "",
 						read: ko.observable(readToggle),
+						words: 0,
 					});
 				}
 			});
@@ -219,7 +223,7 @@ describe("Chapter List", function () {
 		];
 
 		scenarios.forEach(function (scenario) {
-			it("(" + scenario.name + ")", function () {
+			it(scenario.name, function () {
 				const fragment = JSDOM.fragment(fragmentHTML);
 				document.body.appendChild(fragment);
 

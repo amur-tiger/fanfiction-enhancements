@@ -37,6 +37,9 @@ export class ChapterList implements Enhancer {
 						<span class="ffe-cl-chapter-title">
 							<a data-bind="attr: { href: '/s/' + $parent.id + '/' + id }, text: name"></a>
 						</span>
+						<span class="ffe-cl-words" data-bind="visible: words">
+							<b data-bind="text: words"></b> words
+						</span>
 					</li>
 				</ol>
 			</div>`;

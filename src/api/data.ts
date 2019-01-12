@@ -9,7 +9,12 @@ export interface Identifiable {
 export class Chapter {
 	public readonly read = ko.observable();
 
-	constructor(public readonly storyId: number, public readonly id: number, public readonly name: string) {
+	constructor(
+		public readonly storyId: number,
+		public readonly id: number,
+		public readonly name: string,
+		public readonly words: number) {
+
 		this.read(cache.read.isRead(this));
 		this.read.subscribe(value => {
 			cache.read.setRead(this);
@@ -51,11 +56,11 @@ export class Story implements FollowedStory {
 	public readonly currentChapter;
 
 	constructor(public readonly id: number,
-		public readonly title: string,
-		public readonly author: User,
-		public readonly description: string,
-		public readonly chapters: Chapter[],
-		public readonly meta: StoryMetaData) {
+				public readonly title: string,
+				public readonly author: User,
+				public readonly description: string,
+				public readonly chapters: Chapter[],
+				public readonly meta: StoryMetaData) {
 
 		if (chapters.length === 0) {
 			throw new Error("A story must have at least one chapter.");

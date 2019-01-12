@@ -632,7 +632,7 @@ describe("Cache", function () {
 			const result = sut.putStory(story);
 
 			return result.then(mirror => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
+				sAssert.calledTwice(storage.getItem as SinonSpy);
 				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
 				sAssert.calledOnce(storage.setItem as SinonSpy);
 				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-stories", match(function (value) {

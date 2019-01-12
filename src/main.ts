@@ -20,7 +20,7 @@ if (environment.currentPageType === Page.Alerts || environment.currentPageType =
 
 if (environment.currentPageType === Page.Story) {
 	const currentStory: Story = parseProfile(document);
-	container.getApi().applyFollowStates(currentStory)
+	container.getApi().putStoryInfo(currentStory)
 		.then(() => {
 			const storyProfileEnhancer = new StoryProfile(document, container.getApi());
 			storyProfileEnhancer.enhance();
@@ -32,7 +32,7 @@ if (environment.currentPageType === Page.Story) {
 
 if (environment.currentPageType === Page.Chapter) {
 	const currentStory: Story = parseProfile(document);
-	container.getApi().applyFollowStates(currentStory)
+	container.getApi().putStoryInfo(currentStory)
 		.then(story => {
 			const storyProfileEnhancer = new StoryProfile(document, container.getApi());
 			storyProfileEnhancer.enhance();

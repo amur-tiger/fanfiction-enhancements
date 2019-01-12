@@ -8,7 +8,9 @@ import { parseGetParams } from "../utils";
 const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 const debug = (message, ...args) => {
-	args.unshift("[Api] " + message);
+	args.unshift("color: inherit;");
+	args.unshift("color: gray;");
+	args.unshift("%c[Api] %c" + message);
 	console.debug.apply(console, args);
 };
 
@@ -130,29 +132,30 @@ export class Api {
 		};
 
 		return this.cache.getStory(id)
+			.then(story => {
+				if (story.chapters.find(chapter => chapter.words === undefined)) {
+					return this.api.applyChapterLengths(story)
+						.then(s => this.cache.putStory(s));
+				}
+
+				return story;
+			})
 			.then(attachHandlers)
 			.catch(e => {
 				return this.api.getStoryInfo(id)
-					.then(story => Promise.all([
-						Promise.resolve(story),
-						this.hasAlert(story),
-						this.isFavorite(story),
-					]))
-					.then(array => {
-						const story: Story = array[0];
-						this.updatingFollowState = true;
-						story.follow(array[1]);
-						story.favorite(array[2]);
-						this.updatingFollowState = false;
-
-						return story;
-					})
-					.then(story => this.cache.putStory(story))
+					.then(story => this.api.applyChapterLengths(story))
+					.then(story => this.applyFollowStates(story))
 					.then(attachHandlers);
 			});
 	}
 
-	public applyFollowStates(story: Story): Promise<Story> {
+	public putStoryInfo(story: Story): Promise<Story> {
+		return this.applyFollowStates(story)
+			// .then(s => this.api.applyChapterLengths(s))
+			.then(s => this.cache.putStory(s));
+	}
+
+	private applyFollowStates(story: Story): Promise<Story> {
 		return Promise.all([
 			this.hasAlert(story),
 			this.isFavorite(story),
@@ -161,10 +164,7 @@ export class Api {
 			story.follow(array[0]);
 			story.favorite(array[1]);
 			this.updatingFollowState = false;
-
-			return story;
-		})
-			.then(s => this.cache.putStory(s));
+		}).then(() => this.cache.putStory(story));
 	}
 }
 
@@ -223,7 +223,23 @@ export class ApiImmediate {
 	 */
 	public getStoryInfo(id: number): Promise<Story> {
 		return this.apiCall("GET", "/s/" + id)
-			.then(parseProfile);
+			.then(parseProfile)
+			.then(story => this.applyChapterLengths(story));
+	}
+
+	public applyChapterLengths(story: Story): Promise<Story> {
+		return Promise.all(story.chapters
+			.filter(chapter => chapter.words === undefined)
+			.map(chapter => {
+				return this.apiCall("GET", "/s/" + story.id + "/" + chapter.id)
+					.then(body => {
+						const template = document.createElement("template");
+						template.innerHTML = body;
+						(chapter as any).words = template.content.getElementById("storytext")
+							.textContent.trim().split(/\s+/).length;
+					});
+			}))
+			.then(() => story);
 	}
 
 	private getMultiPage(url: string): Promise<DocumentFragment[]> {

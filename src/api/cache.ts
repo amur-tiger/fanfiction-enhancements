@@ -193,7 +193,7 @@ export class Cache {
 			protoStory.title,
 			protoStory.author,
 			protoStory.description,
-			protoStory.chapters.map(c => new Chapter(protoStory.id, c.id, c.name)),
+			protoStory.chapters.map(c => new Chapter(protoStory.id, c.id, c.name, c.words)),
 			protoStory.meta,
 		);
 
@@ -219,24 +219,40 @@ export class Cache {
 	 */
 	public putStory(story: Story): Promise<Story> {
 		const cacheStory: any = {};
+		const save = cached => {
+			cacheStory.id = story.id;
+			cacheStory.title = story.title;
+			cacheStory.author = story.author;
+			cacheStory.description = story.description;
 
-		cacheStory.id = story.id;
-		cacheStory.title = story.title;
-		cacheStory.author = story.author;
-		cacheStory.description = story.description;
-		cacheStory.chapters = story.chapters.map(chapter => {
-			return {
-				id: chapter.id,
-				name: chapter.name,
-			};
-		});
-		cacheStory.meta = story.meta;
-		cacheStory.follow = story.follow();
-		cacheStory.favorite = story.favorite();
+			cacheStory.chapters = [];
+			for (const chapter of story.chapters) {
+				const cachedChapter = cached && cached.chapters.find(c => c.id === chapter.id);
+				cacheStory.chapters.push({
+					id: chapter.id,
+					name: chapter.name,
+					words: chapter.words || cachedChapter.words,
+				});
+			}
 
-		this.addToMap(Cache.STORIES_KEY, cacheStory, Cache.STORIES_LIFETIME);
+			cacheStory.meta = story.meta;
+			cacheStory.follow = story.follow();
+			cacheStory.favorite = story.favorite();
 
-		return Promise.resolve(story);
+			this.addToMap(Cache.STORIES_KEY, cacheStory, Cache.STORIES_LIFETIME);
+		};
+
+		return this.getStory(story.id)
+			.then(cached => {
+				save(cached);
+
+				return story;
+			})
+			.catch(() => {
+				save(undefined);
+
+				return story;
+			});
 	}
 
 	private getMap<T extends Identifiable>(key: string, lifetime: number): Map<CacheItem<T>> {

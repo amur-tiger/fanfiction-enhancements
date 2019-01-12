@@ -12,7 +12,7 @@ describe("StoryCard Component", function() {
 				name: "",
 				profileUrl: "",
 				avatarUrl: "",
-			}, "", [new Chapter(0, 0, "")], {}));
+			}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		assert.equal(element.tagName, "DIV");
 	});
@@ -24,7 +24,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		assert.isDefined(element.querySelector(".ffe-rating"));
 	});
@@ -36,7 +36,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
 		assert.equal(title.tagName, "A");
@@ -51,7 +51,7 @@ describe("StoryCard Component", function() {
 			name: "author",
 			profileUrl: "/u/456",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
 		assert.equal(author.tagName, "A");
@@ -66,7 +66,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {}));
+		}, "", [new Chapter(0, 0, "", 0)], {}));
 
 		const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
 		const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
@@ -83,7 +83,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {
+		}, "", [new Chapter(0, 0, "", 0)], {
 			imageUrl: "/src/img.jpg",
 			imageOriginalUrl: "/src/imgBig.jpg",
 		}));
@@ -100,7 +100,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "this is a description", [new Chapter(0, 0, "")], {}));
+		}, "this is a description", [new Chapter(0, 0, "", 0)], {}));
 
 		const description = element.querySelector(".ffe-sc-description");
 		assert.equal(description.tagName, "DIV");
@@ -114,7 +114,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {
+		}, "", [new Chapter(0, 0, "", 0)], {
 			language: "Elvish",
 			genre: ["Adventure", "Fantasy"],
 			characters: [
@@ -157,7 +157,7 @@ describe("StoryCard Component", function() {
 			name: "",
 			profileUrl: "",
 			avatarUrl: "",
-		}, "", [new Chapter(0, 0, "")], {
+		}, "", [new Chapter(0, 0, "", 0)], {
 			words: 12345,
 			status: "Complete",
 			published: new Date(),
