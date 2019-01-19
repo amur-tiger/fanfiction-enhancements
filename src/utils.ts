@@ -1,3 +1,12 @@
+import * as ko from "knockout";
+
+ko.bindingHandlers.textSeparated = {
+	update: function (element, accessor) {
+		const value = ko.unwrap(accessor());
+		element.textContent = value.toLocaleString("en");
+	},
+};
+
 /**
  * Loads a script dynamically by creating a script element and attaching it to the head element.
  * @param {string} url
