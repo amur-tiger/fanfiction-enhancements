@@ -16,23 +16,21 @@ describe("Cache", function () {
 	});
 
 	describe("Alerts", function () {
-		it("should retrieve items from localStorage", function () {
+		it("should retrieve items from localStorage", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(undefined);
 			const sut = new Cache(storage);
 
-			const result = sut.getAlerts();
+			const list = await sut.getAlerts();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
 
-				assert.isArray(list);
-				assert.isEmpty(list);
-			});
+			assert.isArray(list);
+			assert.isEmpty(list);
 		});
 
-		it("should convert items correctly", function () {
+		it("should convert items correctly", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -44,19 +42,17 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.getAlerts();
+			const list = await sut.getAlerts();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.equal(list[0].title, "value");
-			});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.equal(list[0].title, "value");
 		});
 
-		it("should evict expired items", function () {
+		it("should evict expired items", async function () {
 			const now = new Date().getTime();
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
@@ -76,28 +72,26 @@ describe("Cache", function () {
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.getAlerts();
+			const list = await sut.getAlerts();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
-				sAssert.calledOnce(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts", JSON.stringify({
-					123: {
-						data: {
-							title: "new",
-						},
-						timestamp: now,
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts", JSON.stringify({
+				123: {
+					data: {
+						title: "new",
 					},
-				}));
+					timestamp: now,
+				},
+			}));
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.equal(list[0].title, "new");
-			});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.equal(list[0].title, "new");
 		});
 
-		it("should delete last entries", function () {
+		it("should delete last entries", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -110,20 +104,18 @@ describe("Cache", function () {
 			storage.removeItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.getAlerts();
+			const list = await sut.getAlerts();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
-				sAssert.calledOnce(storage.removeItem as SinonSpy);
-				sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.removeItem as SinonSpy);
+			sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-alerts");
 
-				assert.isArray(list);
-				assert.isEmpty(list);
-			});
+			assert.isArray(list);
+			assert.isEmpty(list);
 		});
 
-		it("should find story in cache", function () {
+		it("should find story in cache", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -135,14 +127,12 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.hasAlert(123);
+			const found = await sut.hasAlert(123);
 
-			return result.then(found => {
-				assert.isTrue(found);
-			});
+			assert.isTrue(found);
 		});
 
-		it("should not find story not in cache", function () {
+		it("should not find story not in cache", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -154,14 +144,12 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.hasAlert(321);
+			const found = await sut.hasAlert(321);
 
-			return result.then(found => {
-				assert.isFalse(found);
-			});
+			assert.isFalse(found);
 		});
 
-		it("should put positive state in cache", function () {
+		it("should put positive state in cache", async function () {
 			const now = new Date().getTime();
 			const story: Story = {
 				id: 321,
@@ -179,23 +167,19 @@ describe("Cache", function () {
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putAlert(story);
+			await sut.putAlert(story);
 
-			return result.then(mirror => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
-				sAssert.calledOnce(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts", match(function (value) {
-					assert.hasAllKeys(JSON.parse(value), ["123", "321"]);
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts", match(function (value) {
+				assert.hasAllKeys(JSON.parse(value), ["123", "321"]);
 
-					return true;
-				}));
-
-				assert.equal(mirror, story);
-			});
+				return true;
+			}));
 		});
 
-		it("should remove negative state from cache", function () {
+		it("should remove negative state from cache", async function () {
 			const now = new Date().getTime();
 			const story: Story = {
 				id: 123,
@@ -213,54 +197,46 @@ describe("Cache", function () {
 			storage.removeItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putAlert(story);
+			await sut.putAlert(story);
 
-			return result.then(mirror => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
-				sAssert.calledOnce(storage.removeItem as SinonSpy);
-				sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-alerts");
-
-				assert.equal(mirror, story);
-			});
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts");
+			sAssert.calledOnce(storage.removeItem as SinonSpy);
+			sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-alerts");
 		});
 
-		it("should say fresh", function () {
+		it("should say fresh", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(new Date().getTime());
 			const sut = new Cache(storage);
 
-			const result = sut.isAlertsFresh();
+			const fresh = await sut.isAlertsFresh();
 
-			return result.then(fresh => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts-scan");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts-scan");
 
-				assert.isTrue(fresh);
-			});
+			assert.isTrue(fresh);
 		});
 
-		it("should not say fresh", function () {
+		it("should not say fresh", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(undefined);
 			const sut = new Cache(storage);
 
-			const result = sut.isAlertsFresh();
+			const fresh = await sut.isAlertsFresh();
 
-			return result.then(fresh => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts-scan");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-alerts-scan");
 
-				assert.isFalse(fresh);
-			});
+			assert.isFalse(fresh);
 		});
 
-		it("should replace all entries", function () {
+		it("should replace all entries", async function () {
 			const storage: Storage = {} as any;
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putAlerts([
+			await sut.putAlerts([
 				{
 					id: 123,
 					title: "title",
@@ -268,40 +244,32 @@ describe("Cache", function () {
 				},
 			]);
 
-			return result.then(list => {
-				sAssert.calledTwice(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts", match(function (value) {
-					assert.hasAllKeys(JSON.parse(value), ["123"]);
+			sAssert.calledTwice(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts", match(function (value) {
+				assert.hasAllKeys(JSON.parse(value), ["123"]);
 
-					return true;
-				}));
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts-scan", match(/\d+/));
-
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.equal(list[0].title, "title");
-			});
+				return true;
+			}));
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-alerts-scan", match(/\d+/));
 		});
 	});
 
 	describe("Favorites", function () {
-		it("should retrieve items from localStorage", function () {
+		it("should retrieve items from localStorage", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(undefined);
 			const sut = new Cache(storage);
 
-			const result = sut.getFavorites();
+			const list = await sut.getFavorites();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
 
-				assert.isArray(list);
-				assert.isEmpty(list);
-			});
+			assert.isArray(list);
+			assert.isEmpty(list);
 		});
 
-		it("should convert items correctly", function () {
+		it("should convert items correctly", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -313,19 +281,17 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.getFavorites();
+			const list = await sut.getFavorites();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.equal(list[0].title, "value");
-			});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.equal(list[0].title, "value");
 		});
 
-		it("should evict expired items", function () {
+		it("should evict expired items", async function () {
 			const now = new Date().getTime();
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
@@ -345,28 +311,26 @@ describe("Cache", function () {
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.getFavorites();
+			const list = await sut.getFavorites();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
-				sAssert.calledOnce(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites", JSON.stringify({
-					123: {
-						data: {
-							title: "new",
-						},
-						timestamp: now,
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites", JSON.stringify({
+				123: {
+					data: {
+						title: "new",
 					},
-				}));
+					timestamp: now,
+				},
+			}));
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.equal(list[0].title, "new");
-			});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.equal(list[0].title, "new");
 		});
 
-		it("should delete last entries", function () {
+		it("should delete last entries", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -379,20 +343,18 @@ describe("Cache", function () {
 			storage.removeItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.getFavorites();
+			const list = await sut.getFavorites();
 
-			return result.then(list => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
-				sAssert.calledOnce(storage.removeItem as SinonSpy);
-				sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.removeItem as SinonSpy);
+			sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-favorites");
 
-				assert.isArray(list);
-				assert.isEmpty(list);
-			});
+			assert.isArray(list);
+			assert.isEmpty(list);
 		});
 
-		it("should find story in cache", function () {
+		it("should find story in cache", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -404,14 +366,12 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.isFavorite(123);
+			const found = await sut.isFavorite(123);
 
-			return result.then(found => {
-				assert.isTrue(found);
-			});
+			assert.isTrue(found);
 		});
 
-		it("should not find story not in cache", function () {
+		it("should not find story not in cache", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -423,14 +383,12 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.isFavorite(321);
+			const found = await sut.isFavorite(321);
 
-			return result.then(found => {
-				assert.isFalse(found);
-			});
+			assert.isFalse(found);
 		});
 
-		it("should put positive state in cache", function () {
+		it("should put positive state in cache", async function () {
 			const now = new Date().getTime();
 			const story: Story = {
 				id: 321,
@@ -448,23 +406,19 @@ describe("Cache", function () {
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putFavorite(story);
+			await sut.putFavorite(story);
 
-			return result.then(mirror => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
-				sAssert.calledOnce(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites", match(function (value) {
-					assert.hasAllKeys(JSON.parse(value), ["123", "321"]);
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites", match(function (value) {
+				assert.hasAllKeys(JSON.parse(value), ["123", "321"]);
 
-					return true;
-				}));
-
-				assert.equal(mirror, story);
-			});
+				return true;
+			}));
 		});
 
-		it("should remove negative state from cache", function () {
+		it("should remove negative state from cache", async function () {
 			const now = new Date().getTime();
 			const story: Story = {
 				id: 123,
@@ -482,54 +436,42 @@ describe("Cache", function () {
 			storage.removeItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putFavorite(story);
+			await sut.putFavorite(story);
 
-			return result.then(mirror => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
-				sAssert.calledOnce(storage.removeItem as SinonSpy);
-				sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-favorites");
-
-				assert.equal(mirror, story);
-			});
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites");
+			sAssert.calledOnce(storage.removeItem as SinonSpy);
+			sAssert.calledWith(storage.removeItem as SinonSpy, "ffe-cache-favorites");
 		});
 
-		it("should say fresh", function () {
+		it("should say fresh", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(new Date().getTime());
 			const sut = new Cache(storage);
 
-			const result = sut.isFavoritesFresh();
+			const fresh = await sut.isFavoritesFresh();
 
-			return result.then(fresh => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites-scan");
-
-				assert.isTrue(fresh);
-			});
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites-scan");
 		});
 
-		it("should not say fresh", function () {
+		it("should not say fresh", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(undefined);
 			const sut = new Cache(storage);
 
-			const result = sut.isFavoritesFresh();
+			const fresh = await sut.isFavoritesFresh();
 
-			return result.then(fresh => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites-scan");
-
-				assert.isFalse(fresh);
-			});
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-favorites-scan");
 		});
 
-		it("should replace all entries", function () {
+		it("should replace all entries", async function () {
 			const storage: Storage = {} as any;
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putFavorites([
+			await sut.putFavorites([
 				{
 					id: 123,
 					title: "title",
@@ -537,24 +479,18 @@ describe("Cache", function () {
 				},
 			]);
 
-			return result.then(list => {
-				sAssert.calledTwice(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites", match(function (value) {
-					assert.hasAllKeys(JSON.parse(value), ["123"]);
+			sAssert.calledTwice(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites", match(function (value) {
+				assert.hasAllKeys(JSON.parse(value), ["123"]);
 
-					return true;
-				}));
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites-scan", match(/\d+/));
-
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.equal(list[0].title, "title");
-			});
+				return true;
+			}));
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-favorites-scan", match(/\d+/));
 		});
 	});
 
 	describe("Story", function () {
-		it("should return a story object", function () {
+		it("should return a story object", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(JSON.stringify({
 				123: {
@@ -574,42 +510,40 @@ describe("Cache", function () {
 			}));
 			const sut = new Cache(storage);
 
-			const result = sut.getStory(123);
+			const story = await sut.getStory(123);
 
-			return result.then(story => {
-				sAssert.calledOnce(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
+			sAssert.calledOnce(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
 
-				assert.instanceOf(story, Story);
-				assert.equal(story.id, 123);
-				assert.equal(story.title, "story");
-				assert.isArray(story.chapters);
-				assert.lengthOf(story.chapters, 1);
-				assert.instanceOf(story.chapters[0], Chapter);
-				assert.equal(story.chapters[0].storyId, 123);
-				assert.equal(story.chapters[0].id, 1);
-			});
+			assert.instanceOf(story, Story);
+			assert.equal(story.id, 123);
+			assert.equal(story.title, "story");
+			assert.isArray(story.chapters);
+			assert.lengthOf(story.chapters, 1);
+			assert.instanceOf(story.chapters[0], Chapter);
+			assert.equal(story.chapters[0].storyId, 123);
+			assert.equal(story.chapters[0].id, 1);
 		});
 
-		it("should reject unknown keys", function () {
+		it("should reject unknown keys", async function () {
 			const storage: Storage = {} as any;
 			storage.getItem = fake.returns(undefined);
 			const sut = new Cache(storage);
 
-			const result = sut.getStory(123);
+			try {
+				// cannot use assert.throws() as that does not await the promise
+				await sut.getStory(123);
+				assert.fail("Promise should have failed");
+			} catch (e) {
+				sAssert.calledOnce(storage.getItem as SinonSpy);
+				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
 
-			return result
-				.then(() => assert.fail("Promise should have failed"))
-				.catch(e => {
-					sAssert.calledOnce(storage.getItem as SinonSpy);
-					sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
-
-					assert.instanceOf(e, Error);
-					assert.equal(e.message, "Story with id '123' does not exist in cache.");
-				});
+				assert.instanceOf(e, Error);
+				assert.equal(e.message, "Story with id '123' does not exist in cache.");
+			}
 		});
 
-		it("should add story to cache", function () {
+		it("should add story to cache", async function () {
 			const now = new Date().getTime();
 			const story: Story = {
 				id: 321,
@@ -629,20 +563,16 @@ describe("Cache", function () {
 			storage.setItem = fake();
 			const sut = new Cache(storage);
 
-			const result = sut.putStory(story);
+			await sut.putStory(story);
 
-			return result.then(mirror => {
-				sAssert.calledTwice(storage.getItem as SinonSpy);
-				sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
-				sAssert.calledOnce(storage.setItem as SinonSpy);
-				sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-stories", match(function (value) {
-					assert.hasAllKeys(JSON.parse(value), ["123", "321"]);
+			sAssert.calledTwice(storage.getItem as SinonSpy);
+			sAssert.calledWith(storage.getItem as SinonSpy, "ffe-cache-stories");
+			sAssert.calledOnce(storage.setItem as SinonSpy);
+			sAssert.calledWith(storage.setItem as SinonSpy, "ffe-cache-stories", match(function (value) {
+				assert.hasAllKeys(JSON.parse(value), ["123", "321"]);
 
-					return true;
-				}));
-
-				assert.equal(mirror, story);
-			});
+				return true;
+			}));
 		});
 	});
 });

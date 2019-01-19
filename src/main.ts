@@ -33,20 +33,20 @@ if (environment.currentPageType === Page.Story) {
 if (environment.currentPageType === Page.Chapter) {
 	const currentStory: Story = parseProfile(document);
 	container.getApi().putStoryInfo(currentStory)
-		.then(story => {
+		.then(() => {
 			const storyProfileEnhancer = new StoryProfile(document, container.getApi());
 			storyProfileEnhancer.enhance();
 
 			const storyTextEnhancer = new StoryText(document);
 			storyTextEnhancer.enhance();
 
-			if (story.currentChapter) {
+			if (currentStory.currentChapter) {
 				const markRead = () => {
 					const amount = document.documentElement.scrollTop;
 					const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
 					if (amount / (max - 550) >= 1) {
-						story.currentChapter.read(true);
+						currentStory.currentChapter.read(true);
 						window.removeEventListener("scroll", markRead);
 					}
 				};

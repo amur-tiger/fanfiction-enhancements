@@ -23,7 +23,7 @@ describe("Api", function () {
 	});
 
 	describe("Alerts", function () {
-		it("should put alert state for Api and Cache", function () {
+		it("should put alert state for Api and Cache", async function () {
 			const story: Story = {} as any;
 			(story as any).follow = () => true;
 
@@ -33,19 +33,15 @@ describe("Api", function () {
 			api.putAlert = fake();
 			const sut = new Api(cache, api);
 
-			const result = sut.putAlert(story);
+			await sut.putAlert(story);
 
-			return result.then(mirror => {
-				sAssert.calledOnce(cache.putAlert as SinonSpy);
-				sAssert.calledWith(cache.putAlert as SinonSpy, story);
-				sAssert.calledOnce(api.putAlert as SinonSpy);
-				sAssert.calledWith(api.putAlert as SinonSpy, story);
-
-				assert.equal(mirror, story);
-			});
+			sAssert.calledOnce(cache.putAlert as SinonSpy);
+			sAssert.calledWith(cache.putAlert as SinonSpy, story);
+			sAssert.calledOnce(api.putAlert as SinonSpy);
+			sAssert.calledWith(api.putAlert as SinonSpy, story);
 		});
 
-		it("should retrieve alerts list from Cache", function () {
+		it("should retrieve alerts list from Cache", async function () {
 			const cache: Cache = {} as any;
 			cache.isAlertsFresh = fake.resolves(true);
 			cache.getAlerts = fake.resolves([{
@@ -55,23 +51,21 @@ describe("Api", function () {
 			}]);
 			const sut = new Api(cache, {} as any);
 
-			const result = sut.getStoryAlerts();
+			const list = await sut.getStoryAlerts();
 
-			return result.then(list => {
-				sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
-				sAssert.calledOnce(cache.getAlerts as SinonSpy);
+			sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
+			sAssert.calledOnce(cache.getAlerts as SinonSpy);
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.deepEqual(list[0], {
-					id: 1,
-					title: "Title",
-					author: undefined,
-				});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.deepEqual(list[0], {
+				id: 1,
+				title: "Title",
+				author: undefined,
 			});
 		});
 
-		it("should retrieve alerts list from Api", function () {
+		it("should retrieve alerts list from Api", async function () {
 			const cache: Cache = {} as any;
 			cache.isAlertsFresh = fake.resolves(false);
 			cache.putAlerts = fake(a => Promise.resolve(a));
@@ -83,31 +77,29 @@ describe("Api", function () {
 			}]);
 			const sut = new Api(cache, api);
 
-			const result = sut.getStoryAlerts();
+			const list = await sut.getStoryAlerts();
 
-			return result.then(list => {
-				sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
-				sAssert.calledOnce(cache.putAlerts as SinonSpy);
-				sAssert.calledWith(cache.putAlerts as SinonSpy, [{
-					id: 1,
-					title: "Title",
-					author: undefined,
-				}]);
-				sAssert.calledOnce(api.getStoryAlerts as SinonSpy);
+			sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
+			sAssert.calledOnce(cache.putAlerts as SinonSpy);
+			sAssert.calledWith(cache.putAlerts as SinonSpy, [{
+				id: 1,
+				title: "Title",
+				author: undefined,
+			}]);
+			sAssert.calledOnce(api.getStoryAlerts as SinonSpy);
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.deepEqual(list[0], {
-					id: 1,
-					title: "Title",
-					author: undefined,
-				});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.deepEqual(list[0], {
+				id: 1,
+				title: "Title",
+				author: undefined,
 			});
 		});
 	});
 
 	describe("Favorites", function () {
-		it("should put favorite state for Api and Cache", function () {
+		it("should put favorite state for Api and Cache", async function () {
 			const story: Story = {} as any;
 			(story as any).follow = () => true;
 
@@ -117,19 +109,15 @@ describe("Api", function () {
 			api.putFavorite = fake();
 			const sut = new Api(cache, api);
 
-			const result = sut.putFavorite(story);
+			await sut.putFavorite(story);
 
-			return result.then(mirror => {
-				sAssert.calledOnce(cache.putFavorite as SinonSpy);
-				sAssert.calledWith(cache.putFavorite as SinonSpy, story);
-				sAssert.calledOnce(api.putFavorite as SinonSpy);
-				sAssert.calledWith(api.putFavorite as SinonSpy, story);
-
-				assert.equal(mirror, story);
-			});
+			sAssert.calledOnce(cache.putFavorite as SinonSpy);
+			sAssert.calledWith(cache.putFavorite as SinonSpy, story);
+			sAssert.calledOnce(api.putFavorite as SinonSpy);
+			sAssert.calledWith(api.putFavorite as SinonSpy, story);
 		});
 
-		it("should retrieve favorite list from Cache", function () {
+		it("should retrieve favorite list from Cache", async function () {
 			const cache: Cache = {} as any;
 			cache.isFavoritesFresh = fake.resolves(true);
 			cache.getFavorites = fake.resolves([{
@@ -139,23 +127,21 @@ describe("Api", function () {
 			}]);
 			const sut = new Api(cache, {} as any);
 
-			const result = sut.getStoryFavorites();
+			const list = await sut.getStoryFavorites();
 
-			return result.then(list => {
-				sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
-				sAssert.calledOnce(cache.getFavorites as SinonSpy);
+			sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
+			sAssert.calledOnce(cache.getFavorites as SinonSpy);
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.deepEqual(list[0], {
-					id: 1,
-					title: "Title",
-					author: undefined,
-				});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.deepEqual(list[0], {
+				id: 1,
+				title: "Title",
+				author: undefined,
 			});
 		});
 
-		it("should retrieve favorites list from Api", function () {
+		it("should retrieve favorites list from Api", async function () {
 			const cache: Cache = {} as any;
 			cache.isFavoritesFresh = fake.resolves(false);
 			cache.putFavorites = fake(a => Promise.resolve(a));
@@ -167,31 +153,29 @@ describe("Api", function () {
 			}]);
 			const sut = new Api(cache, api);
 
-			const result = sut.getStoryFavorites();
+			const list = await sut.getStoryFavorites();
 
-			return result.then(list => {
-				sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
-				sAssert.calledOnce(cache.putFavorites as SinonSpy);
-				sAssert.calledWith(cache.putFavorites as SinonSpy, [{
-					id: 1,
-					title: "Title",
-					author: undefined,
-				}]);
-				sAssert.calledOnce(api.getStoryFavorites as SinonSpy);
+			sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
+			sAssert.calledOnce(cache.putFavorites as SinonSpy);
+			sAssert.calledWith(cache.putFavorites as SinonSpy, [{
+				id: 1,
+				title: "Title",
+				author: undefined,
+			}]);
+			sAssert.calledOnce(api.getStoryFavorites as SinonSpy);
 
-				assert.isArray(list);
-				assert.lengthOf(list, 1);
-				assert.deepEqual(list[0], {
-					id: 1,
-					title: "Title",
-					author: undefined,
-				});
+			assert.isArray(list);
+			assert.lengthOf(list, 1);
+			assert.deepEqual(list[0], {
+				id: 1,
+				title: "Title",
+				author: undefined,
 			});
 		});
 	});
 
 	describe("Story Info", function () {
-		it("should return info from Cache", function () {
+		it("should return info from Cache", async function () {
 			const cache: Cache = {} as any;
 			cache.getStory = fake.resolves({
 				id: 123,
@@ -211,18 +195,16 @@ describe("Api", function () {
 			const api: ApiImmediate = {} as any;
 			const sut = new Api(cache, api);
 
-			const result = sut.getStoryInfo(123);
+			const story = await sut.getStoryInfo(123);
 
-			return result.then(story => {
-				sAssert.calledOnce(cache.getStory as SinonSpy);
-				sAssert.calledWith(cache.getStory as SinonSpy, 123);
+			sAssert.calledOnce(cache.getStory as SinonSpy);
+			sAssert.calledWith(cache.getStory as SinonSpy, 123);
 
-				assert.equal(story.id, 123);
-				assert.equal(story.title, "Title");
-			});
+			assert.equal(story.id, 123);
+			assert.equal(story.title, "Title");
 		});
 
-		it("should return info from Api", function () {
+		it("should return info from Api", async function () {
 			const cache: Cache = {} as any;
 			cache.getStory = fake.rejects(undefined);
 			cache.putStory = fake(a => Promise.resolve(a));
@@ -248,34 +230,32 @@ describe("Api", function () {
 			api.applyChapterLengths = fake.resolves(story);
 			const sut = new Api(cache, api);
 
-			const result = sut.getStoryInfo(123);
+			const result = await sut.getStoryInfo(123);
 
-			return result.then(r => {
-				sAssert.calledOnce(cache.getStory as SinonSpy);
-				sAssert.calledWith(cache.getStory as SinonSpy, 123);
-				sAssert.calledOnce(cache.putStory as SinonSpy);
-				sAssert.calledWith(cache.putStory as SinonSpy, match(s => {
-					assert.equal(s.id, 123);
-					assert.equal(s.title, "Title");
+			sAssert.calledOnce(cache.getStory as SinonSpy);
+			sAssert.calledWith(cache.getStory as SinonSpy, 123);
+			sAssert.calledOnce(cache.putStory as SinonSpy);
+			sAssert.calledWith(cache.putStory as SinonSpy, match(s => {
+				assert.equal(s.id, 123);
+				assert.equal(s.title, "Title");
 
-					return true;
-				}));
-				sAssert.calledOnce(api.getStoryInfo as SinonSpy);
-				sAssert.calledWith(api.getStoryInfo as SinonSpy, 123);
+				return true;
+			}));
+			sAssert.calledOnce(api.getStoryInfo as SinonSpy);
+			sAssert.calledWith(api.getStoryInfo as SinonSpy, 123);
 
-				sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
-				sAssert.calledOnce(cache.hasAlert as SinonSpy);
-				sAssert.calledOnce(story.follow);
-				sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
-				sAssert.calledOnce(cache.isFavorite as SinonSpy);
-				sAssert.calledOnce(story.favorite);
+			sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
+			sAssert.calledOnce(cache.hasAlert as SinonSpy);
+			sAssert.calledOnce(story.follow);
+			sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
+			sAssert.calledOnce(cache.isFavorite as SinonSpy);
+			sAssert.calledOnce(story.favorite);
 
-				assert.equal(r.id, 123);
-				assert.equal(r.title, "Title");
-			});
+			assert.equal(result.id, 123);
+			assert.equal(result.title, "Title");
 		});
 
-		it("should attach alerts handler", function () {
+		it("should attach alerts handler", async function () {
 			const cache: Cache = {
 				putAlert: fake(),
 			} as any;
@@ -297,24 +277,18 @@ describe("Api", function () {
 			} as any;
 			const sut = new Api(cache, api);
 
-			const result = sut.getStoryInfo(123);
+			const result = await sut.getStoryInfo(123);
 
-			return result
-				.then(s => {
-					sAssert.calledOnce((s.follow as any).subscribe);
-					sAssert.calledWith((s.follow as any).subscribe, match.func);
+			sAssert.calledOnce((result.follow as any).subscribe);
+			sAssert.calledWith((result.follow as any).subscribe, match.func);
 
-					((s.follow as any).subscribe as SinonSpy).args[0][0]();
+			await ((result.follow as any).subscribe as SinonSpy).args[0][0]();
 
-					return s;
-				})
-				.then(s => {
-					sAssert.calledOnce(cache.putAlert as SinonSpy);
-					sAssert.calledOnce(api.putAlert as SinonSpy);
-				});
+			sAssert.calledOnce(cache.putAlert as SinonSpy);
+			sAssert.calledOnce(api.putAlert as SinonSpy);
 		});
 
-		it("should attach favorites handler", function () {
+		it("should attach favorites handler", async function () {
 			const cache: Cache = {
 				putFavorite: fake(),
 			} as any;
@@ -336,21 +310,16 @@ describe("Api", function () {
 			} as any;
 			const sut = new Api(cache, api);
 
-			const result = sut.getStoryInfo(123);
+			const result = await sut.getStoryInfo(123);
 
-			return result
-				.then(s => {
-					sAssert.calledOnce((s.favorite as any).subscribe);
-					sAssert.calledWith((s.favorite as any).subscribe, match.func);
+			sAssert.calledOnce((result.favorite as any).subscribe);
+			sAssert.calledWith((result.favorite as any).subscribe, match.func);
 
-					((s.favorite as any).subscribe as SinonSpy).args[0][0]();
+			await ((result.favorite as any).subscribe as SinonSpy).args[0][0]();
 
-					return s;
-				})
-				.then(s => {
-					sAssert.calledOnce(cache.putFavorite as SinonSpy);
-					sAssert.calledOnce(api.putFavorite as SinonSpy);
-				});
+			sAssert.calledOnce(cache.putFavorite as SinonSpy);
+			sAssert.calledOnce(api.putFavorite as SinonSpy);
+
 		});
 	});
 });
@@ -372,7 +341,7 @@ describe("ApiImmediate", function () {
 	});
 
 	describe("Alerts", function () {
-		it("should put positive alert state", function () {
+		it("should put positive alert state", async function () {
 			const story: Story = {
 				id: 123,
 			} as any;
@@ -381,7 +350,7 @@ describe("ApiImmediate", function () {
 			const ajax = $.ajax = fake.resolves(undefined);
 			const sut = new ApiImmediate();
 
-			const result = sut.putAlert(story);
+			await sut.putAlert(story);
 
 			sAssert.calledOnce(ajax);
 			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
@@ -393,13 +362,9 @@ describe("ApiImmediate", function () {
 				userid: undefined,
 				storyalert: 1,
 			});
-
-			return result.then(mirror => {
-				assert.equal(mirror, story);
-			});
 		});
 
-		it("should put negative alert state", function () {
+		it("should put negative alert state", async function () {
 			const story: Story = {
 				id: 123,
 			} as any;
@@ -408,7 +373,7 @@ describe("ApiImmediate", function () {
 			const ajax = $.ajax = fake.resolves(undefined);
 			const sut = new ApiImmediate();
 
-			const result = sut.putAlert(story);
+			await sut.putAlert(story);
 
 			sAssert.calledOnce(ajax);
 			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
@@ -419,13 +384,9 @@ describe("ApiImmediate", function () {
 				action: "remove-multi",
 				"rids[]": 123,
 			});
-
-			return result.then(mirror => {
-				assert.equal(mirror, story);
-			});
 		});
 
-		it("should retrieve multi-page alerts list", function () {
+		it("should retrieve multi-page alerts list", async function () {
 			const page1 = `<div id="content_wrapper_inner">
 				<table id="gui_table1i">
 					<tbody>
@@ -468,42 +429,40 @@ describe("ApiImmediate", function () {
 			ajax.throws();
 			const sut = new ApiImmediate();
 
-			const result = sut.getStoryAlerts();
+			const list = await sut.getStoryAlerts();
 
-			return result.then(list => {
-				sAssert.calledTwice(ajax);
+			sAssert.calledTwice(ajax);
 
-				const args1 = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-				assert.equal(args1.method, "GET");
-				assert.equal(args1.url, "/alert/story.php");
-				assert.equal(args1.data, undefined);
+			const args1 = ajax.getCall(0).args[0] as JQueryAjaxSettings;
+			assert.equal(args1.method, "GET");
+			assert.equal(args1.url, "/alert/story.php");
+			assert.equal(args1.data, undefined);
 
-				const args2 = ajax.getCall(1).args[0] as JQueryAjaxSettings;
-				assert.equal(args2.method, "GET");
-				assert.equal(args2.url, "/alert/story.php?p=2");
-				assert.equal(args2.data, undefined);
+			const args2 = ajax.getCall(1).args[0] as JQueryAjaxSettings;
+			assert.equal(args2.method, "GET");
+			assert.equal(args2.url, "/alert/story.php?p=2");
+			assert.equal(args2.data, undefined);
 
-				assert.equal(list.length, 2);
+			assert.equal(list.length, 2);
 
-				const item1 = list[0];
-				assert.equal(item1.id, 123);
-				assert.equal(item1.title, "Story 1");
-				assert.equal(item1.author.id, 123);
-				assert.equal(item1.author.name, "Author");
-				assert.equal(item1.author.profileUrl, "/u/123/author");
+			const item1 = list[0];
+			assert.equal(item1.id, 123);
+			assert.equal(item1.title, "Story 1");
+			assert.equal(item1.author.id, 123);
+			assert.equal(item1.author.name, "Author");
+			assert.equal(item1.author.profileUrl, "/u/123/author");
 
-				const item2 = list[1];
-				assert.equal(item2.id, 125);
-				assert.equal(item2.title, "Story 2");
-				assert.equal(item2.author.id, 125);
-				assert.equal(item2.author.name, "Cool Guy");
-				assert.equal(item2.author.profileUrl, "/u/125/cool-guy");
-			});
+			const item2 = list[1];
+			assert.equal(item2.id, 125);
+			assert.equal(item2.title, "Story 2");
+			assert.equal(item2.author.id, 125);
+			assert.equal(item2.author.name, "Cool Guy");
+			assert.equal(item2.author.profileUrl, "/u/125/cool-guy");
 		});
 	});
 
 	describe("Favorites", function () {
-		it("should put positive favorite state", function () {
+		it("should put positive favorite state", async function () {
 			const story: Story = {
 				id: 123,
 			} as any;
@@ -512,7 +471,7 @@ describe("ApiImmediate", function () {
 			const ajax = $.ajax = fake.resolves(undefined);
 			const sut = new ApiImmediate();
 
-			const result = sut.putFavorite(story);
+			await sut.putFavorite(story);
 
 			sAssert.calledOnce(ajax);
 			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
@@ -523,10 +482,6 @@ describe("ApiImmediate", function () {
 				storyid: 123,
 				userid: undefined,
 				favstory: 1,
-			});
-
-			return result.then(mirror => {
-				assert.equal(mirror, story);
 			});
 		});
 
@@ -551,12 +506,10 @@ describe("ApiImmediate", function () {
 				"rids[]": 123,
 			});
 
-			return result.then(mirror => {
-				assert.equal(mirror, story);
-			});
+			return result;
 		});
 
-		it("should retrieve multi-page favorites list", function () {
+		it("should retrieve multi-page favorites list", async function () {
 			const page1 = `<div id="content_wrapper_inner">
 				<table id="gui_table1i">
 					<tbody>
@@ -599,42 +552,40 @@ describe("ApiImmediate", function () {
 			ajax.throws();
 			const sut = new ApiImmediate();
 
-			const result = sut.getStoryFavorites();
+			const list = await sut.getStoryFavorites();
 
-			return result.then(list => {
-				sAssert.calledTwice(ajax);
+			sAssert.calledTwice(ajax);
 
-				const args1 = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-				assert.equal(args1.method, "GET");
-				assert.equal(args1.url, "/favorites/story.php");
-				assert.equal(args1.data, undefined);
+			const args1 = ajax.getCall(0).args[0] as JQueryAjaxSettings;
+			assert.equal(args1.method, "GET");
+			assert.equal(args1.url, "/favorites/story.php");
+			assert.equal(args1.data, undefined);
 
-				const args2 = ajax.getCall(1).args[0] as JQueryAjaxSettings;
-				assert.equal(args2.method, "GET");
-				assert.equal(args2.url, "/favorites/story.php?p=2");
-				assert.equal(args2.data, undefined);
+			const args2 = ajax.getCall(1).args[0] as JQueryAjaxSettings;
+			assert.equal(args2.method, "GET");
+			assert.equal(args2.url, "/favorites/story.php?p=2");
+			assert.equal(args2.data, undefined);
 
-				assert.equal(list.length, 2);
+			assert.equal(list.length, 2);
 
-				const item1 = list[0];
-				assert.equal(item1.id, 123);
-				assert.equal(item1.title, "Story 1");
-				assert.equal(item1.author.id, 123);
-				assert.equal(item1.author.name, "Author");
-				assert.equal(item1.author.profileUrl, "/u/123/author");
+			const item1 = list[0];
+			assert.equal(item1.id, 123);
+			assert.equal(item1.title, "Story 1");
+			assert.equal(item1.author.id, 123);
+			assert.equal(item1.author.name, "Author");
+			assert.equal(item1.author.profileUrl, "/u/123/author");
 
-				const item2 = list[1];
-				assert.equal(item2.id, 125);
-				assert.equal(item2.title, "Story 2");
-				assert.equal(item2.author.id, 125);
-				assert.equal(item2.author.name, "Cool Guy");
-				assert.equal(item2.author.profileUrl, "/u/125/cool-guy");
-			});
+			const item2 = list[1];
+			assert.equal(item2.id, 125);
+			assert.equal(item2.title, "Story 2");
+			assert.equal(item2.author.id, 125);
+			assert.equal(item2.author.name, "Cool Guy");
+			assert.equal(item2.author.profileUrl, "/u/125/cool-guy");
 		});
 	});
 
 	describe("Stories", function () {
-		it("should retrieve story info", function () {
+		it("should retrieve story info", async function () {
 			const ajax = $.ajax = fake.resolves(`<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
@@ -655,20 +606,18 @@ describe("ApiImmediate", function () {
 </div>`);
 			const sut = new ApiImmediate();
 
-			const result = sut.getStoryInfo(123);
+			const story = await sut.getStoryInfo(123);
 
-			return result.then(story => {
-				sAssert.calledOnce(ajax);
+			sAssert.calledOnce(ajax);
 
-				const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-				assert.equal(args.method, "GET");
-				assert.equal(args.url, "/s/123");
-				assert.equal(args.data, undefined);
+			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
+			assert.equal(args.method, "GET");
+			assert.equal(args.url, "/s/123");
+			assert.equal(args.data, undefined);
 
-				assert.instanceOf(story, Story);
-				assert.equal(story.id, 123);
-				assert.equal(story.title, "title");
-			});
+			assert.instanceOf(story, Story);
+			assert.equal(story.id, 123);
+			assert.equal(story.title, "title");
 		});
 	});
 });
