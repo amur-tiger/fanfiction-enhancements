@@ -36,9 +36,8 @@
     "typescript": "^3.2.2"
   },
   "scripts": {
-    "pretest": "tslint --project .",
-    "test": "tsc --project tests/tsconfig.json && mocha --recursive --require ignore-styles --require jsdom-global/register tests",
-    "posttest": "gulp clean",
+    "pretest": "npm run lint",
+    "test": "mocha --require ts-node/register --require ignore-styles --require jsdom-global/register tests/**/*.ts",
     "lint": "tslint --project .",
     "build": "gulp build",
     "clean": "gulp clean"
