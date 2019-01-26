@@ -1,6 +1,5 @@
 import { ffnServices } from "../util/environment";
-import * as jQuery from "jquery";
-import "jquery.cookie";
+import { getCookie } from "../utils";
 import { Enhancer } from "./Enhancer";
 
 import "./StoryText.css";
@@ -17,7 +16,7 @@ export class StoryText implements Enhancer {
 
 		this.fixUserSelect(textContainer);
 
-		if (!jQuery.cookie("xcookie2")) {
+		if (!getCookie("xcookie2")) {
 			const cookie = {
 				read_font: "Open Sans",
 				read_font_size: "1.2",

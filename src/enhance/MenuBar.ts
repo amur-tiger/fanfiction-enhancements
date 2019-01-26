@@ -1,27 +1,31 @@
 import { environment } from "../util/environment";
-import * as jQueryProxy from "jquery";
 import { Enhancer } from "./Enhancer";
 
 import "./MenuBar.css";
 
-const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
-
 export class MenuBar implements Enhancer {
-	public enhance(): Promise<any> {
+	public async enhance(): Promise<any> {
 		if (!environment.currentUserName) {
 			return;
 		}
 
-		const $loginElement = $("#name_login a");
+		const loginElement = document.querySelector("#name_login a");
+		const parent = loginElement.parentElement;
+		const ref = loginElement.nextElementSibling;
 
-		const $separator = $(`<span class="ffe-mb-separator"></span>`);
-		const $toAlerts = $(`<a class="ffe-mb-alerts icon-bookmark-2" href="/alert/story.php"></a>`);
-		const $toFavorites = $(`<a class="ffe-mb-favorites icon-heart" href="/favorites/story.php"></a>`);
+		const toAlerts = document.createElement("a") as HTMLAnchorElement;
+		toAlerts.classList.add("ffe-mb-alerts", "icon-bookmark-2");
+		toAlerts.href = "/alert/story.php";
 
-		$separator.insertAfter($loginElement);
-		$toAlerts.insertAfter($separator);
-		$toFavorites.insertAfter($toAlerts);
+		const toFavorites = document.createElement("a") as HTMLAnchorElement;
+		toFavorites.classList.add("ffe-mb-favorites", "icon-heart");
+		toFavorites.href = "/favorites/story.php";
 
-		return Promise.resolve();
+		const separator = document.createElement("span");
+		separator.classList.add("ffe-mb-separator");
+
+		parent.insertBefore(toAlerts, ref);
+		parent.insertBefore(toFavorites, ref);
+		parent.insertBefore(separator, ref);
 	}
 }

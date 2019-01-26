@@ -1,7 +1,7 @@
 import { assert } from "chai";
-import * as jQuery from "jquery";
 import { JSDOM } from "jsdom";
 import * as sinon from "sinon";
+import { setCookie } from "../../src/utils";
 
 import { StoryText } from "../../src/enhance/StoryText";
 
@@ -48,7 +48,7 @@ describe("Story Text", function() {
 	});
 
 	it("should not set styles if styles were modified", function() {
-		jQuery.cookie("xcookie2", "dummy");
+		setCookie("xcookie2", "dummy");
 		const fragment = JSDOM.fragment(`<div id="storytextp"><div id="storytext"></div></div>`)
 			.firstChild as HTMLElement;
 		document.appendChild(fragment);

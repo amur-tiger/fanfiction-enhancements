@@ -1,11 +1,8 @@
 import { Cache } from "./cache";
 import { FollowedStory, Story } from "./data";
 import { environment } from "../util/environment";
-import * as jQueryProxy from "jquery";
 import { parseFollowedStoryList, parseProfile } from "../util/parser";
 import { parseGetParams } from "../utils";
-
-const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 const debug = (message, ...args) => {
 	args.unshift("color: inherit;");
@@ -212,7 +209,7 @@ export class ApiImmediate {
 	 * @returns {Promise<Story>}
 	 */
 	public async getStoryInfo(id: number): Promise<Story> {
-		const data = await this.apiCall("GET", "/s/" + id);
+		const data = await this.getHtml("/s/" + id);
 		const story = parseProfile(data);
 		await this.applyChapterLengths(story);
 
@@ -223,7 +220,7 @@ export class ApiImmediate {
 		await Promise.all(story.chapters
 			.filter(chapter => chapter.words === undefined)
 			.map(async chapter => {
-				const body = await this.apiCall("GET", "/s/" + story.id + "/" + chapter.id);
+				const body = await this.getHtml("/s/" + story.id + "/" + chapter.id);
 				const template = document.createElement("template");
 				template.innerHTML = body;
 				(chapter as any).words = template.content.getElementById("storytext")
@@ -232,7 +229,7 @@ export class ApiImmediate {
 	}
 
 	private async getMultiPage(url: string): Promise<DocumentFragment[]> {
-		const body = await this.apiCall("GET", url);
+		const body = await this.getHtml(url);
 		const template = document.createElement("template");
 		template.innerHTML = body;
 
@@ -251,7 +248,7 @@ export class ApiImmediate {
 
 		const result = [Promise.resolve(template.content)];
 		for (let i = 2; i <= max; i++) {
-			result.push(this.apiCall("GET", url + "?p=" + i)
+			result.push(this.getHtml(url + "?p=" + i)
 				.then(nextBody => {
 					const nextTemplate = document.createElement("template");
 					nextTemplate.innerHTML = nextBody;
@@ -263,20 +260,43 @@ export class ApiImmediate {
 		return Promise.all(result);
 	}
 
-	private apiCall(method: string, url: string, data?: any): Promise<any> {
-		debug("%s %s", method, url);
+	private async postFormData(url: string, data: any): Promise<any> {
+		debug("POST %s", url);
 
-		return Promise.resolve($.ajax({
-			method: method,
-			url: url,
-			data: data,
-		}));
+		const formData = new FormData();
+		for (const key in data) {
+			if (!data.hasOwnProperty(key)) {
+				continue;
+			}
+
+			formData.append(key, data[key]);
+		}
+
+		const response = await fetch(url, {
+			method: "POST",
+			body: formData,
+		});
+
+		const json = await response.json();
+		if (json.error) {
+			throw new Error(json.error_msg);
+		}
+
+		return json;
+	}
+
+	private async getHtml(url: string): Promise<string> {
+		debug("GET %s", url);
+
+		const response = await fetch(url);
+
+		return response.text();
 	}
 
 	private async followStory(story: Story): Promise<void> {
 		debug("Following story %s (id: %s)", story.title, story.id);
 
-		await this.apiCall("POST", "/api/ajax_subs.php", {
+		await this.postFormData("/api/ajax_subs.php", {
 			storyid: story.id,
 			userid: environment.currentUserId,
 			storyalert: 1,
@@ -286,7 +306,7 @@ export class ApiImmediate {
 	private async unFollowStory(story: Story): Promise<void> {
 		debug("Un-following story %s (id: %s)", story.title, story.id);
 
-		await this.apiCall("POST", "/alert/story.php", {
+		await this.postFormData("/alert/story.php", {
 			action: "remove-multi",
 			"rids[]": story.id,
 		});
@@ -295,7 +315,7 @@ export class ApiImmediate {
 	private async favoriteStory(story: Story): Promise<void> {
 		debug("Favoriting story %s (id: %s)", story.title, story.id);
 
-		await this.apiCall("POST", "/api/ajax_subs.php", {
+		await this.postFormData("/api/ajax_subs.php", {
 			storyid: story.id,
 			userid: environment.currentUserId,
 			favstory: 1,
@@ -305,7 +325,7 @@ export class ApiImmediate {
 	private async unFavoriteStory(story: Story): Promise<void> {
 		debug("Un-favoriting story %s (id: %s)", story.title, story.id);
 
-		await this.apiCall("POST", "/favorites/story.php", {
+		await this.postFormData("/favorites/story.php", {
 			action: "remove-multi",
 			"rids[]": story.id,
 		});

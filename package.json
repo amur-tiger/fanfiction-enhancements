@@ -7,11 +7,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "@types/jquery": "^1.10.35",
-    "@types/jquery.cookie": "^1.4.31",
     "@types/knockout": "^3.4.63",
-    "jquery": "1.11.1",
-    "jquery.cookie": "^1.4.1",
     "knockout": "^3.4.2"
   },
   "devDependencies": {

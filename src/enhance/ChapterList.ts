@@ -1,12 +1,9 @@
 import { Api } from "../api/api";
 import { environment } from "../util/environment";
-import * as jQueryProxy from "jquery";
 import * as ko from "knockout";
 import { Enhancer } from "./Enhancer";
 
 import "./ChapterList.css";
-
-const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class ChapterList implements Enhancer {
 	public constructor(private readonly document: Document, private readonly api: Api) {
@@ -63,14 +60,14 @@ export class ChapterList implements Enhancer {
 	}
 
 	private hideLongChapterList() {
-		const $elements = $(this.document.getElementsByClassName("ffe-cl-chapter"));
-		const isRead = (e: HTMLElement) => !!(e.firstElementChild.firstElementChild as HTMLInputElement).checked;
+		const elements = Array.from(this.document.getElementsByClassName("ffe-cl-chapter"));
+		const isRead = (e: Element) => !!(e.firstElementChild.firstElementChild as HTMLInputElement).checked;
 
-		let currentBlockIsRead = isRead($elements[0]);
+		let currentBlockIsRead = isRead(elements[0]);
 		let currentBlockCount = 0;
 
-		for (let i = 0; i < $elements.length; i++) {
-			const read = isRead($elements[i]);
+		for (let i = 0; i < elements.length; i++) {
+			const read = isRead(elements[i]);
 			if (read === currentBlockIsRead) {
 				// no change from previous chapter, continue
 				currentBlockCount++;
@@ -88,22 +85,29 @@ export class ChapterList implements Enhancer {
 			let off = 0;
 			if (currentBlockIsRead) {
 				// we can hide more chapters if they are already read
-				$elements.slice(i - currentBlockCount, i).hide();
+				elements.slice(i - currentBlockCount, i)
+					.forEach(element => (element as HTMLElement).style.display = "none");
 			} else {
 				// some unread chapters here, show a bit more of them
-				$elements.slice(i - currentBlockCount + 2, i - 2).hide();
+				elements.slice(i - currentBlockCount + 2, i - 2)
+					.forEach(element => (element as HTMLElement).style.display = "none");
 				off = 2;
 			}
 
 			// insert a link to show the hidden chapters
-			const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
-				(currentBlockCount - off * 2) + " hidden chapters</a></li>");
-			$showLink.children("a").click(() => {
-				$elements.show();
-				$(".ffe-cl-collapsed").remove();
+			const showLink = document.createElement("a");
+			showLink.style.cursor = "pointer";
+			showLink.textContent = "Show " + (currentBlockCount - off * 2) + " hidden chapters";
+			showLink.addEventListener("click", () => {
+				elements.forEach((element: HTMLElement) => element.classList.contains("ffe-cl-collapsed") ?
+					element.style.display = "none" : element.style.display = "block");
 			});
 
-			$showLink.insertBefore($elements[i - off]);
+			const showLinkContainer = document.createElement("li");
+			showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
+			showLinkContainer.appendChild(showLink);
+
+			elements[0].parentElement.insertBefore(showLinkContainer, elements[i - off]);
 
 			currentBlockIsRead = read;
 			currentBlockCount = 1;
@@ -111,16 +115,22 @@ export class ChapterList implements Enhancer {
 
 		// the last visited block might be long enough to hide
 		if (currentBlockCount > 6) {
-			$elements.slice($elements.length - currentBlockCount + 2, $elements.length - 3).hide();
+			elements.slice(elements.length - currentBlockCount + 2, elements.length - 3)
+				.forEach(element => (element as HTMLElement).style.display = "none");
 
-			const $showLink = $("<li class='ffe-cl-chapter ffe-cl-collapsed'><a style='cursor: pointer;'>Show " +
-				(currentBlockCount - 5) + " hidden chapters</a></li>");
-			$showLink.children("a").click(() => {
-				$elements.show();
-				$(".ffe-cl-collapsed").remove();
+			const showLink = document.createElement("a");
+			showLink.style.cursor = "pointer";
+			showLink.textContent = "Show " + (currentBlockCount - 5) + " hidden chapters";
+			showLink.addEventListener("click", () => {
+				elements.forEach((element: HTMLElement) => element.classList.contains("ffe-cl-collapsed") ?
+					element.style.display = "none" : element.style.display = "block");
 			});
 
-			$showLink.insertBefore($elements[$elements.length - 3]);
+			const showLinkContainer = document.createElement("li");
+			showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
+			showLinkContainer.appendChild(showLink);
+
+			elements[0].parentElement.insertBefore(showLinkContainer, elements[elements.length - 3]);
 		}
 	}
 }

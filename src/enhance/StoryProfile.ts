@@ -9,17 +9,15 @@ export class StoryProfile implements Enhancer {
 	constructor(private readonly document: Document, private readonly api: Api) {
 	}
 
-	public enhance(): Promise<any> {
+	public async enhance(): Promise<any> {
 		const profile = this.document.getElementById("profile_top");
 		const card = new StoryCard(document, this.api);
 
-		return this.api.getStoryInfo(environment.currentStoryId)
-			.then(story => {
-				const replacement = card.createElement(story);
+		const story = await this.api.getStoryInfo(environment.currentStoryId);
+		const replacement = card.createElement(story);
 
-				// profile.parentElement.replaceChild(replacement, profile);
-				profile.parentElement.insertBefore(replacement, profile);
-				profile.style.display = "none";
-			});
+		// profile.parentElement.replaceChild(replacement, profile);
+		profile.parentElement.insertBefore(replacement, profile);
+		profile.style.display = "none";
 	}
 }

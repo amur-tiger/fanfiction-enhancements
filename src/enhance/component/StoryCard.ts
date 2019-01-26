@@ -1,13 +1,10 @@
 import { Api } from "../../api/api";
 import { Story, StoryMetaData } from "../../api/data";
 import { ffnServices } from "../../util/environment";
-import * as jQueryProxy from "jquery";
 import { Component } from "./Component";
 import { Rating } from "./Rating";
 
 import "./StoryCard.css";
-
-const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
 
 export class StoryCard implements Component {
 	constructor(private readonly document: Document, private readonly api: Api) {
@@ -56,7 +53,7 @@ export class StoryCard implements Component {
 		const follow = this.document.createElement("span") as HTMLSpanElement;
 		follow.className = "ffe-sc-follow btn icon-bookmark-2";
 		follow.dataset["storyId"] = story.id + "";
-		follow.addEventListener("click", this.clickFollow);
+		follow.addEventListener("click", this.clickFollow.bind(this));
 		if (story.follow()) {
 			follow.classList.add("ffe-sc-active");
 		}
@@ -66,13 +63,13 @@ export class StoryCard implements Component {
 			} else {
 				follow.classList.remove("ffe-sc-active");
 			}
-		});
+		}, this);
 		mark.appendChild(follow);
 
 		const favorite = this.document.createElement("span") as HTMLSpanElement;
 		favorite.className = "ffe-sc-favorite btn icon-heart";
 		favorite.dataset["storyId"] = story.id + "";
-		favorite.addEventListener("click", this.clickFavorite);
+		favorite.addEventListener("click", this.clickFavorite.bind(this));
 		if (story.favorite()) {
 			favorite.classList.add("ffe-sc-active");
 		}
@@ -82,7 +79,7 @@ export class StoryCard implements Component {
 			} else {
 				favorite.classList.remove("ffe-sc-active");
 			}
-		});
+		}, this);
 		mark.appendChild(favorite);
 
 		header.appendChild(mark);
@@ -91,7 +88,7 @@ export class StoryCard implements Component {
 	}
 
 	private clickFollow(event: MouseEvent): void {
-		$(event.target).toggleClass("ffe-sc-active");
+		(event.target as HTMLElement).classList.toggle("ffe-sc-active");
 		this.api.getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
 			.then(story => {
 				story.follow(!story.follow());
@@ -101,13 +98,13 @@ export class StoryCard implements Component {
 			.then(story => this.api.putAlert(story))
 			.catch(err => {
 				console.error(err);
-				$(event.target).toggleClass("ffe-sc-active");
+				(event.target as HTMLElement).classList.toggle("ffe-sc-active");
 				ffnServices.xtoast("We are unable to process your request due to a network error. Please try again later.");
 			});
 	}
 
 	private clickFavorite(event: MouseEvent): void {
-		$(event.target).toggleClass("ffe-sc-active");
+		(event.target as HTMLElement).classList.toggle("ffe-sc-active");
 		this.api.getStoryInfo(+(event.target as HTMLElement).dataset["storyId"])
 			.then(story => {
 				story.favorite(!story.favorite());
@@ -117,7 +114,7 @@ export class StoryCard implements Component {
 			.then(story => this.api.putFavorite(story))
 			.catch(err => {
 				console.error(err);
-				$(event.target).toggleClass("ffe-sc-active");
+				(event.target as HTMLElement).classList.toggle("ffe-sc-active");
 				ffnServices.xtoast("We are unable to process your request due to a network error. Please try again later.");
 			});
 	}

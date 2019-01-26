@@ -51,7 +51,6 @@ gulp.task("build-source", () => {
 			format: "iife",
 			banner: getHeader(),
 			globals: {
-				jquery: "jQuery",
 				knockout: "ko",
 			},
 		});

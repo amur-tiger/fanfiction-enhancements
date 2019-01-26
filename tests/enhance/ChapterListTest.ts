@@ -223,7 +223,7 @@ describe("Chapter List", function () {
 		];
 
 		scenarios.forEach(function (scenario) {
-			it(scenario.name, function () {
+			it(scenario.name, async function () {
 				const fragment = JSDOM.fragment(fragmentHTML);
 				document.body.appendChild(fragment);
 
@@ -231,32 +231,31 @@ describe("Chapter List", function () {
 					getStoryInfo: fake.resolves(createStory(scenario.chapters)),
 				} as any);
 
-				return sut.enhance()
-					.then(() => {
-						const items = document.getElementsByClassName("ffe-cl-chapter");
-						let i = 0;
-						let prevShown = scenario.spec[0].show;
-						for (const spec of scenario.spec) {
-							if (spec.show && !prevShown) {
-								const showCommand = items[i++];
-								assert.equal(showCommand.className, "ffe-cl-chapter ffe-cl-collapsed");
-							}
+				await sut.enhance();
 
-							prevShown = spec.show;
+				const items = document.getElementsByClassName("ffe-cl-chapter");
+				let i = 0;
+				let prevShown = scenario.spec[0].show;
+				for (const spec of scenario.spec) {
+					if (spec.show && !prevShown) {
+						const showCommand = items[i++];
+						assert.equal(showCommand.className, "ffe-cl-chapter ffe-cl-collapsed");
+					}
 
-							while (spec.count-- > 0) {
-								const item = items[i++];
+					prevShown = spec.show;
 
-								const read = !!(item.firstElementChild.firstElementChild as HTMLInputElement).checked;
-								assert.equal(read, spec.read,
-									"Element " + i + " should be " + (spec.read ? "read" : "unread") + ", but is not.");
+					while (spec.count-- > 0) {
+						const item = items[i++];
 
-								const shown = item.style.display !== "none";
-								assert.equal(shown, spec.show,
-									"Element " + i + " should be " + (spec.show ? "shown" : "hidden") + ", but is not.");
-							}
-						}
-					});
+						const read = !!(item.firstElementChild.firstElementChild as HTMLInputElement).checked;
+						assert.equal(read, spec.read,
+							"Element " + i + " should be " + (spec.read ? "read" : "unread") + ", but is not.");
+
+						const shown = item.style.display !== "none";
+						assert.equal(shown, spec.show,
+							"Element " + i + " should be " + (spec.show ? "shown" : "hidden") + ", but is not.");
+					}
+				}
 			});
 		});
 	});
