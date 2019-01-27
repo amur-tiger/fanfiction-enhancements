@@ -24,8 +24,10 @@ export class Api {
 	 * @param story
 	 */
 	public async putAlert(story: Story): Promise<void> {
-		await this.api.putAlert(story);
-		await this.cache.putAlert(story);
+		await Promise.all([
+			this.api.putAlert(story),
+			this.cache.putAlert(story),
+		]);
 	}
 
 	/**
@@ -100,7 +102,7 @@ export class Api {
 	public async getStoryInfo(id: number): Promise<Story> {
 		const attachHandlers = (story: Story) => {
 			// todo better error handling
-			story.follow.subscribe(follow => {
+			story.follow.subscribe(() => {
 				if (this.updatingFollowState) {
 					return;
 				}
@@ -108,7 +110,7 @@ export class Api {
 				this.putAlert(story)
 					.catch(console.error);
 			});
-			story.favorite.subscribe(favorite => {
+			story.favorite.subscribe(() => {
 				if (this.updatingFollowState) {
 					return;
 				}
