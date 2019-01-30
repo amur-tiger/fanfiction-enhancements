@@ -6,6 +6,10 @@
 		"lib": [
 			"dom",
 			"es7"
+		],
+		"typeRoots": [
+			"node_modules/@types",
+			"typings"
 		]
 	},
 	"exclude": [

@@ -1,7 +1,4 @@
-import { Chapter, Story } from "../api/data";
-
-declare function GM_getValue(key: string, def?: string | number | boolean): string | number | boolean;
-declare function GM_setValue(key: string, value: string | number | boolean): void;
+import { Chapter } from "../api/data";
 
 function GM_getObject(key: string): any {
 	return JSON.parse(GM_getValue(key, "{}") as string);
