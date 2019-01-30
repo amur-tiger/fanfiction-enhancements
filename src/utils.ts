@@ -1,12 +1,3 @@
-import * as ko from "knockout";
-
-ko.bindingHandlers.textSeparated = {
-	update: function (element, accessor) {
-		const value = ko.unwrap(accessor());
-		element.textContent = value.toLocaleString("en");
-	},
-};
-
 /**
  * Loads a script dynamically by creating a script element and attaching it to the head element.
  * @param {string} url
@@ -134,4 +125,14 @@ export function parseGetParams(url: string): { [key: string]: string } {
 
 		return {};
 	}
+}
+
+/**
+ * Returns a promise that will resolve after the given time in milliseconds.
+ * @param {number} time
+ */
+export function timeout(time): Promise<void> {
+	return new Promise(resolve => {
+		setTimeout(resolve, time);
+	});
 }

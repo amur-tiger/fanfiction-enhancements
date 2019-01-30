@@ -5,6 +5,13 @@ import { Enhancer } from "./Enhancer";
 
 import "./ChapterList.css";
 
+ko.bindingHandlers.textSeparated = {
+	update: function (element, accessor) {
+		const value = ko.unwrap(accessor());
+		element.textContent = value.toLocaleString("en");
+	},
+};
+
 export class ChapterList implements Enhancer {
 	public constructor(private readonly document: Document, private readonly api: Api) {
 	}

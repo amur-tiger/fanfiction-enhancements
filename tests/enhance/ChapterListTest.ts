@@ -1,13 +1,12 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
 import * as ko from "knockout";
-import { fake } from "sinon";
 
 import { Chapter, Story } from "../../src/api/data";
 import { ChapterList } from "../../src/enhance/ChapterList";
 
 describe("Chapter List", function () {
-	const fragmentHTML = `
+	const fragmentHTML = `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 		<div id="content_wrapper_inner">
 			<div class="lc-wrapper" id="pre_story_links"></div>
 
@@ -76,16 +75,17 @@ describe("Chapter List", function () {
 	beforeEach(function () {
 		dom = new JSDOM();
 		document = dom.window.document;
+		global["GM_getValue"] = (a, b) => b;
 	});
 
-	it("should clean elements", function () {
+	it("should clean elements", async function () {
 		const fragment = JSDOM.fragment(fragmentHTML);
 		document.body.appendChild(fragment);
 
 		const sut = new ChapterList(document, {
-			getStoryInfo: fake.resolves(createStory()),
+			getStoryInfo: () => Promise.resolve(createStory()),
 		} as any);
-		sut.enhance();
+		await sut.enhance();
 
 		const preStoryLinks = document.getElementById("pre_story_links");
 		assert.isNotNull(preStoryLinks);
@@ -99,46 +99,45 @@ describe("Chapter List", function () {
 		const review = document.getElementById("review");
 		assert.isNotNull(review);
 
-		const storytext = document.getElementById("storytextp");
-		assert.isNull(storytext);
+		const storyText = document.getElementById("storytextp");
+		assert.isNull(storyText);
 
 		assert.equal(document.getElementById("content_wrapper_inner").children.length, 7);
 	});
 
-	it("should insert chapter list", function () {
+	it("should insert chapter list", async function () {
 		const fragment = JSDOM.fragment(fragmentHTML);
 		document.body.appendChild(fragment);
 
 		const sut = new ChapterList(document, {
-			getStoryInfo: fake.resolves(createStory()),
+			getStoryInfo: () => Promise.resolve(createStory()),
 		} as any);
 
-		return sut.enhance()
-			.then(() => {
-				const container = document.getElementsByClassName("ffe-cl-container");
-				assert.lengthOf(container, 1);
+		await sut.enhance();
 
-				const items = document.getElementsByClassName("ffe-cl-chapter");
-				assert.lengthOf(items, 3);
+		const container = document.getElementsByClassName("ffe-cl-container");
+		assert.lengthOf(container, 1);
 
-				const prologue = items[0];
-				assert.equal(prologue.children[1].firstElementChild.nodeName, "A");
-				assert.equal(prologue.children[1].firstElementChild.href, "/s/0/0");
-				assert.equal(prologue.children[1].textContent.trim(), "prologue");
-				assert.equal(prologue.children[2].textContent.trim(), "1 words");
+		const items = document.getElementsByClassName("ffe-cl-chapter");
+		assert.lengthOf(items, 3);
 
-				const chapter = items[1];
-				assert.equal(chapter.children[1].firstElementChild.nodeName, "A");
-				assert.equal(chapter.children[1].firstElementChild.href, "/s/0/1");
-				assert.equal(chapter.children[1].textContent.trim(), "chapter 1");
-				assert.equal(chapter.children[2].textContent.trim(), "2 words");
+		const prologue = items[0];
+		assert.equal(prologue.children[1].firstElementChild.nodeName, "A");
+		assert.equal(prologue.children[1].firstElementChild.href, "/s/0/0");
+		assert.equal(prologue.children[1].textContent.trim(), "prologue");
+		assert.equal(prologue.children[2].textContent.trim(), "1 words");
 
-				const epilogue = items[2];
-				assert.equal(epilogue.children[1].firstElementChild.nodeName, "A");
-				assert.equal(epilogue.children[1].firstElementChild.href, "/s/0/2");
-				assert.equal(epilogue.children[1].textContent.trim(), "epilogue");
-				assert.equal(epilogue.children[2].textContent.trim(), "3 words");
-			});
+		const chapter = items[1];
+		assert.equal(chapter.children[1].firstElementChild.nodeName, "A");
+		assert.equal(chapter.children[1].firstElementChild.href, "/s/0/1");
+		assert.equal(chapter.children[1].textContent.trim(), "chapter 1");
+		assert.equal(chapter.children[2].textContent.trim(), "2 words");
+
+		const epilogue = items[2];
+		assert.equal(epilogue.children[1].firstElementChild.nodeName, "A");
+		assert.equal(epilogue.children[1].firstElementChild.href, "/s/0/2");
+		assert.equal(epilogue.children[1].textContent.trim(), "epilogue");
+		assert.equal(epilogue.children[2].textContent.trim(), "3 words");
 	});
 
 	describe("Chapter hiding", function () {
@@ -228,7 +227,7 @@ describe("Chapter List", function () {
 				document.body.appendChild(fragment);
 
 				const sut = new ChapterList(document, {
-					getStoryInfo: fake.resolves(createStory(scenario.chapters)),
+					getStoryInfo: () => Promise.resolve(createStory(scenario.chapters)),
 				} as any);
 
 				await sut.enhance();
