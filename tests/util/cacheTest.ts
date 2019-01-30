@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import * as sinon from "sinon";
+import * as td from "testdouble";
 
 import { Cache } from "../../src/util/cache";
 
@@ -8,13 +8,13 @@ describe("Cache", function() {
 	let gmSetValue;
 
 	beforeEach(function() {
-		global["GM_getValue"] = gmGetValue = sinon.stub();
-		global["GM_setValue"] = gmSetValue = sinon.spy();
+		global["GM_getValue"] = gmGetValue = td.function("GM_getValue");
+		global["GM_setValue"] = gmSetValue = td.function("GM_getValue");
 	});
 
 	describe("Read", function() {
 		it("should return false if no data is present", function() {
-			gmGetValue.returnsArg(1);
+			td.when(gmGetValue("ffe-cache-read", "{}")).thenReturn("{}");
 			const chapter = {
 				storyId: 123,
 				id: 1,
@@ -26,7 +26,7 @@ describe("Cache", function() {
 		});
 
 		it("should return saved data", function() {
-			gmGetValue.returns(JSON.stringify({
+			td.when(gmGetValue("ffe-cache-read", "{}")).thenReturn(JSON.stringify({
 				123: {
 					1: true,
 					2: false,
@@ -48,7 +48,7 @@ describe("Cache", function() {
 		});
 
 		it("should save data", function() {
-			gmGetValue.returnsArg(1);
+			td.when(gmGetValue("ffe-cache-read", "{}")).thenReturn("{}");
 			const chapter = {
 				storyId: 123,
 				id: 1,
@@ -58,15 +58,15 @@ describe("Cache", function() {
 			const sut = new Cache();
 			sut.read.setRead(chapter as any);
 
-			sinon.assert.calledWith(gmSetValue, "ffe-cache-read", JSON.stringify({
+			td.verify(gmSetValue("ffe-cache-read", JSON.stringify({
 				123: {
 					1: true,
 				},
-			}));
+			})));
 		});
 
 		it("should merge data instead of overwriting", function() {
-			gmGetValue.returns(JSON.stringify({
+			td.when(gmGetValue("ffe-cache-read", "{}")).thenReturn(JSON.stringify({
 				101: {
 					1: true,
 				},
@@ -83,7 +83,7 @@ describe("Cache", function() {
 			const sut = new Cache();
 			sut.read.setRead(chapter as any);
 
-			sinon.assert.calledWith(gmSetValue, "ffe-cache-read", JSON.stringify({
+			td.verify(gmSetValue("ffe-cache-read", JSON.stringify({
 				101: {
 					1: true,
 				},
@@ -91,7 +91,7 @@ describe("Cache", function() {
 					1: true,
 					2: true,
 				},
-			}));
+			})));
 		});
 	});
 });
