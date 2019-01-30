@@ -1,118 +1,84 @@
 import { assert } from "chai";
-import * as ko from "knockout";
-import * as sinon from "sinon";
+import * as td from "testdouble";
 
-import { cache, Cache } from "../../src/util/cache";
+import { cache } from "../../src/util/cache";
 import { Chapter, Story } from "../../src/api/data";
 
 describe("Data Objects", function() {
-	before(function() {
-		global["cache"] = new Cache();
+	beforeEach(function () {
+		global["GM_getValue"] = td.function("GM_getValue");
+	});
+
+	afterEach(function() {
+		td.reset();
 	});
 
 	describe("Story", function() {
-		let isFollowed;
-		let setFollowed;
-		let isFavorited;
-		let setFavorited;
-
-		beforeEach(function() {
-			cache.alerts.isFollowed = isFollowed = sinon.stub();
-			cache.alerts.setFollowed = setFollowed = sinon.spy();
-			cache.alerts.isFavorited = isFavorited = sinon.stub();
-			cache.alerts.setFavorited = setFavorited = sinon.spy();
-		});
-
 		it("should report read if all chapters are read", function() {
-			const a = { read: ko.observable(true) };
-			const b = { read: ko.observable(true) };
+			const a = { read: () => true };
+			const b = { read: () => true };
 
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [a, b] as any, {});
+			const sut = new Story(0, "", undefined, "", [a, b] as any, {});
 
 			assert.isTrue(sut.read());
 		});
 
 		it("should report unread if some chapters are unread", function() {
-			const a = { read: ko.observable(true) };
-			const b = { read: ko.observable(false) };
+			const a = { read: () => true };
+			const b = { read: () => false };
 
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [a, b] as any, {});
+			const sut = new Story(0, "", undefined, "", [a, b] as any, {});
 
 			assert.isFalse(sut.read());
 		});
 
 		it("should set all chapters read", function() {
-			const a = { read: ko.observable(true) };
-			const b = { read: ko.observable(false) };
+			const a = { read: td.function() };
+			const b = { read: td.function() };
+			td.when(a.read()).thenReturn(true);
+			td.when(b.read()).thenReturn(false);
 
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [a, b] as any, {});
+			const sut = new Story(0, "", undefined, "", [a, b] as any, {});
 
 			sut.read(true);
 
-			assert.isTrue(a.read());
-			assert.isTrue(b.read());
+			td.verify(a.read(true));
+			td.verify(b.read(true));
 		});
 
 		it("should set all chapters unread", function() {
-			const a = { read: ko.observable(true) };
-			const b = { read: ko.observable(false) };
+			const a = { read: td.function() };
+			const b = { read: td.function() };
+			td.when(a.read()).thenReturn(true);
+			td.when(b.read()).thenReturn(false);
 
-			const sut = new Story(0, "", {
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			}, "", [a, b] as any, {});
+			const sut = new Story(0, "", undefined, "", [a, b] as any, {});
 
 			sut.read(false);
 
-			assert.isFalse(a.read());
-			assert.isFalse(b.read());
+			td.verify(a.read(false));
+			td.verify(b.read(false));
 		});
 	});
 
 	describe("Chapter", function() {
-		let isRead;
-		let setRead;
-
-		beforeEach(function() {
-			cache.read.isRead = isRead = sinon.stub();
-			cache.read.setRead = setRead = sinon.spy();
-		});
-
 		it("should retrieve read value via cache", function() {
-			isRead.returns(true);
+			td.replace(cache, "read");
+			td.when(cache.read.isRead(td.matchers.anything())).thenReturn(true);
 
 			const sut = new Chapter(123, 1, "chapter", 0);
 
 			assert.isTrue(sut.read());
-			sinon.assert.calledOnce(isRead);
-			sinon.assert.notCalled(setRead);
 		});
 
 		it("should set read value via cache", function() {
-			isRead.returns(false);
+			td.replace(cache, "read");
+			td.when(cache.read.isRead(td.matchers.anything())).thenReturn(false);
 
 			const sut = new Chapter(123, 1, "chapter", 0);
 			sut.read(true);
 
-			sinon.assert.calledOnce(isRead);
-			sinon.assert.calledWith(setRead, sut);
+			td.verify(cache.read.setRead(sut));
 		});
 	});
 });
