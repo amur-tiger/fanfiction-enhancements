@@ -176,7 +176,6 @@ export class Cache {
 	public async getStory(id: number): Promise<Story> {
 		const items = this.getMap(Cache.STORIES_KEY, Cache.STORIES_LIFETIME);
 		if (!items.hasOwnProperty(id)) {
-			console.log(id + " not found");
 			throw new Error(`Story with id '${id}' does not exist in cache.`);
 		}
 
