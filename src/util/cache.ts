@@ -31,49 +31,8 @@ class Read {
 	}
 }
 
-class Alerts {
-	private static readonly ALERTS_KEY = "ffe-cache-alerts";
-
-	public isFollowed(story: Story): boolean {
-		const data = GM_getObject(Alerts.ALERTS_KEY);
-
-		return !!(data.follows && data.follows[story.id]);
-	}
-
-	public setFollowed(story: Story) {
-		const data = GM_getObject(Alerts.ALERTS_KEY);
-		if (!data.follows) {
-			data.follows = {};
-		}
-
-		data.follows[story.id] = story.follow();
-		GM_setObject(Alerts.ALERTS_KEY, data);
-	}
-
-	public isFavorited(story: Story): boolean {
-		const data = GM_getObject(Alerts.ALERTS_KEY);
-
-		return !!(data.favorites && data.favorites[story.id]);
-	}
-
-	public setFavorited(story: Story) {
-		const data = GM_getObject(Alerts.ALERTS_KEY);
-		if (!data.favorites) {
-			data.favorites = {};
-		}
-
-		data.favorites[story.id] = story.favorite();
-		GM_setObject(Alerts.ALERTS_KEY, data);
-	}
-}
-
 export class Cache {
 	public readonly read: Read = new Read();
-	/**
-	 * @deprecated
-	 * @type {Alerts}
-	 */
-	public readonly alerts: Alerts = new Alerts();
 }
 
 export const cache = new Cache();
