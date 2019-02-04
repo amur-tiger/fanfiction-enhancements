@@ -6,6 +6,9 @@ export interface Identifiable {
 	id: number;
 }
 
+/**
+ * @deprecated
+ */
 export class Chapter {
 	public readonly read = ko.observable();
 
@@ -34,6 +37,9 @@ export interface FollowedStory extends Identifiable {
 	author: User;
 }
 
+/**
+ * @deprecated
+ */
 export class Story implements FollowedStory {
 	public readonly follow = ko.observable();
 	public readonly favorite = ko.observable();
@@ -72,6 +78,9 @@ export class Story implements FollowedStory {
 	}
 }
 
+/**
+ * @deprecated
+ */
 export interface StoryMetaData {
 	id?: number;
 	imageUrl?: string;

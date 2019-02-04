@@ -1,7 +1,7 @@
-import { Api } from "../api/api";
 import { environment } from "../util/environment";
 import * as ko from "knockout";
 import { Enhancer } from "./Enhancer";
+import { ValueContainer } from "../api/ValueContainer";
 
 import "./ChapterList.css";
 
@@ -13,11 +13,11 @@ ko.bindingHandlers.textSeparated = {
 };
 
 export class ChapterList implements Enhancer {
-	public constructor(private readonly document: Document, private readonly api: Api) {
+	public constructor(private readonly valueContainer: ValueContainer) {
 	}
 
-	public enhance(): Promise<any> {
-		const contentWrapper = this.document.getElementById("content_wrapper_inner");
+	public async enhance(): Promise<any> {
+		const contentWrapper = document.getElementById("content_wrapper_inner");
 
 		// clean up content
 		Array.from(contentWrapper.children)
@@ -25,10 +25,10 @@ export class ChapterList implements Enhancer {
 				|| (e.firstElementChild && e.firstElementChild.nodeName === "SELECT")
 				|| (e.className === "lc-wrapper" && e.id !== "pre_story_links"))
 			.forEach(e => contentWrapper.removeChild(e));
-		contentWrapper.removeChild(this.document.getElementById("storytextp"));
+		contentWrapper.removeChild(document.getElementById("storytextp"));
 
 		// add chapter list
-		const chapterListContainer = this.document.createElement("div");
+		const chapterListContainer = document.createElement("div");
 		chapterListContainer.className = "ffe-cl-container";
 		chapterListContainer.innerHTML =
 			`<div class="ffe-cl">
@@ -47,7 +47,7 @@ export class ChapterList implements Enhancer {
 					</li>
 				</ol>
 			</div>`;
-		contentWrapper.insertBefore(chapterListContainer, this.document.getElementById("review_success"));
+		contentWrapper.insertBefore(chapterListContainer, document.getElementById("review_success"));
 
 		// const profileFooter = this.document.getElementsByClassName("ffe-sc-footer")[0];
 		// const allReadContainer = this.document.createElement("span");
@@ -59,15 +59,13 @@ export class ChapterList implements Enhancer {
 		// 	<label data-bind="attr: { for: 'ffe-cl-story-' + id }"/>`;
 		// profileFooter.insertBefore(allReadContainer, profileFooter.firstElementChild);
 
-		return this.api.getStoryInfo(environment.currentStoryId)
-			.then(story => {
-				ko.applyBindings(story, this.document.getElementById("content_wrapper_inner"));
-				this.hideLongChapterList();
-			});
+		const story = await this.valueContainer.getStory(environment.currentStoryId);
+		ko.applyBindings(story, document.getElementById("content_wrapper_inner"));
+		this.hideLongChapterList();
 	}
 
 	private hideLongChapterList() {
-		const elements = Array.from(this.document.getElementsByClassName("ffe-cl-chapter"));
+		const elements = Array.from(document.getElementsByClassName("ffe-cl-chapter"));
 		const isRead = (e: Element) => !!(e.firstElementChild.firstElementChild as HTMLInputElement).checked;
 
 		let currentBlockIsRead = isRead(elements[0]);

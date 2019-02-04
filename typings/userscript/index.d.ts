@@ -6,6 +6,7 @@ type GMValue = string | number | boolean;
 /**
  * Deletes an existing key/value pair from storage.
  * @param {string} name
+ * @deprecated
  */
 declare function GM_deleteValue(name: string): void;
 
@@ -13,11 +14,13 @@ declare function GM_deleteValue(name: string): void;
  * Retrieves a value from storage that was set with GM_setValue.
  * @param {string} name
  * @param {GMValue} def
+ * @deprecated
  */
 declare function GM_getValue(name: string, def?: GMValue): GMValue;
 
 /**
  * Retrieves a list of keys for values in storage.
+ * @deprecated
  */
 declare function GM_listValues(): string[];
 
@@ -25,6 +28,7 @@ declare function GM_listValues(): string[];
  * Saves a value to storage.
  * @param {string} name
  * @param {GMValue} value
+ * @deprecated
  */
 declare function GM_setValue(name: string, value: GMValue): void;
 

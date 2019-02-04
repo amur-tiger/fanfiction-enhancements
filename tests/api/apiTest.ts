@@ -1,211 +1,10 @@
 import { assert } from "chai";
 import * as td from "testdouble";
 
-import { Api, ApiImmediate } from "../../src/api/api";
-import { Cache } from "../../src/api/cache";
-import { Chapter, FollowedStory, Story } from "../../src/api/data";
+import { Api } from "../../src/api/api";
+import { Story, StoryData } from "../../src/api/Story";
 
 describe("Api", function () {
-	before(function () {
-		global["GM_getValue"] = (a, b) => b;
-		global["GM_setValue"] = () => undefined;
-
-		td.replace(console, "debug");
-	});
-
-	after(function () {
-		td.reset();
-	});
-
-	describe("Alerts", function () {
-		it("should put alert state for Api and Cache", async function () {
-			const story: Story = {} as any;
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			const sut = new Api(cache, api);
-
-			await sut.putAlert(story);
-
-			td.verify(api.putAlert(story));
-			td.verify(cache.putAlert(story));
-		});
-
-		it("should retrieve alerts list from Cache", async function () {
-			const story: FollowedStory = {} as any;
-			const cache = td.object<Cache>();
-			td.when(cache.isAlertsFresh()).thenResolve(true);
-			td.when(cache.getAlerts()).thenResolve([story]);
-
-			const sut = new Api(cache, {} as any);
-
-			const list = await sut.getStoryAlerts();
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.equal(list[0], story);
-		});
-
-		it("should retrieve alerts list from Api", async function () {
-			const story: FollowedStory = {} as any;
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			td.when(cache.isAlertsFresh()).thenResolve(false);
-			td.when(api.getStoryAlerts()).thenResolve([story]);
-
-			const sut = new Api(cache, api);
-
-			const list = await sut.getStoryAlerts();
-
-			td.verify(cache.putAlerts([story]));
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.equal(list[0], story);
-		});
-	});
-
-	describe("Favorites", function () {
-		it("should put favorite state for Api and Cache", async function () {
-			const story: Story = {} as any;
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			const sut = new Api(cache, api);
-
-			await sut.putFavorite(story);
-
-			td.verify(api.putFavorite(story));
-			td.verify(cache.putFavorite(story));
-		});
-
-		it("should retrieve favorite list from Cache", async function () {
-			const story: FollowedStory = {} as any;
-			const cache = td.object<Cache>();
-			td.when(cache.isFavoritesFresh()).thenResolve(true);
-			td.when(cache.getFavorites()).thenResolve([story]);
-
-			const sut = new Api(cache, {} as any);
-
-			const list = await sut.getStoryFavorites();
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.equal(list[0], story);
-		});
-
-		it("should retrieve favorites list from Api", async function () {
-			const story: FollowedStory = {} as any;
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			td.when(cache.isFavoritesFresh()).thenResolve(false);
-			td.when(api.getStoryFavorites()).thenResolve([story]);
-
-			const sut = new Api(cache, api);
-
-			const list = await sut.getStoryFavorites();
-
-			td.verify(cache.putFavorites([story]));
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.equal(list[0], story);
-		});
-	});
-
-	describe("Story Info", function () {
-		it("should return info from Cache", async function () {
-			const story: Story = {
-				chapters: [{
-					words: 100,
-				}],
-				follow: { subscribe: td.function() },
-				favorite: { subscribe: td.function() },
-			} as any;
-			const cache = td.object<Cache>();
-			td.when(cache.getStory(123)).thenResolve(story);
-
-			const sut = new Api(cache, {} as any);
-
-			const result = await sut.getStoryInfo(123);
-
-			assert.equal(result, story);
-		});
-
-		it("should return info from Api", async function () {
-			const story = td.object<Story>();
-			story.follow.subscribe = td.function() as any;
-			story.favorite.subscribe = td.function() as any;
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			td.when(cache.getStory(123)).thenThrow(new Error("not in cache"));
-			td.when(cache.isAlertsFresh()).thenResolve(true);
-			td.when(cache.isFavoritesFresh()).thenResolve(true);
-			td.when(cache.hasAlert(td.matchers.anything())).thenResolve(true);
-			td.when(cache.isFavorite(td.matchers.anything())).thenResolve(true);
-			td.when(api.getStoryInfo(123)).thenResolve(story);
-
-			const sut = new Api(cache, api);
-
-			const result = await sut.getStoryInfo(123);
-
-			td.verify(api.applyChapterLengths(td.matchers.anything()));
-			td.verify(story.follow.subscribe(td.matchers.anything()));
-			td.verify(story.favorite.subscribe(td.matchers.anything()));
-			td.verify(story.follow(true));
-			td.verify(story.favorite(true));
-
-			assert.equal(result, story);
-		});
-
-		it("should attach alerts handler", async function () {
-			const story = td.object<Story>();
-			story.follow.subscribe = td.function() as any;
-			story.favorite.subscribe = td.function() as any;
-			(story as any).chapters = [ td.object<Chapter>() ];
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			td.when(cache.getStory(123)).thenResolve(story);
-
-			const sut = new Api(cache, api);
-
-			await sut.getStoryInfo(123);
-
-			const callback = td.matchers.captor();
-			td.verify(story.follow.subscribe(callback.capture()));
-
-			await callback.value();
-
-			td.verify(cache.putAlert(td.matchers.anything()));
-			td.verify(api.putAlert(td.matchers.anything()));
-		});
-
-		it("should attach favorites handler", async function () {
-			const story = td.object<Story>();
-			story.follow.subscribe = td.function() as any;
-			story.favorite.subscribe = td.function() as any;
-			(story as any).chapters = [ td.object<Chapter>() ];
-			const cache = td.object<Cache>();
-			const api = td.object<ApiImmediate>();
-			td.when(cache.getStory(123)).thenResolve(story);
-
-			const sut = new Api(cache, api);
-
-			await sut.getStoryInfo(123);
-
-			const callback = td.matchers.captor();
-			td.verify(story.favorite.subscribe(callback.capture()));
-
-			await callback.value();
-
-			td.verify(cache.putFavorite(td.matchers.anything()));
-			td.verify(api.putFavorite(td.matchers.anything()));
-		});
-	});
-});
-
-describe("ApiImmediate", function () {
-	global["GM_getValue"] = (a, b) => b;
-	global["GM_setValue"] = () => undefined;
-
 	beforeEach(function () {
 		td.replace(console, "debug");
 		global["fetch"] = td.function("fetch");
@@ -217,44 +16,40 @@ describe("ApiImmediate", function () {
 	});
 
 	describe("Alerts", function () {
-		it("should put positive alert state", async function () {
-			const story = td.object<Story>();
+		it("should add alert", async function () {
 			const response = td.object<Response>();
 			const urlCaptor = td.matchers.captor();
 			const argsCaptor = td.matchers.captor();
-			td.when(story.follow()).thenReturn(true);
 			td.when(response.json()).thenResolve({});
 			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const sut = new ApiImmediate();
+			const sut = new Api();
 
-			await sut.putAlert(story);
+			await sut.addStoryAlert(1);
 
 			assert.equal(urlCaptor.value, "/api/ajax_subs.php");
 			assert.equal(argsCaptor.value.method, "POST");
 			const fd: FormData = argsCaptor.value.body;
-			assert.equal(fd.get("storyid").valueOf(), story.id);
+			assert.equal(fd.get("storyid").valueOf(), 1);
 			assert.equal(fd.get("storyalert").valueOf(), 1);
 		});
 
-		it("should put negative alert state", async function () {
-			const story = td.object<Story>();
+		it("should remove alert", async function () {
 			const response = td.object<Response>();
 			const urlCaptor = td.matchers.captor();
 			const argsCaptor = td.matchers.captor();
-			td.when(story.follow()).thenReturn(false);
 			td.when(response.json()).thenResolve({});
 			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const sut = new ApiImmediate();
+			const sut = new Api();
 
-			await sut.putAlert(story);
+			await sut.removeStoryAlert(1);
 
 			assert.equal(urlCaptor.value, "/alert/story.php");
 			assert.equal(argsCaptor.value.method, "POST");
 			const fd: FormData = argsCaptor.value.body;
 			assert.equal(fd.get("action").valueOf(), "remove-multi");
-			assert.equal(fd.get("rids[]").valueOf(), story.id);
+			assert.equal(fd.get("rids[]").valueOf(), 1);
 		});
 
 		it("should retrieve multi-page alerts list", async function () {
@@ -299,7 +94,7 @@ describe("ApiImmediate", function () {
 			const response1 = td.object<Response>();
 			const response2 = td.object<Response>();
 			const urlCaptor = td.matchers.captor();
-			const sut = new ApiImmediate();
+			const sut = new Api();
 			td.when(response1.text()).thenResolve(page1);
 			td.when(response2.text()).thenResolve(page2);
 			td.when(fetch(urlCaptor.capture())).thenResolve(response1, response2);
@@ -328,44 +123,40 @@ describe("ApiImmediate", function () {
 	});
 
 	describe("Favorites", function () {
-		it("should put positive favorite state", async function () {
-			const story = td.object<Story>();
+		it("should add favorite", async function () {
 			const response = td.object<Response>();
 			const urlCaptor = td.matchers.captor();
 			const argsCaptor = td.matchers.captor();
-			td.when(story.favorite()).thenReturn(true);
 			td.when(response.json()).thenResolve({});
 			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const sut = new ApiImmediate();
+			const sut = new Api();
 
-			await sut.putFavorite(story);
+			await sut.addStoryFavorite(1);
 
 			assert.equal(urlCaptor.value, "/api/ajax_subs.php");
 			assert.equal(argsCaptor.value.method, "POST");
 			const fd: FormData = argsCaptor.value.body;
-			assert.equal(fd.get("storyid").valueOf(), story.id);
+			assert.equal(fd.get("storyid").valueOf(), 1);
 			assert.equal(fd.get("favstory").valueOf(), 1);
 		});
 
-		it("should put negative favorite state", async function () {
-			const story = td.object<Story>();
+		it("should remove favorite", async function () {
 			const response = td.object<Response>();
 			const urlCaptor = td.matchers.captor();
 			const argsCaptor = td.matchers.captor();
-			td.when(story.favorite()).thenReturn(false);
 			td.when(response.json()).thenResolve({});
 			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const sut = new ApiImmediate();
+			const sut = new Api();
 
-			await sut.putFavorite(story);
+			await sut.removeStoryFavorite(1);
 
 			assert.equal(urlCaptor.value, "/favorites/story.php");
 			assert.equal(argsCaptor.value.method, "POST");
 			const fd: FormData = argsCaptor.value.body;
 			assert.equal(fd.get("action").valueOf(), "remove-multi");
-			assert.equal(fd.get("rids[]").valueOf(), story.id);
+			assert.equal(fd.get("rids[]").valueOf(), 1);
 		});
 
 		it("should retrieve multi-page favorites list", async function () {
@@ -410,7 +201,7 @@ describe("ApiImmediate", function () {
 			const response1 = td.object<Response>();
 			const response2 = td.object<Response>();
 			const urlCaptor = td.matchers.captor();
-			const sut = new ApiImmediate();
+			const sut = new Api();
 			td.when(response1.text()).thenResolve(page1);
 			td.when(response2.text()).thenResolve(page2);
 			td.when(fetch(urlCaptor.capture())).thenResolve(response1, response2);
@@ -439,7 +230,7 @@ describe("ApiImmediate", function () {
 	});
 
 	describe("Stories", function () {
-		it("should retrieve story info", async function () {
+		it("should retrieve story data", async function () {
 			const page = `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 			<div id="test-wrapper">
 				<div id="profile_top">
@@ -462,14 +253,14 @@ describe("ApiImmediate", function () {
 
 			const urlCaptor = td.matchers.captor();
 			const response = td.object<Response>();
-			const sut = new ApiImmediate();
+			const sut = new Api();
 			td.when(response.text()).thenResolve(page);
 			td.when(fetch(urlCaptor.capture())).thenResolve(response);
+			global["GM_getValue"] = (a, b) => b;
 
-			const story = await sut.getStoryInfo(123);
+			const story = await sut.getStoryData(123);
 
 			assert.equal(urlCaptor.value, "/s/123");
-			assert.instanceOf(story, Story);
 			assert.equal(story.id, 123);
 			assert.equal(story.title, "title");
 		});

@@ -1,5 +1,6 @@
 import { Chapter, FollowedStory, Story, StoryMetaData } from "../api/data";
 import { environment } from "./environment";
+import { StoryData } from "../api/Story";
 
 export function parseProfile(fragment: string | Document | DocumentFragment): Story {
 	const container = typeof fragment === "string" ? (() => {
@@ -54,6 +55,38 @@ export function parseProfile(fragment: string | Document | DocumentFragment): St
 		],
 		resultMeta,
 	);
+}
+
+export function parseProfile2(fragment: string | Document | DocumentFragment): StoryData {
+	const story = parseProfile(fragment);
+
+	return {
+		id: story.id,
+		title: story.title,
+		author: story.author.name,
+		authorId: story.author.id,
+		description: story.description,
+		chapters: story.chapters.map(chapter => {
+			return {
+				storyId: story.id,
+				id: chapter.id,
+				name: chapter.name,
+			};
+		}),
+		imageUrl: story.meta.imageUrl,
+		imageOriginalUrl: story.meta.imageOriginalUrl,
+		favs: story.meta.favs,
+		follows: story.meta.follows,
+		reviews: story.meta.reviews,
+		genre: story.meta.genre,
+		language: story.meta.language,
+		published: story.meta.published ? story.meta.published.toISOString() : undefined,
+		updated: story.meta.updated ? story.meta.updated.toISOString() : undefined,
+		rating: story.meta.rating,
+		words: story.meta.words,
+		characters: story.meta.characters,
+		status: story.meta.status,
+	};
 }
 
 function parseTags(tagsElement: Element): StoryMetaData {
@@ -160,7 +193,8 @@ function parseChapters(storyId: number, selectElement: ParentNode): Chapter[] {
 	return result;
 }
 
-export function parseFollowedStoryList(fragment: string | Document | DocumentFragment): FollowedStory[] {
+export function parseFollowedStoryList(fragment: string | Document | DocumentFragment):
+	(FollowedStory & { row: HTMLTableRowElement })[] {
 	const container = typeof fragment === "string" ? (() => {
 		const template = document.createElement("template");
 		template.innerHTML = fragment;
@@ -168,25 +202,26 @@ export function parseFollowedStoryList(fragment: string | Document | DocumentFra
 		return template.content;
 	})() : fragment;
 
-	const rows = container.querySelectorAll("#gui_table1i tbody tr");
+	const rows = container.querySelectorAll("#gui_table1i tbody tr") as NodeListOf<HTMLTableRowElement>;
 
-	return Array.from(rows).map((row: HTMLTableRowElement) => {
-		if ((row.firstElementChild as HTMLTableCellElement).colSpan > 1) {
-			return undefined;
-		}
+	return Array.from(rows)
+		.filter(row => {
+			return (row.firstElementChild as HTMLTableCellElement).colSpan === 1;
+		})
+		.map(row => {
+			const storyAnchor = row.children[0].firstElementChild as HTMLAnchorElement;
+			const authorAnchor = row.children[1].firstElementChild as HTMLAnchorElement;
 
-		const storyAnchor = row.children[0].firstElementChild as HTMLAnchorElement;
-		const authorAnchor = row.children[1].firstElementChild as HTMLAnchorElement;
-
-		return {
-			id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-			title: storyAnchor.textContent,
-			author: {
-				id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-				name: authorAnchor.textContent,
-				profileUrl: authorAnchor.href,
-				avatarUrl: "",
-			},
-		};
-	}).filter(story => story);
+			return {
+				row: row,
+				id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
+				title: storyAnchor.textContent,
+				author: {
+					id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
+					name: authorAnchor.textContent,
+					profileUrl: authorAnchor.href,
+					avatarUrl: "",
+				},
+			};
+		});
 }
