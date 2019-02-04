@@ -51,14 +51,14 @@ export class Api {
 			storyid: id,
 			userid: environment.currentUserId,
 			storyalert: 1,
-		});
+		}, "json");
 	}
 
 	public async removeStoryAlert(id: number): Promise<void> {
 		await this.post("/alert/story.php", {
 			action: "remove-multi",
 			"rids[]": id,
-		});
+		}, "html");
 	}
 
 	public async addStoryFavorite(id: number): Promise<void> {
@@ -66,14 +66,14 @@ export class Api {
 			storyid: id,
 			userid: environment.currentUserId,
 			favstory: 1,
-		});
+		}, "json");
 	}
 
 	public async removeStoryFavorite(id: number): Promise<void> {
 		await this.post("/favorites/story.php", {
 			action: "remove-multi",
 			"rids[]": id,
-		});
+		}, "html");
 	}
 
 	private async get(url: string): Promise<string> {
@@ -113,10 +113,10 @@ export class Api {
 		return Promise.all(result);
 	}
 
-	private async post(url: string, data: any): Promise<any> {
+	private async post(url: string, data: any, expect: "json" | "html"): Promise<any> {
 		console.log("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
 
-		const formData = new FormData();
+		const formData = new URLSearchParams();
 		for (const key in data) {
 			if (!data.hasOwnProperty(key)) {
 				continue;
@@ -128,13 +128,32 @@ export class Api {
 		const response = await fetch(url, {
 			method: "POST",
 			body: formData,
+			referrer: url,
 		});
 
-		const json = await response.json();
-		if (json.error) {
-			throw new Error(json.error_msg);
-		}
+		if (expect === "json") {
+			const json = await response.json();
+			if (json.error) {
+				throw new Error(json.error_msg);
+			}
 
-		return json;
+			return json;
+		} else {
+			const template = document.createElement("template");
+			template.innerHTML = await response.text();
+
+			const err = template.content.querySelector(".gui_error");
+			if (err) {
+				throw new Error(err.textContent);
+			}
+
+			const msg = template.content.querySelector(".gui_success");
+			if (msg) {
+				return {
+					payload_type: "html",
+					payload_data: msg.innerHTML,
+				};
+			}
+		}
 	}
 }
