@@ -23,20 +23,21 @@
 }
 
 .ffe-sc-follow:hover,
-.ffe-sc-follow.ffe-sc-active {
+.ffe-sc-follow.ffe-active {
 	color: #60cf23;
 }
 
 .ffe-sc-favorite:hover,
-.ffe-sc-favorite.ffe-sc-active {
+.ffe-sc-favorite.ffe-active {
 	color: #ffb400;
 }
 
 .ffe-sc-tags {
 	border-bottom: 1px solid #ddd;
+	display: flex;
+	flex-wrap: wrap;
 	line-height: 2em;
 	margin-bottom: 8px;
-	padding-bottom: 8px;
 }
 
 .ffe-sc-tag {
@@ -44,6 +45,7 @@
 	border-radius: 4px;
 	color: black;
 	line-height: 16px;
+	margin-bottom: 8px;
 	margin-right: 5px;
 	padding: 3px 8px;
 }

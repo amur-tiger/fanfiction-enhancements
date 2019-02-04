@@ -1,13 +1,19 @@
-import { assert } from "chai";
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
 import { JSDOM } from "jsdom";
-import * as ko from "knockout";
-import { fake } from "sinon";
+import * as td from "testdouble";
 
-import { Chapter, Story } from "../../src/api/data";
+import { Chapter } from "../../src/api/Chapter";
 import { ChapterList } from "../../src/enhance/ChapterList";
+import { SmartValue } from "../../src/api/SmartValue";
+import { Story } from "../../src/api/Story";
+import { ValueContainer } from "../../src/api/ValueContainer";
+
+chai.use(chaiAsPromised);
+const assert = chai.assert;
 
 describe("Chapter List", function () {
-	const fragmentHTML = `
+	const fragmentHTML = `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 		<div id="content_wrapper_inner">
 			<div class="lc-wrapper" id="pre_story_links"></div>
 
@@ -51,41 +57,51 @@ describe("Chapter List", function () {
 		</div>`;
 
 	function createStory(chapters: Chapter[] = undefined): Story {
-		return new Story(
-			0,
-			"title",
-			{
-				id: 0,
-				name: "",
-				profileUrl: "",
-				avatarUrl: "",
-			},
-			"description",
-			chapters ? chapters :
-				[
-					new Chapter(0, 0, "prologue", 1),
-					new Chapter(0, 1, "chapter 1", 2),
-					new Chapter(0, 2, "epilogue", 3),
-				],
-			undefined,
-		);
+		const story: Story = {
+			id: 0,
+		} as any;
+
+		(story as any).chapters = chapters || [
+			createChapter(0, "prologue", 1),
+			createChapter(1, "chapter 1", 2),
+			createChapter(2, "epilogue", 3),
+		];
+
+		return story;
 	}
 
-	let dom;
-	let document;
-	beforeEach(function () {
-		dom = new JSDOM();
-		document = dom.window.document;
+	function createChapter(id: number, name: string, words: number): Chapter {
+		const r: SmartValue<boolean> = {
+			get: () => Promise.resolve(true),
+			subscribe: () => undefined,
+		} as any;
+		const w: SmartValue<number> = {
+			get: () => Promise.resolve(1),
+			subscribe: () => undefined,
+		} as any;
+
+		return {
+			storyId: 0,
+			id: id,
+			name: name,
+			read: r,
+			words: w,
+		};
+	}
+
+	afterEach(function () {
+		document.body.innerHTML = "";
 	});
 
-	it("should clean elements", function () {
+	it("should clean elements", async function () {
 		const fragment = JSDOM.fragment(fragmentHTML);
 		document.body.appendChild(fragment);
 
-		const sut = new ChapterList(document, {
-			getStoryInfo: fake.resolves(createStory()),
-		} as any);
-		sut.enhance();
+		const valueContainer = td.object<ValueContainer>();
+		const sut = new ChapterList(valueContainer);
+		td.when(valueContainer.getStory(td.matchers.anything())).thenResolve(createStory());
+
+		await sut.enhance();
 
 		const preStoryLinks = document.getElementById("pre_story_links");
 		assert.isNotNull(preStoryLinks);
@@ -99,165 +115,23 @@ describe("Chapter List", function () {
 		const review = document.getElementById("review");
 		assert.isNotNull(review);
 
-		const storytext = document.getElementById("storytextp");
-		assert.isNull(storytext);
+		const storyText = document.getElementById("storytextp");
+		assert.isNull(storyText);
 
 		assert.equal(document.getElementById("content_wrapper_inner").children.length, 7);
 	});
 
-	it("should insert chapter list", function () {
+	it("should insert chapter list", async function () {
 		const fragment = JSDOM.fragment(fragmentHTML);
 		document.body.appendChild(fragment);
 
-		const sut = new ChapterList(document, {
-			getStoryInfo: fake.resolves(createStory()),
-		} as any);
+		const valueContainer = td.object<ValueContainer>();
+		const sut = new ChapterList(valueContainer);
+		td.when(valueContainer.getStory(td.matchers.anything())).thenResolve(createStory());
 
-		return sut.enhance()
-			.then(() => {
-				const container = document.getElementsByClassName("ffe-cl-container");
-				assert.lengthOf(container, 1);
+		await sut.enhance();
 
-				const items = document.getElementsByClassName("ffe-cl-chapter");
-				assert.lengthOf(items, 3);
-
-				const prologue = items[0];
-				assert.equal(prologue.children[1].firstElementChild.nodeName, "A");
-				assert.equal(prologue.children[1].firstElementChild.href, "/s/0/0");
-				assert.equal(prologue.children[1].textContent.trim(), "prologue");
-				assert.equal(prologue.children[2].textContent.trim(), "1 words");
-
-				const chapter = items[1];
-				assert.equal(chapter.children[1].firstElementChild.nodeName, "A");
-				assert.equal(chapter.children[1].firstElementChild.href, "/s/0/1");
-				assert.equal(chapter.children[1].textContent.trim(), "chapter 1");
-				assert.equal(chapter.children[2].textContent.trim(), "2 words");
-
-				const epilogue = items[2];
-				assert.equal(epilogue.children[1].firstElementChild.nodeName, "A");
-				assert.equal(epilogue.children[1].firstElementChild.href, "/s/0/2");
-				assert.equal(epilogue.children[1].textContent.trim(), "epilogue");
-				assert.equal(epilogue.children[2].textContent.trim(), "3 words");
-			});
-	});
-
-	describe("Chapter hiding", function () {
-		const createChapterRun = (...blockLengths) => {
-			const result: Chapter[] = [];
-			let chapterRunningIndex = 1;
-			let readToggle = false;
-			blockLengths.forEach(length => {
-				readToggle = !readToggle;
-				for (let i = 0; i < length; i++) {
-					result.push({
-						storyId: 0,
-						id: chapterRunningIndex++,
-						name: "",
-						read: ko.observable(readToggle),
-						words: 0,
-					});
-				}
-			});
-
-			return result;
-		};
-
-		const scenarios = [
-			{
-				name: "should hide read chapters",
-				chapters: createChapterRun(3, 2),
-				spec: [{
-					count: 3,
-					read: true,
-					show: false,
-				},
-					{
-						count: 2,
-						read: false,
-						show: true,
-					}],
-			},
-			{
-				name: "should hide unread chapters",
-				chapters: createChapterRun(0, 11),
-				spec: [{
-					count: 2,
-					read: false,
-					show: true,
-				},
-					{
-						count: 6,
-						read: false,
-						show: false,
-					},
-					{
-						count: 3,
-						read: false,
-						show: true,
-					}],
-			},
-			{
-				name: "should show unread chapters after read chapters",
-				chapters: createChapterRun(5, 15),
-				spec: [{
-					count: 5,
-					read: true,
-					show: false,
-				},
-					{
-						count: 2,
-						read: false,
-						show: true,
-					},
-					{
-						count: 10,
-						read: false,
-						show: false,
-					},
-					{
-						count: 3,
-						read: false,
-						show: true,
-					}],
-			},
-		];
-
-		scenarios.forEach(function (scenario) {
-			it(scenario.name, function () {
-				const fragment = JSDOM.fragment(fragmentHTML);
-				document.body.appendChild(fragment);
-
-				const sut = new ChapterList(document, {
-					getStoryInfo: fake.resolves(createStory(scenario.chapters)),
-				} as any);
-
-				return sut.enhance()
-					.then(() => {
-						const items = document.getElementsByClassName("ffe-cl-chapter");
-						let i = 0;
-						let prevShown = scenario.spec[0].show;
-						for (const spec of scenario.spec) {
-							if (spec.show && !prevShown) {
-								const showCommand = items[i++];
-								assert.equal(showCommand.className, "ffe-cl-chapter ffe-cl-collapsed");
-							}
-
-							prevShown = spec.show;
-
-							while (spec.count-- > 0) {
-								const item = items[i++];
-
-								const read = !!(item.firstElementChild.firstElementChild as HTMLInputElement).checked;
-								assert.equal(read, spec.read,
-									"Element " + i + " should be " + (spec.read ? "read" : "unread") + ", but is not.");
-
-								const shown = item.style.display !== "none";
-								assert.equal(shown, spec.show,
-									"Element " + i + " should be " + (spec.show ? "shown" : "hidden") + ", but is not.");
-							}
-						}
-					});
-			});
-		});
+		const container = document.getElementsByClassName("ffe-cl-container");
+		assert.lengthOf(container, 1);
 	});
 });

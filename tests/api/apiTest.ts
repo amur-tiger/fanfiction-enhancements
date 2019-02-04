@@ -1,393 +1,60 @@
 import { assert } from "chai";
-import * as jQueryProxy from "jquery";
-import { assert as sAssert, fake, match, SinonSpy, stub } from "sinon";
+import * as td from "testdouble";
 
-import { Api, ApiImmediate } from "../../src/api/api";
-import { Cache } from "../../src/api/cache";
-import { Story } from "../../src/api/data";
-
-const $: JQueryStatic = (jQueryProxy as any).default || jQueryProxy;
+import { Api } from "../../src/api/api";
+import { Story, StoryData } from "../../src/api/Story";
 
 describe("Api", function () {
-	const consoleDebugSave = console.debug;
-
-	global["GM_getValue"] = (a, b) => b;
-	global["GM_setValue"] = () => undefined;
-
-	before(function () {
-		console.debug = () => undefined;
+	beforeEach(function () {
+		td.replace(console, "log");
+		global["fetch"] = td.function("fetch");
 	});
 
-	after(function () {
-		console.debug = consoleDebugSave;
+	afterEach(function () {
+		td.reset();
+		delete global["fetch"];
 	});
 
 	describe("Alerts", function () {
-		it("should put alert state for Api and Cache", async function () {
-			const story: Story = {} as any;
-			(story as any).follow = () => true;
+		it("should add alert", async function () {
+			const response = td.object<Response>();
+			const urlCaptor = td.matchers.captor();
+			const argsCaptor = td.matchers.captor();
+			td.when(response.json()).thenResolve({});
+			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const cache: Cache = {} as any;
-			cache.putAlert = fake();
-			const api: ApiImmediate = {} as any;
-			api.putAlert = fake();
-			const sut = new Api(cache, api);
+			const sut = new Api();
 
-			await sut.putAlert(story);
+			await sut.addStoryAlert(1);
 
-			sAssert.calledOnce(cache.putAlert as SinonSpy);
-			sAssert.calledWith(cache.putAlert as SinonSpy, story);
-			sAssert.calledOnce(api.putAlert as SinonSpy);
-			sAssert.calledWith(api.putAlert as SinonSpy, story);
+			assert.equal(urlCaptor.value, "/api/ajax_subs.php");
+			assert.equal(argsCaptor.value.method, "POST");
+			const fd: FormData = argsCaptor.value.body;
+			assert.equal(fd.get("storyid").valueOf(), 1);
+			assert.equal(fd.get("storyalert").valueOf(), 1);
 		});
 
-		it("should retrieve alerts list from Cache", async function () {
-			const cache: Cache = {} as any;
-			cache.isAlertsFresh = fake.resolves(true);
-			cache.getAlerts = fake.resolves([{
-				id: 1,
-				title: "Title",
-				author: undefined,
-			}]);
-			const sut = new Api(cache, {} as any);
+		it("should remove alert", async function () {
+			const response = td.object<Response>();
+			const urlCaptor = td.matchers.captor();
+			const argsCaptor = td.matchers.captor();
+			td.when(response.json()).thenResolve({});
+			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const list = await sut.getStoryAlerts();
+			const sut = new Api();
 
-			sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
-			sAssert.calledOnce(cache.getAlerts as SinonSpy);
+			await sut.removeStoryAlert(1);
 
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.deepEqual(list[0], {
-				id: 1,
-				title: "Title",
-				author: undefined,
-			});
-		});
-
-		it("should retrieve alerts list from Api", async function () {
-			const cache: Cache = {} as any;
-			cache.isAlertsFresh = fake.resolves(false);
-			cache.putAlerts = fake(a => Promise.resolve(a));
-			const api: ApiImmediate = {} as any;
-			api.getStoryAlerts = fake.resolves([{
-				id: 1,
-				title: "Title",
-				author: undefined,
-			}]);
-			const sut = new Api(cache, api);
-
-			const list = await sut.getStoryAlerts();
-
-			sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
-			sAssert.calledOnce(cache.putAlerts as SinonSpy);
-			sAssert.calledWith(cache.putAlerts as SinonSpy, [{
-				id: 1,
-				title: "Title",
-				author: undefined,
-			}]);
-			sAssert.calledOnce(api.getStoryAlerts as SinonSpy);
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.deepEqual(list[0], {
-				id: 1,
-				title: "Title",
-				author: undefined,
-			});
-		});
-	});
-
-	describe("Favorites", function () {
-		it("should put favorite state for Api and Cache", async function () {
-			const story: Story = {} as any;
-			(story as any).follow = () => true;
-
-			const cache: Cache = {} as any;
-			cache.putFavorite = fake();
-			const api: ApiImmediate = {} as any;
-			api.putFavorite = fake();
-			const sut = new Api(cache, api);
-
-			await sut.putFavorite(story);
-
-			sAssert.calledOnce(cache.putFavorite as SinonSpy);
-			sAssert.calledWith(cache.putFavorite as SinonSpy, story);
-			sAssert.calledOnce(api.putFavorite as SinonSpy);
-			sAssert.calledWith(api.putFavorite as SinonSpy, story);
-		});
-
-		it("should retrieve favorite list from Cache", async function () {
-			const cache: Cache = {} as any;
-			cache.isFavoritesFresh = fake.resolves(true);
-			cache.getFavorites = fake.resolves([{
-				id: 1,
-				title: "Title",
-				author: undefined,
-			}]);
-			const sut = new Api(cache, {} as any);
-
-			const list = await sut.getStoryFavorites();
-
-			sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
-			sAssert.calledOnce(cache.getFavorites as SinonSpy);
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.deepEqual(list[0], {
-				id: 1,
-				title: "Title",
-				author: undefined,
-			});
-		});
-
-		it("should retrieve favorites list from Api", async function () {
-			const cache: Cache = {} as any;
-			cache.isFavoritesFresh = fake.resolves(false);
-			cache.putFavorites = fake(a => Promise.resolve(a));
-			const api: ApiImmediate = {} as any;
-			api.getStoryFavorites = fake.resolves([{
-				id: 1,
-				title: "Title",
-				author: undefined,
-			}]);
-			const sut = new Api(cache, api);
-
-			const list = await sut.getStoryFavorites();
-
-			sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
-			sAssert.calledOnce(cache.putFavorites as SinonSpy);
-			sAssert.calledWith(cache.putFavorites as SinonSpy, [{
-				id: 1,
-				title: "Title",
-				author: undefined,
-			}]);
-			sAssert.calledOnce(api.getStoryFavorites as SinonSpy);
-
-			assert.isArray(list);
-			assert.lengthOf(list, 1);
-			assert.deepEqual(list[0], {
-				id: 1,
-				title: "Title",
-				author: undefined,
-			});
-		});
-	});
-
-	describe("Story Info", function () {
-		it("should return info from Cache", async function () {
-			const cache: Cache = {} as any;
-			cache.getStory = fake.resolves({
-				id: 123,
-				title: "Title",
-				chapters: [
-					{
-						words: 1,
-					},
-				],
-				follow: {
-					subscribe: fake(),
-				},
-				favorite: {
-					subscribe: fake(),
-				},
-			});
-			const api: ApiImmediate = {} as any;
-			const sut = new Api(cache, api);
-
-			const story = await sut.getStoryInfo(123);
-
-			sAssert.calledOnce(cache.getStory as SinonSpy);
-			sAssert.calledWith(cache.getStory as SinonSpy, 123);
-
-			assert.equal(story.id, 123);
-			assert.equal(story.title, "Title");
-		});
-
-		it("should return info from Api", async function () {
-			const cache: Cache = {} as any;
-			cache.getStory = fake.rejects(undefined);
-			cache.putStory = fake(a => Promise.resolve(a));
-			cache.isAlertsFresh = fake.resolves(true);
-			cache.hasAlert = fake.resolves(true);
-			cache.isFavoritesFresh = fake.resolves(true);
-			cache.isFavorite = fake.resolves(false);
-			const api: ApiImmediate = {} as any;
-			const story = {
-				id: 123,
-				title: "Title",
-				chapters: [
-					{
-						words: 1,
-					},
-				],
-				follow: fake(),
-				favorite: fake(),
-			};
-			(story.follow as any).subscribe = fake();
-			(story.favorite as any).subscribe = fake();
-			api.getStoryInfo = fake.resolves(story);
-			api.applyChapterLengths = fake.resolves(story);
-			const sut = new Api(cache, api);
-
-			const result = await sut.getStoryInfo(123);
-
-			sAssert.calledOnce(cache.getStory as SinonSpy);
-			sAssert.calledWith(cache.getStory as SinonSpy, 123);
-			sAssert.calledOnce(cache.putStory as SinonSpy);
-			sAssert.calledWith(cache.putStory as SinonSpy, match(s => {
-				assert.equal(s.id, 123);
-				assert.equal(s.title, "Title");
-
-				return true;
-			}));
-			sAssert.calledOnce(api.getStoryInfo as SinonSpy);
-			sAssert.calledWith(api.getStoryInfo as SinonSpy, 123);
-
-			sAssert.calledOnce(cache.isAlertsFresh as SinonSpy);
-			sAssert.calledOnce(cache.hasAlert as SinonSpy);
-			sAssert.calledOnce(story.follow);
-			sAssert.calledOnce(cache.isFavoritesFresh as SinonSpy);
-			sAssert.calledOnce(cache.isFavorite as SinonSpy);
-			sAssert.calledOnce(story.favorite);
-
-			assert.equal(result.id, 123);
-			assert.equal(result.title, "Title");
-		});
-
-		it("should attach alerts handler", async function () {
-			const cache: Cache = {
-				putAlert: fake(),
-			} as any;
-			const story = {
-				id: 123,
-				chapters: [
-					{
-						words: 1,
-					},
-				],
-				follow: fake(),
-				favorite: fake(),
-			};
-			(story.follow as any).subscribe = fake();
-			(story.favorite as any).subscribe = fake();
-			cache.getStory = fake.resolves(story);
-			const api: ApiImmediate = {
-				putAlert: fake(),
-			} as any;
-			const sut = new Api(cache, api);
-
-			const result = await sut.getStoryInfo(123);
-
-			sAssert.calledOnce((result.follow as any).subscribe);
-			sAssert.calledWith((result.follow as any).subscribe, match.func);
-
-			await ((result.follow as any).subscribe as SinonSpy).args[0][0]();
-
-			sAssert.calledOnce(cache.putAlert as SinonSpy);
-			sAssert.calledOnce(api.putAlert as SinonSpy);
-		});
-
-		it("should attach favorites handler", async function () {
-			const cache: Cache = {
-				putFavorite: fake(),
-			} as any;
-			const story = {
-				id: 123,
-				chapters: [
-					{
-						words: 1,
-					},
-				],
-				follow: fake(),
-				favorite: fake(),
-			};
-			(story.follow as any).subscribe = fake();
-			(story.favorite as any).subscribe = fake();
-			cache.getStory = fake.resolves(story);
-			const api: ApiImmediate = {
-				putFavorite: fake(),
-			} as any;
-			const sut = new Api(cache, api);
-
-			const result = await sut.getStoryInfo(123);
-
-			sAssert.calledOnce((result.favorite as any).subscribe);
-			sAssert.calledWith((result.favorite as any).subscribe, match.func);
-
-			await ((result.favorite as any).subscribe as SinonSpy).args[0][0]();
-
-			sAssert.calledOnce(cache.putFavorite as SinonSpy);
-			sAssert.calledOnce(api.putFavorite as SinonSpy);
-
-		});
-	});
-});
-
-describe("ApiImmediate", function () {
-	const consoleDebugSave = console.debug;
-	const ajaxSave = $.ajax;
-
-	global["GM_getValue"] = (a, b) => b;
-	global["GM_setValue"] = () => undefined;
-
-	before(function () {
-		console.debug = () => undefined;
-	});
-
-	after(function () {
-		console.debug = consoleDebugSave;
-		$.ajax = ajaxSave;
-	});
-
-	describe("Alerts", function () {
-		it("should put positive alert state", async function () {
-			const story: Story = {
-				id: 123,
-			} as any;
-			(story as any).follow = () => true;
-
-			const ajax = $.ajax = fake.resolves(undefined);
-			const sut = new ApiImmediate();
-
-			await sut.putAlert(story);
-
-			sAssert.calledOnce(ajax);
-			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-
-			assert.equal(args.method, "POST");
-			assert.equal(args.url, "/api/ajax_subs.php");
-			assert.deepEqual(args.data, {
-				storyid: 123,
-				userid: undefined,
-				storyalert: 1,
-			});
-		});
-
-		it("should put negative alert state", async function () {
-			const story: Story = {
-				id: 123,
-			} as any;
-			(story as any).follow = () => false;
-
-			const ajax = $.ajax = fake.resolves(undefined);
-			const sut = new ApiImmediate();
-
-			await sut.putAlert(story);
-
-			sAssert.calledOnce(ajax);
-			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-
-			assert.equal(args.method, "POST");
-			assert.equal(args.url, "/alert/story.php");
-			assert.deepEqual(args.data, {
-				action: "remove-multi",
-				"rids[]": 123,
-			});
+			assert.equal(urlCaptor.value, "/alert/story.php");
+			assert.equal(argsCaptor.value.method, "POST");
+			const fd: FormData = argsCaptor.value.body;
+			assert.equal(fd.get("action").valueOf(), "remove-multi");
+			assert.equal(fd.get("rids[]").valueOf(), 1);
 		});
 
 		it("should retrieve multi-page alerts list", async function () {
-			const page1 = `<div id="content_wrapper_inner">
+			const page1 = `<!--suppress HtmlUnknownTarget, HtmlDeprecatedTag -->
+			<div id="content_wrapper_inner">
 				<table id="gui_table1i">
 					<tbody>
 						<tr>
@@ -407,7 +74,8 @@ describe("ApiImmediate", function () {
 					Page <b>1</b> 2 <a href="https://www.fanfiction.net/alert/story.php?p=2">Next</a>
 				</center>
 			</div>`;
-			const page2 = `<table id="gui_table1i">
+			const page2 = `<!--suppress HtmlUnknownTarget -->
+			<table id="gui_table1i">
 				<tbody>
 					<tr>
 						<td><a href="/s/125/story-2">Story 2</a></td>
@@ -423,25 +91,18 @@ describe("ApiImmediate", function () {
 				</tbody>
 			</table>`;
 
-			const ajax = $.ajax = stub();
-			ajax.onCall(0).resolves(page1);
-			ajax.onCall(1).resolves(page2);
-			ajax.throws();
-			const sut = new ApiImmediate();
+			const response1 = td.object<Response>();
+			const response2 = td.object<Response>();
+			const urlCaptor = td.matchers.captor();
+			const sut = new Api();
+			td.when(response1.text()).thenResolve(page1);
+			td.when(response2.text()).thenResolve(page2);
+			td.when(fetch(urlCaptor.capture())).thenResolve(response1, response2);
 
 			const list = await sut.getStoryAlerts();
 
-			sAssert.calledTwice(ajax);
-
-			const args1 = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-			assert.equal(args1.method, "GET");
-			assert.equal(args1.url, "/alert/story.php");
-			assert.equal(args1.data, undefined);
-
-			const args2 = ajax.getCall(1).args[0] as JQueryAjaxSettings;
-			assert.equal(args2.method, "GET");
-			assert.equal(args2.url, "/alert/story.php?p=2");
-			assert.equal(args2.data, undefined);
+			assert.equal(urlCaptor.values[0], "/alert/story.php");
+			assert.equal(urlCaptor.values[1], "/alert/story.php?p=2");
 
 			assert.equal(list.length, 2);
 
@@ -462,55 +123,45 @@ describe("ApiImmediate", function () {
 	});
 
 	describe("Favorites", function () {
-		it("should put positive favorite state", async function () {
-			const story: Story = {
-				id: 123,
-			} as any;
-			(story as any).favorite = () => true;
+		it("should add favorite", async function () {
+			const response = td.object<Response>();
+			const urlCaptor = td.matchers.captor();
+			const argsCaptor = td.matchers.captor();
+			td.when(response.json()).thenResolve({});
+			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const ajax = $.ajax = fake.resolves(undefined);
-			const sut = new ApiImmediate();
+			const sut = new Api();
 
-			await sut.putFavorite(story);
+			await sut.addStoryFavorite(1);
 
-			sAssert.calledOnce(ajax);
-			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-
-			assert.equal(args.method, "POST");
-			assert.equal(args.url, "/api/ajax_subs.php");
-			assert.deepEqual(args.data, {
-				storyid: 123,
-				userid: undefined,
-				favstory: 1,
-			});
+			assert.equal(urlCaptor.value, "/api/ajax_subs.php");
+			assert.equal(argsCaptor.value.method, "POST");
+			const fd: FormData = argsCaptor.value.body;
+			assert.equal(fd.get("storyid").valueOf(), 1);
+			assert.equal(fd.get("favstory").valueOf(), 1);
 		});
 
-		it("should put negative favorite state", function () {
-			const story: Story = {
-				id: 123,
-			} as any;
-			(story as any).favorite = () => false;
+		it("should remove favorite", async function () {
+			const response = td.object<Response>();
+			const urlCaptor = td.matchers.captor();
+			const argsCaptor = td.matchers.captor();
+			td.when(response.json()).thenResolve({});
+			td.when(fetch(urlCaptor.capture(), argsCaptor.capture())).thenResolve(response);
 
-			const ajax = $.ajax = fake.resolves(undefined);
-			const sut = new ApiImmediate();
+			const sut = new Api();
 
-			const result = sut.putFavorite(story);
+			await sut.removeStoryFavorite(1);
 
-			sAssert.calledOnce(ajax);
-			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-
-			assert.equal(args.method, "POST");
-			assert.equal(args.url, "/favorites/story.php");
-			assert.deepEqual(args.data, {
-				action: "remove-multi",
-				"rids[]": 123,
-			});
-
-			return result;
+			assert.equal(urlCaptor.value, "/favorites/story.php");
+			assert.equal(argsCaptor.value.method, "POST");
+			const fd: FormData = argsCaptor.value.body;
+			assert.equal(fd.get("action").valueOf(), "remove-multi");
+			assert.equal(fd.get("rids[]").valueOf(), 1);
 		});
 
 		it("should retrieve multi-page favorites list", async function () {
-			const page1 = `<div id="content_wrapper_inner">
+			const page1 = `<!--suppress HtmlUnknownTarget, HtmlDeprecatedTag -->
+			<div id="content_wrapper_inner">
 				<table id="gui_table1i">
 					<tbody>
 						<tr>
@@ -530,7 +181,8 @@ describe("ApiImmediate", function () {
 					Page <b>1</b> 2 <a href="https://www.fanfiction.net/favorites/story.php?p=2">Next</a>
 				</center>
 			</div>`;
-			const page2 = `<table id="gui_table1i">
+			const page2 = `<!--suppress HtmlUnknownTarget -->
+			<table id="gui_table1i">
 				<tbody>
 					<tr>
 						<td><a href="/s/125/story-2">Story 2</a></td>
@@ -546,25 +198,18 @@ describe("ApiImmediate", function () {
 				</tbody>
 			</table>`;
 
-			const ajax = $.ajax = stub();
-			ajax.onCall(0).resolves(page1);
-			ajax.onCall(1).resolves(page2);
-			ajax.throws();
-			const sut = new ApiImmediate();
+			const response1 = td.object<Response>();
+			const response2 = td.object<Response>();
+			const urlCaptor = td.matchers.captor();
+			const sut = new Api();
+			td.when(response1.text()).thenResolve(page1);
+			td.when(response2.text()).thenResolve(page2);
+			td.when(fetch(urlCaptor.capture())).thenResolve(response1, response2);
 
 			const list = await sut.getStoryFavorites();
 
-			sAssert.calledTwice(ajax);
-
-			const args1 = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-			assert.equal(args1.method, "GET");
-			assert.equal(args1.url, "/favorites/story.php");
-			assert.equal(args1.data, undefined);
-
-			const args2 = ajax.getCall(1).args[0] as JQueryAjaxSettings;
-			assert.equal(args2.method, "GET");
-			assert.equal(args2.url, "/favorites/story.php?p=2");
-			assert.equal(args2.data, undefined);
+			assert.equal(urlCaptor.values[0], "/favorites/story.php");
+			assert.equal(urlCaptor.values[1], "/favorites/story.php?p=2");
 
 			assert.equal(list.length, 2);
 
@@ -585,37 +230,37 @@ describe("ApiImmediate", function () {
 	});
 
 	describe("Stories", function () {
-		it("should retrieve story info", async function () {
-			const ajax = $.ajax = fake.resolves(`<div id="test-wrapper">
-	<div id="profile_top">
-		<span><img src="/src/img.jpg" /></span>
-		<button><!-- follow+fav button --></button>
-		<b>title</b>
-		<span>by</span>
-		<a href="/u/678/author">author</a>
-		<span><!-- mail icon --></span>
-		<a><!-- message link --></a>
-		<div>description</div>
-		<span>
-			Rated: <a>M</a> - Elvish - Fantasy - [Romeo, Juliet] Steve - Chapters: 33 - Words: 1,234 - Reviews:
-			<a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published:
-			<span data-xutime="1426879324">Mar 20, 2015</span> - id: 123
-		</span>
-	</div>
-	<div id="storytext">Two words.</div>
-</div>`);
-			const sut = new ApiImmediate();
+		it("should retrieve story data", async function () {
+			const page = `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
+			<div id="test-wrapper">
+				<div id="profile_top">
+					<span><img src="/src/img.jpg" /></span>
+					<button><!-- follow+fav button --></button>
+					<b>title</b>
+					<span>by</span>
+					<a href="/u/678/author">author</a>
+					<span><!-- mail icon --></span>
+					<a><!-- message link --></a>
+					<div>description</div>
+					<span>
+						Rated: <a>M</a> - Elvish - Fantasy - [Romeo, Juliet] Steve - Chapters: 33 - Words: 1,234 - Reviews:
+						<a>123</a> - Favs: 345 - Follows: 567 - Updated: <span data-xutime="1517639271">Feb 3</span> - Published:
+						<span data-xutime="1426879324">Mar 20, 2015</span> - id: 123
+					</span>
+				</div>
+				<div id="storytext">Two words.</div>
+			</div>`;
 
-			const story = await sut.getStoryInfo(123);
+			const urlCaptor = td.matchers.captor();
+			const response = td.object<Response>();
+			const sut = new Api();
+			td.when(response.text()).thenResolve(page);
+			td.when(fetch(urlCaptor.capture())).thenResolve(response);
+			global["GM_getValue"] = (a, b) => b;
 
-			sAssert.calledOnce(ajax);
+			const story = await sut.getStoryData(123);
 
-			const args = ajax.getCall(0).args[0] as JQueryAjaxSettings;
-			assert.equal(args.method, "GET");
-			assert.equal(args.url, "/s/123");
-			assert.equal(args.data, undefined);
-
-			assert.instanceOf(story, Story);
+			assert.equal(urlCaptor.value, "/s/123");
 			assert.equal(story.id, 123);
 			assert.equal(story.title, "title");
 		});

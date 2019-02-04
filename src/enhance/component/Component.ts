@@ -1,3 +1,4 @@
 export interface Component {
-	createElement(from: any): HTMLElement;
+	// createElement(from: any): HTMLElement;
+	render(): HTMLElement;
 }
