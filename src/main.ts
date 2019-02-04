@@ -2,6 +2,7 @@ import { Container } from "./container";
 import { environment, Page } from "./util/environment";
 import { parseFollowedStoryList, parseProfile } from "./util/parser";
 import { StoryText } from "./enhance/StoryText";
+import { CacheName } from "./api/ValueContainer";
 
 const container = new Container();
 async function main() {
@@ -64,4 +65,30 @@ async function main() {
 	}
 }
 
-main().catch(console.error);
+async function migrate() {
+	const readListStr = await GM.getValue("ffe-cache-read");
+	if (!readListStr) {
+		return;
+	}
+
+	const readList = JSON.parse(readListStr as string);
+	for (const storyId in readList) {
+		if (!readList.hasOwnProperty(storyId)) {
+			continue;
+		}
+
+		for (const chapterId in readList[storyId]) {
+			if (!readList[storyId].hasOwnProperty(chapterId)) {
+				continue;
+			}
+
+			await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), readList[storyId][chapterId]);
+		}
+	}
+
+	await GM.deleteValue("ffe-cache-read");
+}
+
+migrate()
+	.then(main)
+	.catch(console.error);
