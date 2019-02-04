@@ -12,7 +12,8 @@ describe("Story Profile Parser", function() {
 
 	const params = [
 		{
-			fragment: `<div id="test-wrapper">
+			fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
+<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
 		<button><!-- follow+fav button --></button>
@@ -61,7 +62,8 @@ describe("Story Profile Parser", function() {
 			id: 12345678,
 		},
 		{
-			fragment: `<div id="test-wrapper">
+			fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
+<div id="test-wrapper">
 	<div id="profile_top">
 		<button><!-- follow+fav button --></button>
 		<b>story</b>
@@ -105,7 +107,8 @@ describe("Story Profile Parser", function() {
 			id: 12345678,
 		},
 		{
-			fragment: `<div id="test-wrapper">
+			fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute, HtmlUnknownTag -->
+<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/image/12345/75/" width="75" height="100"></span>
 		<button><!-- follow+fav button --></button>
@@ -150,7 +153,8 @@ describe("Story Profile Parser", function() {
 			id: 123456,
 		},
 		{
-			fragment: `<div id="test-wrapper">
+			fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
+<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
 		<button><!-- follow+fav button --></button>
@@ -196,7 +200,8 @@ describe("Story Profile Parser", function() {
 			id: 12345678,
 		},
 		{
-			fragment: `<div id="test-wrapper">
+			fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute, HtmlUnknownTag -->
+<div id="test-wrapper">
 	<div id="profile_top">
 		<span><img src="/image/12345/75/" width="75" height="100"></span>
 		<button><!-- follow+fav button --></button>
@@ -256,8 +261,8 @@ describe("Story Profile Parser", function() {
 
 			it("should recognize author", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.author.id, param.authorId);
-				assert.equal(result.author.name, param.author);
+				assert.equal(result.authorId, param.authorId);
+				assert.equal(result.author, param.author);
 			});
 
 			it("should recognize description", function() {
@@ -276,59 +281,57 @@ describe("Story Profile Parser", function() {
 
 			it("should recognize image url", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.imageUrl, param.imageUrl);
+				assert.equal(result.imageUrl, param.imageUrl);
 			});
 
 			it("should recognize favorites", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.favs, param.favs);
+				assert.equal(result.favorites, param.favs);
 			});
 
 			it("should recognize follows", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.follows, param.follows);
+				assert.equal(result.follows, param.follows);
 			});
 
 			it("should recognize reviews", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.reviews, param.reviews);
+				assert.equal(result.reviews, param.reviews);
 			});
 
 			it("should recognize genre", function() {
 				const result = parseProfile(param.fragment);
-				assert.deepEqual(result.meta.genre, param.genre);
+				assert.deepEqual(result.genre, param.genre);
 			});
 
 			it("should recognize characters", function() {
 				const result = parseProfile(param.fragment);
-				assert.deepEqual(result.meta.characters, param.characters);
+				assert.deepEqual(result.characters, param.characters);
 			});
 
 			it("should recognize language", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.language, param.language);
+				assert.equal(result.language, param.language);
 			});
 
 			it("should recognize publish date", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.published.getTime(), param.published);
-				assert.equal(result.meta.publishedWords, param.publishedWords);
+				assert.equal(result.published, new Date(param.published).toISOString());
 			});
 
 			it("should recognize update date", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.updated.getTime(), param.updated);
-				assert.equal(result.meta.updatedWords, param.updatedWords);
+				assert.equal(result.updated, new Date(param.updated).toISOString());
 			});
 
 			it("should recognize rating", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.rating, param.rating);
+				assert.equal(result.rating, param.rating);
 			});
 
 			it("should recognize words", function() {
 				const result = parseProfile(param.fragment);
-				assert.equal(result.meta.words, param.words);
+				assert.equal(result.words, param.words);
 			});
 		});
 	});

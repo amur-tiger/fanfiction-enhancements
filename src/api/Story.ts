@@ -12,7 +12,7 @@ export interface StoryData {
 	chapters?: ChapterData[];
 	imageUrl?: string;
 	imageOriginalUrl?: string;
-	favs?: number;
+	favorites?: number;
 	follows?: number;
 	reviews?: number;
 	genre?: string[];
@@ -55,7 +55,7 @@ export class Story {
 		this.chapters = data.chapters.map(chapter => new Chapter(chapter, valueManager));
 		this.imageUrl = data.imageUrl;
 		this.imageOriginalUrl = data.imageOriginalUrl;
-		this.favorites = data.favs;
+		this.favorites = data.favorites;
 		this.follows = data.follows;
 		this.reviews = data.reviews;
 		this.genre = data.genre;

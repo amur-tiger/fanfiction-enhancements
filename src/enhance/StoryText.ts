@@ -5,11 +5,8 @@ import { Enhancer } from "./Enhancer";
 import "./StoryText.css";
 
 export class StoryText implements Enhancer {
-	constructor(private document: Document) {
-	}
-
-	public enhance(): Promise<any> {
-		const textContainer = this.document.getElementById("storytextp");
+	public async enhance(): Promise<any> {
+		const textContainer = document.getElementById("storytextp");
 		if (!textContainer) {
 			throw new Error("Could not find text container element.");
 		}
@@ -31,8 +28,6 @@ export class StoryText implements Enhancer {
 			text.style.lineHeight = cookie.read_line_height;
 			text.style.width = cookie.read_width + "%";
 		}
-
-		return Promise.resolve();
 	}
 
 	private fixUserSelect(textContainer: HTMLElement) {

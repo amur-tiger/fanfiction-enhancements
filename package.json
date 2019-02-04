@@ -6,10 +6,7 @@
   "directories": {
     "test": "tests"
   },
-  "dependencies": {
-    "@types/knockout": "^3.4.63",
-    "knockout": "^3.4.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",

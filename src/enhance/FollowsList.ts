@@ -11,7 +11,6 @@ export class FollowsList implements Enhancer {
 	}
 
 	public async enhance(): Promise<any> {
-		const cardFactory = new StoryCard(this.valueContainer);
 		const list = parseFollowedStoryList(document);
 		const container = document.createElement("ul");
 		container.classList.add("ffe-follows-list");
@@ -25,7 +24,7 @@ export class FollowsList implements Enhancer {
 			container.appendChild(item);
 
 			const story = await this.valueContainer.getStory(followedStory.id);
-			const card = cardFactory.createElement(story);
+			const card = new StoryCard({ story: story }).render();
 			item.appendChild(card);
 
 			followedStory.row.parentElement.removeChild(followedStory.row);

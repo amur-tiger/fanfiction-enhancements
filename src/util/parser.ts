@@ -1,8 +1,9 @@
-import { Chapter, FollowedStory, Story, StoryMetaData } from "../api/data";
+import { FollowedStory, StoryMetaData } from "../api/data";
 import { environment } from "./environment";
+import { ChapterData } from "../api/Chapter";
 import { StoryData } from "../api/Story";
 
-export function parseProfile(fragment: string | Document | DocumentFragment): Story {
+export function parseProfile(fragment: string | Document | DocumentFragment): StoryData {
 	const container = typeof fragment === "string" ? (() => {
 		const template = document.createElement("template");
 		template.innerHTML = fragment;
@@ -39,53 +40,30 @@ export function parseProfile(fragment: string | Document | DocumentFragment): St
 		}
 	}
 
-	return new Story(
-		resultMeta.id,
-		titleElement.textContent,
-		{
-			id: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-			name: authorElement.textContent,
-			profileUrl: authorElement.href,
-			avatarUrl: undefined,
-		},
-		descriptionElement.textContent,
-		chapterElement ? parseChapters(resultMeta.id, chapterElement) : [
-			new Chapter(resultMeta.id, 1, titleElement.textContent,
-				container.getElementById("storytext").textContent.trim().split(/\s+/).length),
-		],
-		resultMeta,
-	);
-}
-
-export function parseProfile2(fragment: string | Document | DocumentFragment): StoryData {
-	const story = parseProfile(fragment);
-
 	return {
-		id: story.id,
-		title: story.title,
-		author: story.author.name,
-		authorId: story.author.id,
-		description: story.description,
-		chapters: story.chapters.map(chapter => {
-			return {
-				storyId: story.id,
-				id: chapter.id,
-				name: chapter.name,
-			};
-		}),
-		imageUrl: story.meta.imageUrl,
-		imageOriginalUrl: story.meta.imageOriginalUrl,
-		favs: story.meta.favs,
-		follows: story.meta.follows,
-		reviews: story.meta.reviews,
-		genre: story.meta.genre,
-		language: story.meta.language,
-		published: story.meta.published ? story.meta.published.toISOString() : undefined,
-		updated: story.meta.updated ? story.meta.updated.toISOString() : undefined,
-		rating: story.meta.rating,
-		words: story.meta.words,
-		characters: story.meta.characters,
-		status: story.meta.status,
+		id: resultMeta.id,
+		title: titleElement.textContent,
+		author: authorElement.textContent,
+		authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+		description: descriptionElement.textContent,
+		chapters: chapterElement ? parseChapters(resultMeta.id, chapterElement) : [{
+			storyId: resultMeta.id,
+			id: 1,
+			name: titleElement.textContent,
+		}],
+		imageUrl: resultMeta.imageUrl,
+		imageOriginalUrl: resultMeta.imageOriginalUrl,
+		favorites: resultMeta.favs,
+		follows: resultMeta.follows,
+		reviews: resultMeta.reviews,
+		genre: resultMeta.genre,
+		language: resultMeta.language,
+		published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
+		updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
+		rating: resultMeta.rating,
+		words: resultMeta.words,
+		characters: resultMeta.characters,
+		status: resultMeta.status,
 	};
 }
 
@@ -178,8 +156,8 @@ function parseCharacters(tag: string): (string | string[])[] {
  * @param {ParentNode} selectElement
  * @returns {Chapter[]}
  */
-function parseChapters(storyId: number, selectElement: ParentNode): Chapter[] {
-	const result: Chapter[] = [];
+function parseChapters(storyId: number, selectElement: ParentNode): ChapterData[] {
+	const result: ChapterData[] = [];
 
 	for (let i = 0; i < selectElement.children.length; i++) {
 		const option = selectElement.children[i];
@@ -187,7 +165,11 @@ function parseChapters(storyId: number, selectElement: ParentNode): Chapter[] {
 			continue;
 		}
 
-		result.push(new Chapter(storyId, +option.getAttribute("value"), option.textContent, undefined));
+		result.push({
+			storyId: storyId,
+			id: +option.getAttribute("value"),
+			name: option.textContent,
+		});
 	}
 
 	return result;

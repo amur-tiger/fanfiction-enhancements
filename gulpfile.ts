@@ -50,9 +50,6 @@ gulp.task("build-source", () => {
 			file: path.join(OUT_FOLDER, "latest", PACKAGE.main),
 			format: "iife",
 			banner: getHeader(),
-			globals: {
-				knockout: "ko",
-			},
 		});
 	});
 });

@@ -1,20 +1,18 @@
+import { React } from "../../util/react";
 import { Component } from "./Component";
 
 import "./Rating.css";
 
 export class Rating implements Component {
-	constructor(private document: Document) { }
+	constructor(private props: { rating: string }) {
+	}
 
-	public createElement(rating: string): HTMLAnchorElement {
-		const element = this.document.createElement("a") as HTMLAnchorElement;
+	public render(): HTMLAnchorElement {
+		const element = <a href="https://www.fictionratings.com/" class="ffe-rating" rel="noreferrer" target="rating">
+			{this.props.rating}
+		</a>;
 
-		element.href = "https://www.fictionratings.com/";
-		element.className = "ffe-rating";
-		element.rel = "noreferrer";
-		element.target = "rating";
-		element.textContent = rating;
-
-		switch (rating) {
+		switch (this.props.rating) {
 			case "K":
 				element.title = "General Audience (5+)";
 				element.classList.add("ffe-rating-k");

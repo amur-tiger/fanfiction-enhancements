@@ -6,7 +6,7 @@ import { Story, StoryData } from "../../src/api/Story";
 
 describe("Api", function () {
 	beforeEach(function () {
-		td.replace(console, "debug");
+		td.replace(console, "log");
 		global["fetch"] = td.function("fetch");
 	});
 

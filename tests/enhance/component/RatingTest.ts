@@ -4,7 +4,7 @@ import { Rating } from "../../../src/enhance/component/Rating";
 
 describe("Rating Component", function() {
 	it("should create an anchor element with certain properties", function() {
-		const element = new Rating(document).createElement("K");
+		const element = new Rating({ rating: "K" }).render();
 
 		assert.equal(element.href, "https://www.fictionratings.com/");
 		assert.include(element.className, "ffe-rating");
@@ -13,7 +13,7 @@ describe("Rating Component", function() {
 	});
 
 	it("should create default element for invalid ratings", function() {
-		const element = new Rating(document).createElement("not a rating");
+		const element = new Rating({ rating: "not a rating" }).render();
 
 		assert.equal(element.textContent, "?");
 		assert.equal(element.className, "ffe-rating");
@@ -21,7 +21,7 @@ describe("Rating Component", function() {
 	});
 
 	it("should create element for general audiences", function() {
-		const element = new Rating(document).createElement("K");
+		const element = new Rating({ rating: "K" }).render();
 
 		assert.equal(element.textContent, "K");
 		assert.equal(element.className, "ffe-rating ffe-rating-k");
@@ -29,7 +29,7 @@ describe("Rating Component", function() {
 	});
 
 	it("should create element for young children", function() {
-		const element = new Rating(document).createElement("K+");
+		const element = new Rating({ rating: "K+" }).render();
 
 		assert.equal(element.textContent, "K+");
 		assert.equal(element.className, "ffe-rating ffe-rating-kp");
@@ -37,7 +37,7 @@ describe("Rating Component", function() {
 	});
 
 	it("should create element for teens", function() {
-		const element = new Rating(document).createElement("T");
+		const element = new Rating({ rating: "T" }).render();
 
 		assert.equal(element.textContent, "T");
 		assert.equal(element.className, "ffe-rating ffe-rating-t");
@@ -45,7 +45,7 @@ describe("Rating Component", function() {
 	});
 
 	it("should create element for elder teens", function() {
-		const element = new Rating(document).createElement("M");
+		const element = new Rating({ rating: "M" }).render();
 
 		assert.equal(element.textContent, "M");
 		assert.equal(element.className, "ffe-rating ffe-rating-m");
@@ -53,7 +53,7 @@ describe("Rating Component", function() {
 	});
 
 	it("should create element for mature audiences", function() {
-		const element = new Rating(document).createElement("MA");
+		const element = new Rating({ rating: "MA" }).render();
 
 		assert.equal(element.textContent, "MA");
 		assert.equal(element.className, "ffe-rating ffe-rating-ma");

@@ -10,7 +10,8 @@
 		"typeRoots": [
 			"node_modules/@types",
 			"typings"
-		]
+		],
+		"jsx": "react"
 	},
 	"exclude": [
 		"node_modules",

@@ -1,6 +1,6 @@
-import { FollowedStory, Story } from "./data";
+import { FollowedStory } from "./data";
 import { environment } from "../util/environment";
-import { parseFollowedStoryList, parseProfile, parseProfile2 } from "../util/parser";
+import { parseFollowedStoryList, parseProfile } from "../util/parser";
 import { parseGetParams } from "../utils";
 import { StoryData } from "./Story";
 
@@ -34,7 +34,7 @@ export class Api {
 	public async getStoryData(id: number): Promise<StoryData> {
 		const data = await this.get("/s/" + id);
 
-		return parseProfile2(data);
+		return parseProfile(data);
 	}
 
 	public async getChapterWordCount(storyId: number, chapterId: number): Promise<number> {
