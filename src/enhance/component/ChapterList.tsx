@@ -79,9 +79,14 @@ export class ChapterList implements Component {
 			showLink.style.cursor = "pointer";
 			showLink.textContent = "Show " + (currentBlockCount - off * 2) + " hidden chapters";
 			showLink.addEventListener("click", () => {
-				showLinkContainer.parentElement.removeChild(showLinkContainer);
-				elements.forEach((element: HTMLElement) => element.classList.contains("ffe-cl-collapsed") ?
-					element.style.display = "none" : element.style.display = "block");
+				for (let j = 0; j < list.children.length; j++) {
+					const element = list.children.item(j) as HTMLElement;
+					if (element.classList.contains("ffe-cl-collapsed")) {
+						element.style.display = "none";
+					} else {
+						element.style.display = "block";
+					}
+				}
 			});
 
 			const showLinkContainer = document.createElement("li");
@@ -103,9 +108,14 @@ export class ChapterList implements Component {
 			showLink.style.cursor = "pointer";
 			showLink.textContent = "Show " + (currentBlockCount - 5) + " hidden chapters";
 			showLink.addEventListener("click", () => {
-				showLinkContainer.parentElement.removeChild(showLinkContainer);
-				elements.forEach((element: HTMLElement) => element.classList.contains("ffe-cl-collapsed") ?
-					element.style.display = "none" : element.style.display = "block");
+				for (let j = 0; j < list.children.length; j++) {
+					const element = list.children.item(j) as HTMLElement;
+					if (element.classList.contains("ffe-cl-collapsed")) {
+						element.style.display = "none";
+					} else {
+						element.style.display = "block";
+					}
+				}
 			});
 
 			const showLinkContainer = document.createElement("li");
