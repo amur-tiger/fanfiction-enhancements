@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.5.1+54.781844f
+// @version      0.5.2+56.20a2c15
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -883,7 +883,7 @@
         }
     }
 
-    var css$4 = ".ffe-follows-list {\n\tlist-style: none;\n\tmargin: 0;\n}\n\n.ffe-follows-item {\n\tmargin-bottom: 8px;\n}\n\n.ffe-follows-item .ffe-sc {\n\tborder-left: 1px solid #aaa;\n\tborder-top: 1px solid #aaa;\n\tborder-top-left-radius: 4px;\n\tpadding-left: .5em;\n\tpadding-top: 5px;\n}\n";
+    var css$4 = ".ffe-follows-list {\n\tlist-style: none;\n\tmargin: 0;\n}\n\n.ffe-follows-item {\n\tmargin-bottom: 8px;\n}\n\n.ffe-follows-item .ffe-sc {\n\tborder-left: 1px solid #aaa;\n\tborder-top: 1px solid #aaa;\n\tborder-top-left-radius: 4px;\n\tpadding-left: .5em;\n\tpadding-top: 5px;\n}\n\n.ffe-follows-item .ffe-cl-container {\n\tborder-left: 1px solid #aaa;\n\tmargin-bottom: 20px;\n\tpadding: 10px 0 0 0;\n}\n";
     styleInject(css$4);
 
     class FollowsList {
@@ -904,6 +904,8 @@
                     const story = yield this.valueContainer.getStory(followedStory.id);
                     const card = new StoryCard({ story: story }).render();
                     item.appendChild(card);
+                    const chapterList = new ChapterList({ story: story }).render();
+                    item.appendChild(chapterList);
                     followedStory.row.parentElement.removeChild(followedStory.row);
                 }
                 table.parentElement.removeChild(table);
