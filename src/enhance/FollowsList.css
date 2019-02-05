@@ -14,3 +14,9 @@
 	padding-left: .5em;
 	padding-top: 5px;
 }
+
+.ffe-follows-item .ffe-cl-container {
+	border-left: 1px solid #aaa;
+	margin-bottom: 20px;
+	padding: 10px 0 0 0;
+}
