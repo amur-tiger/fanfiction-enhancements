@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.5.0+52.1b6fad3
+// @version      0.5.1+54.781844f
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -619,9 +619,15 @@
                 showLink.style.cursor = "pointer";
                 showLink.textContent = "Show " + (currentBlockCount - off * 2) + " hidden chapters";
                 showLink.addEventListener("click", () => {
-                    showLinkContainer.parentElement.removeChild(showLinkContainer);
-                    elements.forEach((element) => element.classList.contains("ffe-cl-collapsed") ?
-                        element.style.display = "none" : element.style.display = "block");
+                    for (let j = 0; j < list.children.length; j++) {
+                        const element = list.children.item(j);
+                        if (element.classList.contains("ffe-cl-collapsed")) {
+                            element.style.display = "none";
+                        }
+                        else {
+                            element.style.display = "block";
+                        }
+                    }
                 });
                 const showLinkContainer = document.createElement("li");
                 showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
@@ -638,9 +644,15 @@
                 showLink.style.cursor = "pointer";
                 showLink.textContent = "Show " + (currentBlockCount - 5) + " hidden chapters";
                 showLink.addEventListener("click", () => {
-                    showLinkContainer.parentElement.removeChild(showLinkContainer);
-                    elements.forEach((element) => element.classList.contains("ffe-cl-collapsed") ?
-                        element.style.display = "none" : element.style.display = "block");
+                    for (let j = 0; j < list.children.length; j++) {
+                        const element = list.children.item(j);
+                        if (element.classList.contains("ffe-cl-collapsed")) {
+                            element.style.display = "none";
+                        }
+                        else {
+                            element.style.display = "block";
+                        }
+                    }
                 });
                 const showLinkContainer = document.createElement("li");
                 showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
@@ -1383,6 +1395,7 @@
                 }
             }
             yield GM.deleteValue("ffe-cache-read");
+            yield GM.deleteValue("ffe-cache-alerts");
         });
     }
     migrate()
