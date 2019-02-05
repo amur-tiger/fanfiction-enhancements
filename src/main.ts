@@ -87,6 +87,7 @@ async function migrate() {
 	}
 
 	await GM.deleteValue("ffe-cache-read");
+	await GM.deleteValue("ffe-cache-alerts");
 }
 
 migrate()
