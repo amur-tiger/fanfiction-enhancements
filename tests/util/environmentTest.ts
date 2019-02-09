@@ -2,13 +2,13 @@ import { assert } from "chai";
 
 import { getPage, Page } from "../../src/util/environment";
 
-describe("Environment", function() {
-	describe("Page Identification", function() {
+describe("Environment", function () {
+	describe("Page Identification", function () {
 		const noOp = () => {
 			// no operation
 		};
 
-		it("should recognize user pages", function() {
+		it("should recognize user pages", function () {
 			const location: Location = {
 				hash: "",
 				host: "www.fanfiction.net",
@@ -29,7 +29,7 @@ describe("Environment", function() {
 			assert.equal(getPage(location), Page.User);
 		});
 
-		it("should recognize the alerts page", function() {
+		it("should recognize the alerts page", function () {
 			const location: Location = {
 				hash: "",
 				host: "www.fanfiction.net",
@@ -50,7 +50,7 @@ describe("Environment", function() {
 			assert.equal(getPage(location), Page.Alerts);
 		});
 
-		it("should recognize the favorites page", function() {
+		it("should recognize the favorites page", function () {
 			const location: Location = {
 				hash: "",
 				host: "www.fanfiction.net",
@@ -71,7 +71,7 @@ describe("Environment", function() {
 			assert.equal(getPage(location), Page.Favorites);
 		});
 
-		it("should recognize story pages", function() {
+		it("should recognize story pages", function () {
 			const location: Location = {
 				hash: "",
 				host: "www.fanfiction.net",
@@ -92,7 +92,7 @@ describe("Environment", function() {
 			assert.equal(getPage(location), Page.Story);
 		});
 
-		it("should recognize chapter pages", function() {
+		it("should recognize chapter pages", function () {
 			const location: Location = {
 				hash: "",
 				host: "www.fanfiction.net",
@@ -113,7 +113,28 @@ describe("Environment", function() {
 			assert.equal(getPage(location), Page.Chapter);
 		});
 
-		it("should return other on other pages", function() {
+		it("should recognize oauth return page", function () {
+			const location: Location = {
+				hash: "",
+				host: "www.fanfiction.net",
+				hostname: "www.fanfiction.net",
+				href: "https://www.fanfiction.net/ffe-oauth2-return",
+				origin: "https://www.fanfiction.net",
+				pathname: "/ffe-oauth2-return",
+				port: "",
+				protocol: "https:",
+				search: "",
+				ancestorOrigins: undefined,
+
+				assign: noOp,
+				reload: noOp,
+				replace: noOp,
+			};
+
+			assert.equal(getPage(location), Page.OAuth2);
+		});
+
+		it("should return other on other pages", function () {
 			const location: Location = {
 				hash: "",
 				host: "www.fanfiction.net",

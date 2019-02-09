@@ -2,7 +2,21 @@
 	content: " | ";
 }
 
-.ffe-mb-alerts, .ffe-mb-favorites {
+.ffe-mb-checked:before {
+	background: green;
+	border-radius: 50%;
+	bottom: 2px;
+	color: #fff;
+	content: "✓";
+	font-size: 9px;
+	height: 12px;
+	line-height: 12px;
+	position: absolute;
+	right: -2px;
+	width: 12px;
+}
+
+.ffe-mb-icon {
 	display: inline-block;
 	line-height: 2em;
 	margin-top: -.5em;
@@ -10,7 +24,15 @@
 	width: 2em;
 }
 
-.ffe-mb-alerts:hover, .ffe-mb-favorites:hover {
+.ffe-mb-icon:hover {
 	border-bottom: 0;
 	color: orange !important;
+}
+
+.ffe-mb-dropbox {
+	transform: translateY(3px);
+}
+
+.ffe-mb-dropbox:hover .st0 {
+	fill: orange;
 }

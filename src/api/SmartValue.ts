@@ -1,3 +1,5 @@
+import { Synchronizer } from "./DropBox";
+
 export interface ValueGetter<T> {
 	(): Promise<T>;
 }
@@ -155,6 +157,7 @@ export class SmartValueRoaming<T> extends SmartValueBase<T> {
 		public readonly name: string,
 		protected readonly getter?: ValueGetter<T>,
 		protected readonly setter?: ValueSetter<T>,
+		private readonly synchronizer?: Synchronizer,
 	) {
 		super(name, getter, setter);
 
@@ -164,6 +167,14 @@ export class SmartValueRoaming<T> extends SmartValueBase<T> {
 					await this.trigger(JSON.parse(value as string));
 				}
 			});
+		}
+	}
+
+	public async set(value: T): Promise<void> {
+		await super.set(value);
+
+		if (this.synchronizer) {
+			await this.synchronizer.synchronize();
 		}
 	}
 

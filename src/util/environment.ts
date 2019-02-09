@@ -32,6 +32,7 @@ export const enum Page {
 	Favorites,
 	Story,
 	Chapter,
+	OAuth2,
 }
 
 export const ffnServices = {
@@ -76,6 +77,10 @@ export function getPage(location: Location): Page {
 
 	if (location.pathname.indexOf("/s/") === 0) {
 		return Page.Chapter;
+	}
+
+	if (location.pathname.indexOf("/ffe-oauth2-return") === 0) {
+		return Page.OAuth2;
 	}
 
 	return Page.Other;

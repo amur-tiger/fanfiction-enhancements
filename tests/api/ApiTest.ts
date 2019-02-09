@@ -1,8 +1,7 @@
 import { assert } from "chai";
 import * as td from "testdouble";
 
-import { Api } from "../../src/api/api";
-import { Story, StoryData } from "../../src/api/Story";
+import { Api } from "../../src/api/Api";
 
 describe("Api", function () {
 	beforeEach(function () {
