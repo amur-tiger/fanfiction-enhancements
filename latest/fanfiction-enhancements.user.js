@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.5.2+56.20a2c15
+// @version      0.5.2+58.1c5d0bb
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -80,6 +80,9 @@
         }
         if (location.pathname.indexOf("/s/") === 0) {
             return 5 /* Chapter */;
+        }
+        if (location.pathname.indexOf("/ffe-oauth2-return") === 0) {
+            return 6 /* OAuth2 */;
         }
         return 0 /* Other */;
     }
@@ -684,6 +687,471 @@
         }
     }
 
+    class SmartValueBase {
+        constructor(name, getter, setter) {
+            this.name = name;
+            this.getter = getter;
+            this.setter = setter;
+            // todo: key should be of type "symbol"
+            // see https://github.com/Microsoft/TypeScript/issues/1863 and https://github.com/Microsoft/TypeScript/pull/26797
+            this.subscribers = {};
+        }
+        get() {
+            return __awaiter(this, void 0, void 0, function* () {
+                let value = yield this.getCached();
+                if (value === undefined && this.getter) {
+                    value = yield this.getter();
+                    yield this.setCached(value);
+                }
+                return value;
+            });
+        }
+        set(value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (this.setter) {
+                    yield this.setter(value);
+                }
+                else if (this.getter) {
+                    throw new Error("This value cannot be set.");
+                }
+                yield this.setCached(value);
+                yield this.trigger(value);
+            });
+        }
+        subscribe(callback) {
+            const key = Symbol();
+            this.subscribers[key] = callback;
+            return key;
+        }
+        unsubscribe(key) {
+            delete this.subscribers[key];
+        }
+        dispose() {
+            this.subscribers = {};
+        }
+        update(value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield this.setCached(value);
+                yield this.trigger(value);
+            });
+        }
+        trigger(value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield Promise.all(Object.getOwnPropertySymbols(this.subscribers)
+                    .map(sym => this.subscribers[sym](value))
+                    .filter(promise => promise && promise.then));
+            });
+        }
+    }
+    class SmartValueLocal extends SmartValueBase {
+        constructor(name, storage, getter, setter) {
+            super(name, getter, setter);
+            this.name = name;
+            this.storage = storage;
+            this.getter = getter;
+            this.setter = setter;
+        }
+        getCached() {
+            const data = this.storage.getItem(this.name);
+            if (!data) {
+                return Promise.resolve(undefined);
+            }
+            return Promise.resolve(JSON.parse(data));
+        }
+        setCached(value) {
+            const data = JSON.stringify(value);
+            this.storage.setItem(this.name, data);
+            this.storage.setItem(this.name + "+timestamp", new Date().getTime() + "");
+            return Promise.resolve();
+        }
+    }
+    class SmartValueRoaming extends SmartValueBase {
+        constructor(name, getter, setter, synchronizer) {
+            super(name, getter, setter);
+            this.name = name;
+            this.getter = getter;
+            this.setter = setter;
+            this.synchronizer = synchronizer;
+            if (typeof GM_addValueChangeListener !== "undefined") {
+                this.token = GM_addValueChangeListener(name, (k, o, value, remote) => __awaiter(this, void 0, void 0, function* () {
+                    if (remote) {
+                        yield this.trigger(JSON.parse(value));
+                    }
+                }));
+            }
+        }
+        set(value) {
+            const _super = Object.create(null, {
+                set: { get: () => super.set }
+            });
+            return __awaiter(this, void 0, void 0, function* () {
+                yield _super.set.call(this, value);
+                if (this.synchronizer) {
+                    yield this.synchronizer.synchronize();
+                }
+            });
+        }
+        dispose() {
+            super.dispose();
+            if (!this.token) {
+                return;
+            }
+            if (typeof GM_removeValueChangeListener !== "undefined") {
+                GM_removeValueChangeListener(this.token);
+            }
+            this.token = undefined;
+        }
+        getCached() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const data = yield GM.getValue(this.name);
+                if (!data) {
+                    return;
+                }
+                return JSON.parse(data);
+            });
+        }
+        setCached(value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield GM.setValue(this.name, JSON.stringify(value));
+                yield GM.setValue(this.name + "+timestamp", new Date().getTime());
+            });
+        }
+    }
+
+    class Chapter {
+        constructor(data, valueManager) {
+            this.storyId = data.storyId;
+            this.id = data.id;
+            this.name = data.name;
+            this.words = valueManager.getWordCountValue(data.storyId, data.id);
+            this.read = valueManager.getChapterReadValue(data.storyId, data.id);
+        }
+    }
+
+    class Story {
+        constructor(data, valueManager) {
+            this.id = data.id;
+            this.title = data.title;
+            this.description = data.description;
+            this.chapters = data.chapters.map(chapter => new Chapter(chapter, valueManager));
+            this.imageUrl = data.imageUrl;
+            this.imageOriginalUrl = data.imageOriginalUrl;
+            this.favorites = data.favorites;
+            this.follows = data.follows;
+            this.reviews = data.reviews;
+            this.genre = data.genre;
+            this.language = data.language;
+            this.published = data.published ? new Date(data.published) : undefined;
+            this.updated = data.updated ? new Date(data.updated) : undefined;
+            this.rating = data.rating;
+            this.words = data.words;
+            this.characters = data.characters;
+            this.status = data.status;
+            this.author = {
+                id: data.authorId,
+                name: data.author,
+                profileUrl: undefined,
+                avatarUrl: undefined,
+            };
+            this.alert = valueManager.getAlertValue(data.id);
+            this.favorite = valueManager.getFavoriteValue(data.id);
+        }
+        isRead() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const read = yield Promise.all(this.chapters.map(chapter => chapter.read.get()));
+                return read.every(r => r);
+            });
+        }
+        setRead(read) {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield Promise.all(this.chapters.map(chapter => chapter.read.set(read)));
+            });
+        }
+    }
+
+    class CacheName {
+        static story(id) {
+            return `ffe-story-${id}`;
+        }
+        static isStoryKey(key) {
+            return /^ffe-story-\d+$/.test(key);
+        }
+        static storyAlert(id) {
+            return `ffe-story-${id}-alert`;
+        }
+        static isStoryAlertKey(key) {
+            return /^ffe-story-\d+-alert$/.test(key);
+        }
+        static storyFavorite(id) {
+            return `ffe-story-${id}-favorite`;
+        }
+        static isStoryFavoriteKey(key) {
+            return /^ffe-story-\d+-favorite$/.test(key);
+        }
+        static wordCount(storyId, chapterId) {
+            return `ffe-story-${storyId}-chapter-${chapterId}-words`;
+        }
+        static isWordCountKey(key) {
+            return /^ffe-story-\d+-chapter-\d+-words$/.test(key);
+        }
+        static chapterRead(storyId, chapterId) {
+            return `ffe-story-${storyId}-chapter-${chapterId}-read`;
+        }
+        static isChapterReadKey(key) {
+            return /^ffe-story-\d+-chapter-\d+-read$/.test(key);
+        }
+        static isTimestampKey(key) {
+            return /\+timestamp$/.test(key);
+        }
+    }
+    class ValueContainer {
+        constructor(storage, api, synchronizer) {
+            this.storage = storage;
+            this.api = api;
+            this.synchronizer = synchronizer;
+            this.instances = {};
+            addEventListener("storage", (event) => __awaiter(this, void 0, void 0, function* () {
+                const value = this.instances[event.key];
+                if (!value) {
+                    return;
+                }
+                yield value.trigger(JSON.parse(event.newValue));
+            }));
+            synchronizer.onValueUpdate((key, value) => __awaiter(this, void 0, void 0, function* () {
+                const instance = this.instances[key];
+                if (!instance) {
+                    yield GM.setValue(key, value);
+                    yield GM.setValue(key + "+timestamp", new Date().getTime());
+                    return;
+                }
+                yield instance.update(value);
+            }));
+        }
+        getStory(id) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const storyData = yield this.getStoryValue(id).get();
+                return new Story(storyData, this);
+            });
+        }
+        getStoryValue(id) {
+            const key = CacheName.story(id);
+            if (!this.instances[key]) {
+                this.instances[key] = new SmartValueLocal(key, this.storage, () => this.api.getStoryData(id));
+            }
+            return this.instances[key];
+        }
+        getAlertValue(id) {
+            const key = CacheName.storyAlert(id);
+            if (!this.instances[key]) {
+                this.instances[key] = new SmartValueLocal(key, this.storage, () => __awaiter(this, void 0, void 0, function* () {
+                    const alerts = yield this.api.getStoryAlerts();
+                    yield this.followedStoryDiff(CacheName.isStoryAlertKey, alerts, this.getAlertValue);
+                    return !!alerts.find(alert => alert.id === id);
+                }), (alert) => __awaiter(this, void 0, void 0, function* () {
+                    if (alert) {
+                        yield this.api.addStoryAlert(id);
+                    }
+                    else {
+                        yield this.api.removeStoryAlert(id);
+                    }
+                }));
+            }
+            return this.instances[key];
+        }
+        getFavoriteValue(id) {
+            const key = CacheName.storyFavorite(id);
+            if (!this.instances[key]) {
+                this.instances[key] = new SmartValueLocal(key, this.storage, () => __awaiter(this, void 0, void 0, function* () {
+                    const favorites = yield this.api.getStoryFavorites();
+                    yield this.followedStoryDiff(CacheName.isStoryFavoriteKey, favorites, this.getFavoriteValue);
+                    return !!favorites.find(favorite => favorite.id === id);
+                }), (favorite) => __awaiter(this, void 0, void 0, function* () {
+                    if (favorite) {
+                        yield this.api.addStoryFavorite(id);
+                    }
+                    else {
+                        yield this.api.removeStoryFavorite(id);
+                    }
+                }));
+            }
+            return this.instances[key];
+        }
+        getWordCountValue(storyId, chapterId) {
+            const key = CacheName.wordCount(storyId, chapterId);
+            if (!this.instances[key]) {
+                this.instances[key] = new SmartValueLocal(key, this.storage, () => this.api.getChapterWordCount(storyId, chapterId));
+            }
+            return this.instances[key];
+        }
+        getChapterReadValue(storyId, chapterId) {
+            const key = CacheName.chapterRead(storyId, chapterId);
+            if (!this.instances[key]) {
+                this.instances[key] = new SmartValueRoaming(key, undefined, undefined, this.synchronizer);
+            }
+            return this.instances[key];
+        }
+        followedStoryDiff(matchFn, updated, valueGetter) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const visited = new Set();
+                for (const followed of updated) {
+                    const value = valueGetter.call(this, followed.id);
+                    visited.add(value.name);
+                    yield value.update(true);
+                }
+                const current = Object.keys(this.instances).filter(matchFn).map(key => this.instances[key]);
+                for (const value of current) {
+                    if (visited.has(value.name)) {
+                        continue;
+                    }
+                    yield value.update(false);
+                }
+            });
+        }
+    }
+
+    const OAUTH2_CALLBACK = "ffe-oauth2-cb";
+    const REDIRECT_URI = "https://www.fanfiction.net/ffe-oauth2-return";
+    const CLIENT_ID = "ngjdgcbyh9cq080";
+    const BEARER_TOKEN_KEY = "ffe-dropbox-token";
+    const FFE_DATA_PATH = "/ffe.json";
+    class DropBox {
+        constructor() {
+            this.valueUpdateCallbacks = {};
+        }
+        isAuthorized() {
+            return __awaiter(this, void 0, void 0, function* () {
+                return !!(yield GM.getValue(BEARER_TOKEN_KEY));
+            });
+        }
+        authorize() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const token = yield new Promise((resolve, reject) => {
+                    unsafeWindow[OAUTH2_CALLBACK] = callbackToken => {
+                        clearInterval(handle);
+                        resolve(callbackToken);
+                    };
+                    const popup = ffnServices.xwindow("https://www.dropbox.com/oauth2/authorize?response_type=token" +
+                        "&client_id=" + encodeURIComponent(CLIENT_ID) +
+                        "&redirect_uri=" + encodeURIComponent(REDIRECT_URI), 775, 550);
+                    const handle = setInterval(() => {
+                        if (popup.closed) {
+                            clearInterval(handle);
+                            reject(new Error("Authorization aborted by user"));
+                        }
+                    }, 1000);
+                });
+                yield GM.setValue(BEARER_TOKEN_KEY, token);
+            });
+        }
+        synchronize() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const rawData = yield this.readFile(FFE_DATA_PATH);
+                const remoteData = rawData ? JSON.parse(rawData) : {};
+                for (const key in remoteData) {
+                    if (!remoteData.hasOwnProperty(key) || CacheName.isTimestampKey(key)) {
+                        continue;
+                    }
+                    const localTimestamp = +(yield GM.getValue(key + "+timestamp", 0));
+                    const remoteTimestamp = +remoteData[key + "+timestamp"];
+                    if (localTimestamp < remoteTimestamp) {
+                        yield Promise.all(Object.getOwnPropertySymbols(this.valueUpdateCallbacks)
+                            .map(sym => this.valueUpdateCallbacks[sym](key, remoteData[key]))
+                            .filter(promise => promise && promise.then));
+                    }
+                }
+                let hasUpdate = false;
+                for (const key of yield GM.listValues()) {
+                    if (CacheName.isTimestampKey(key)) {
+                        continue;
+                    }
+                    const localTimestamp = +(yield GM.getValue(key + "+timestamp", 0));
+                    const remoteTimestamp = +remoteData[key + "+timestamp"] || 0;
+                    if (localTimestamp > remoteTimestamp) {
+                        hasUpdate = true;
+                        remoteData[key] = yield GM.getValue(key);
+                        remoteData[key + "+timestamp"] = localTimestamp;
+                    }
+                }
+                if (hasUpdate) {
+                    yield this.saveFile(FFE_DATA_PATH, remoteData);
+                }
+            });
+        }
+        onValueUpdate(callback) {
+            const key = Symbol();
+            this.valueUpdateCallbacks[key] = callback;
+            return key;
+        }
+        removeValueUpdateCallback(key) {
+            delete this.valueUpdateCallbacks[key];
+        }
+        readFile(path) {
+            return this.content("/files/download", {
+                path: path,
+            });
+        }
+        saveFile(path, content) {
+            return this.content("/files/upload", {
+                path: path,
+                mode: "overwrite",
+                mute: true,
+            }, content);
+        }
+        content(url, params, body) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (!(yield this.isAuthorized())) {
+                    throw new Error("Not authorized with DropBox yet.");
+                }
+                const token = yield GM.getValue(BEARER_TOKEN_KEY);
+                const fmtUrl = "https://content.dropboxapi.com/2" + url + "?arg=" + encodeURIComponent(JSON.stringify(params));
+                console.log("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
+                const response = yield fetch(fmtUrl, {
+                    method: "POST",
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        "Content-Type": "application/octet-stream",
+                    },
+                    body: body ? JSON.stringify(body) : undefined,
+                });
+                if (!response.ok) {
+                    const msg = yield response.json();
+                    if (response.status === 409 && msg.error_summary.startsWith("path/not_found/")) {
+                        // File doesn't exist yet after first connection. Simply ignore and push all changes.
+                        return undefined;
+                    }
+                    throw new Error(msg.error_summary);
+                }
+                return response.text();
+            });
+        }
+        rpc(url, body) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (!(yield this.isAuthorized())) {
+                    throw new Error("Not authorized with Dropbox yet.");
+                }
+                const token = yield GM.getValue(BEARER_TOKEN_KEY);
+                const fmtUrl = "https://api.dropboxapi.com/2" + url;
+                console.log("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
+                const response = yield fetch(fmtUrl, {
+                    method: "POST",
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        "Content-Type": "application/octet-stream",
+                    },
+                    body: body ? JSON.stringify(body) : "null",
+                });
+                return response.json();
+            });
+        }
+    }
+    function oAuth2LandingPage() {
+        // This function will be executed inside the child popup window receiving the OAuth token.
+        document.body.firstElementChild.innerHTML = `<h2>Received oAuth2 token</h2>This page should close momentarily.`;
+        const token = /[?&#]access_token=([^&#]*)/i.exec(location.hash)[1];
+        window.opener[OAUTH2_CALLBACK](token);
+        window.close();
+    }
+
     class Button {
         constructor(props) {
             this.props = props;
@@ -913,10 +1381,13 @@
         }
     }
 
-    var css$5 = ".ffe-mb-separator:before {\n\tcontent: \" | \";\n}\n\n.ffe-mb-alerts, .ffe-mb-favorites {\n\tdisplay: inline-block;\n\tline-height: 2em;\n\tmargin-top: -.5em;\n\ttext-align: center;\n\twidth: 2em;\n}\n\n.ffe-mb-alerts:hover, .ffe-mb-favorites:hover {\n\tborder-bottom: 0;\n\tcolor: orange !important;\n}\n";
+    var css$5 = ".ffe-mb-separator:before {\n\tcontent: \" | \";\n}\n\n.ffe-mb-checked:before {\n\tbackground: green;\n\tborder-radius: 50%;\n\tbottom: 2px;\n\tcolor: #fff;\n\tcontent: \"✓\";\n\tfont-size: 9px;\n\theight: 12px;\n\tline-height: 12px;\n\tposition: absolute;\n\tright: -2px;\n\twidth: 12px;\n}\n\n.ffe-mb-icon {\n\tdisplay: inline-block;\n\tline-height: 2em;\n\tmargin-top: -.5em;\n\ttext-align: center;\n\twidth: 2em;\n}\n\n.ffe-mb-icon:hover {\n\tborder-bottom: 0;\n\tcolor: orange !important;\n}\n\n.ffe-mb-dropbox {\n\ttransform: translateY(3px);\n}\n\n.ffe-mb-dropbox:hover .st0 {\n\tfill: orange;\n}\n";
     styleInject(css$5);
 
     class MenuBar {
+        constructor(dropBox) {
+            this.dropBox = dropBox;
+        }
         enhance() {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!environment.currentUserName) {
@@ -926,15 +1397,33 @@
                 const parent = loginElement.parentElement;
                 const ref = loginElement.nextElementSibling;
                 const toAlerts = document.createElement("a");
-                toAlerts.classList.add("ffe-mb-alerts", "icon-bookmark-2");
+                toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "icon-bookmark-2");
+                toAlerts.title = "Go to Story Alerts";
                 toAlerts.href = "/alert/story.php";
                 const toFavorites = document.createElement("a");
-                toFavorites.classList.add("ffe-mb-favorites", "icon-heart");
+                toFavorites.classList.add("ffe-mb-icon", "ffe-mb-favorites", "icon-heart");
+                toFavorites.title = "Go to Story Favorites";
                 toFavorites.href = "/favorites/story.php";
+                const toDropBox = document.createElement("a");
+                toDropBox.classList.add("ffe-mb-icon", "ffe-mb-dropbox");
+                toDropBox.title = "Connect to DropBox";
+                toDropBox.href = "#";
+                toDropBox.innerHTML = "<svg id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 42.4 39.5\" " +
+                    "width=\"16\" height=\"16\"><style>.st0{fill:#fff}</style><path class=\"st0\" " +
+                    "d=\"M10.6 1.7L0 8.5l10.6 6.7 10.6-6.7zm21.2 0L21.2 8.5l10.6 6.7 10.6-6.7zM0 22l10.6 6.8L21.2 " +
+                    "22l-10.6-6.8zm31.8-6.8L21.2 22l10.6 6.8L42.4 22zM10.6 31l10.6 6.8L31.8 31l-10.6-6.7z\"/></svg>";
+                if (yield this.dropBox.isAuthorized()) {
+                    toDropBox.classList.add("ffe-mb-checked");
+                }
+                toDropBox.addEventListener("click", (event) => __awaiter(this, void 0, void 0, function* () {
+                    event.preventDefault();
+                    yield this.dropBox.authorize();
+                }));
                 const separator = document.createElement("span");
                 separator.classList.add("ffe-mb-separator");
                 parent.insertBefore(toAlerts, ref);
                 parent.insertBefore(toFavorites, ref);
+                parent.insertBefore(toDropBox, ref);
                 parent.insertBefore(separator, ref);
             });
         }
@@ -960,312 +1449,16 @@
         }
     }
 
-    class SmartValueBase {
-        constructor(name, getter, setter) {
-            this.name = name;
-            this.getter = getter;
-            this.setter = setter;
-            // todo: key should be of type "symbol"
-            // see https://github.com/Microsoft/TypeScript/issues/1863 and https://github.com/Microsoft/TypeScript/pull/26797
-            this.subscribers = {};
-        }
-        get() {
-            return __awaiter(this, void 0, void 0, function* () {
-                let value = yield this.getCached();
-                if (value === undefined && this.getter) {
-                    value = yield this.getter();
-                    yield this.setCached(value);
-                }
-                return value;
-            });
-        }
-        set(value) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (this.setter) {
-                    yield this.setter(value);
-                }
-                else if (this.getter) {
-                    throw new Error("This value cannot be set.");
-                }
-                yield this.setCached(value);
-                yield this.trigger(value);
-            });
-        }
-        subscribe(callback) {
-            const key = Symbol();
-            this.subscribers[key] = callback;
-            return key;
-        }
-        unsubscribe(key) {
-            delete this.subscribers[key];
-        }
-        dispose() {
-            this.subscribers = {};
-        }
-        update(value) {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield this.setCached(value);
-                yield this.trigger(value);
-            });
-        }
-        trigger(value) {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield Promise.all(Object.getOwnPropertySymbols(this.subscribers)
-                    .map(sym => this.subscribers[sym](value))
-                    .filter(promise => promise && promise.then));
-            });
-        }
-    }
-    class SmartValueLocal extends SmartValueBase {
-        constructor(name, storage, getter, setter) {
-            super(name, getter, setter);
-            this.name = name;
-            this.storage = storage;
-            this.getter = getter;
-            this.setter = setter;
-        }
-        getCached() {
-            const data = this.storage.getItem(this.name);
-            if (!data) {
-                return Promise.resolve(undefined);
-            }
-            return Promise.resolve(JSON.parse(data));
-        }
-        setCached(value) {
-            const data = JSON.stringify(value);
-            this.storage.setItem(this.name, data);
-            this.storage.setItem(this.name + "+timestamp", new Date().getTime() + "");
-            return Promise.resolve();
-        }
-    }
-    class SmartValueRoaming extends SmartValueBase {
-        constructor(name, getter, setter) {
-            super(name, getter, setter);
-            this.name = name;
-            this.getter = getter;
-            this.setter = setter;
-            if (typeof GM_addValueChangeListener !== "undefined") {
-                this.token = GM_addValueChangeListener(name, (k, o, value, remote) => __awaiter(this, void 0, void 0, function* () {
-                    if (remote) {
-                        yield this.trigger(JSON.parse(value));
-                    }
-                }));
-            }
-        }
-        dispose() {
-            super.dispose();
-            if (!this.token) {
-                return;
-            }
-            if (typeof GM_removeValueChangeListener !== "undefined") {
-                GM_removeValueChangeListener(this.token);
-            }
-            this.token = undefined;
-        }
-        getCached() {
-            return __awaiter(this, void 0, void 0, function* () {
-                const data = yield GM.getValue(this.name);
-                if (!data) {
-                    return;
-                }
-                return JSON.parse(data);
-            });
-        }
-        setCached(value) {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield GM.setValue(this.name, JSON.stringify(value));
-                yield GM.setValue(this.name + "+timestamp", new Date().getTime());
-            });
-        }
-    }
-
-    class Chapter {
-        constructor(data, valueManager) {
-            this.storyId = data.storyId;
-            this.id = data.id;
-            this.name = data.name;
-            this.words = valueManager.getWordCountValue(data.storyId, data.id);
-            this.read = valueManager.getChapterReadValue(data.storyId, data.id);
-        }
-    }
-
-    class Story {
-        constructor(data, valueManager) {
-            this.id = data.id;
-            this.title = data.title;
-            this.description = data.description;
-            this.chapters = data.chapters.map(chapter => new Chapter(chapter, valueManager));
-            this.imageUrl = data.imageUrl;
-            this.imageOriginalUrl = data.imageOriginalUrl;
-            this.favorites = data.favorites;
-            this.follows = data.follows;
-            this.reviews = data.reviews;
-            this.genre = data.genre;
-            this.language = data.language;
-            this.published = data.published ? new Date(data.published) : undefined;
-            this.updated = data.updated ? new Date(data.updated) : undefined;
-            this.rating = data.rating;
-            this.words = data.words;
-            this.characters = data.characters;
-            this.status = data.status;
-            this.author = {
-                id: data.authorId,
-                name: data.author,
-                profileUrl: undefined,
-                avatarUrl: undefined,
-            };
-            this.alert = valueManager.getAlertValue(data.id);
-            this.favorite = valueManager.getFavoriteValue(data.id);
-        }
-        isRead() {
-            return __awaiter(this, void 0, void 0, function* () {
-                const read = yield Promise.all(this.chapters.map(chapter => chapter.read.get()));
-                return read.every(r => r);
-            });
-        }
-        setRead(read) {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield Promise.all(this.chapters.map(chapter => chapter.read.set(read)));
-            });
-        }
-    }
-
-    class CacheName {
-        static story(id) {
-            return `ffe-story-${id}`;
-        }
-        static isStoryKey(key) {
-            return /^ffe-story-\d+$/.test(key);
-        }
-        static storyAlert(id) {
-            return `ffe-story-${id}-alert`;
-        }
-        static isStoryAlertKey(key) {
-            return /^ffe-story-\d+-alert$/.test(key);
-        }
-        static storyFavorite(id) {
-            return `ffe-story-${id}-favorite`;
-        }
-        static isStoryFavoriteKey(key) {
-            return /^ffe-story-\d+-favorite$/.test(key);
-        }
-        static wordCount(storyId, chapterId) {
-            return `ffe-story-${storyId}-chapter-${chapterId}-words`;
-        }
-        static isWordCountKey(key) {
-            return /^ffe-story-\d+-chapter-\d+-words$/.test(key);
-        }
-        static chapterRead(storyId, chapterId) {
-            return `ffe-story-${storyId}-chapter-${chapterId}-read`;
-        }
-        static isChapterReadKey(key) {
-            return /^ffe-story-\d+-chapter-\d+-read$/.test(key);
-        }
-    }
-    class ValueContainer {
-        constructor(storage, api) {
-            this.storage = storage;
-            this.api = api;
-            this.instances = {};
-            addEventListener("storage", (event) => __awaiter(this, void 0, void 0, function* () {
-                const value = this.instances[event.key];
-                if (!value) {
-                    return;
-                }
-                yield value.trigger(JSON.parse(event.newValue));
-            }));
-        }
-        getStory(id) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const storyData = yield this.getStoryValue(id).get();
-                return new Story(storyData, this);
-            });
-        }
-        getStoryValue(id) {
-            const key = CacheName.story(id);
-            if (!this.instances[key]) {
-                this.instances[key] = new SmartValueLocal(key, this.storage, () => this.api.getStoryData(id));
-            }
-            return this.instances[key];
-        }
-        getAlertValue(id) {
-            const key = CacheName.storyAlert(id);
-            if (!this.instances[key]) {
-                this.instances[key] = new SmartValueLocal(key, this.storage, () => __awaiter(this, void 0, void 0, function* () {
-                    const alerts = yield this.api.getStoryAlerts();
-                    yield this.followedStoryDiff(CacheName.isStoryAlertKey, alerts, this.getAlertValue);
-                    return !!alerts.find(alert => alert.id === id);
-                }), (alert) => __awaiter(this, void 0, void 0, function* () {
-                    if (alert) {
-                        yield this.api.addStoryAlert(id);
-                    }
-                    else {
-                        yield this.api.removeStoryAlert(id);
-                    }
-                }));
-            }
-            return this.instances[key];
-        }
-        getFavoriteValue(id) {
-            const key = CacheName.storyFavorite(id);
-            if (!this.instances[key]) {
-                this.instances[key] = new SmartValueLocal(key, this.storage, () => __awaiter(this, void 0, void 0, function* () {
-                    const favorites = yield this.api.getStoryFavorites();
-                    yield this.followedStoryDiff(CacheName.isStoryFavoriteKey, favorites, this.getFavoriteValue);
-                    return !!favorites.find(favorite => favorite.id === id);
-                }), (favorite) => __awaiter(this, void 0, void 0, function* () {
-                    if (favorite) {
-                        yield this.api.addStoryFavorite(id);
-                    }
-                    else {
-                        yield this.api.removeStoryFavorite(id);
-                    }
-                }));
-            }
-            return this.instances[key];
-        }
-        getWordCountValue(storyId, chapterId) {
-            const key = CacheName.wordCount(storyId, chapterId);
-            if (!this.instances[key]) {
-                this.instances[key] = new SmartValueLocal(key, this.storage, () => this.api.getChapterWordCount(storyId, chapterId));
-            }
-            return this.instances[key];
-        }
-        getChapterReadValue(storyId, chapterId) {
-            const key = CacheName.chapterRead(storyId, chapterId);
-            if (!this.instances[key]) {
-                this.instances[key] = new SmartValueRoaming(key);
-            }
-            return this.instances[key];
-        }
-        followedStoryDiff(matchFn, updated, valueGetter) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const visited = new Set();
-                for (const followed of updated) {
-                    const value = valueGetter.call(this, followed.id);
-                    visited.add(value.name);
-                    yield value.update(true);
-                }
-                const current = Object.keys(this.instances).filter(matchFn).map(key => this.instances[key]);
-                for (const value of current) {
-                    if (visited.has(value.name)) {
-                        continue;
-                    }
-                    yield value.update(false);
-                }
-            });
-        }
-    }
-
     class Container {
         getApi() {
             return this.api || (this.api = new Api());
         }
         getValueContainer() {
-            return this.valueManager || (this.valueManager = new ValueContainer(this.getStorage(), this.getApi()));
+            return this.valueManager ||
+                (this.valueManager = new ValueContainer(this.getStorage(), this.getApi(), this.getDropBox()));
         }
         getMenuBar() {
-            return this.menuBar || (this.menuBar = new MenuBar());
+            return this.menuBar || (this.menuBar = new MenuBar(this.getDropBox()));
         }
         getFollowsList() {
             return this.followsList || (this.followsList = new FollowsList(this.getValueContainer()));
@@ -1275,6 +1468,9 @@
         }
         getChapterList() {
             return this.chapterList || (this.chapterList = new ChapterList$1(this.getValueContainer()));
+        }
+        getDropBox() {
+            return this.dropBox || (this.dropBox = new DropBox());
         }
         getContainer() {
             return this;
@@ -1332,7 +1528,16 @@
     const container = new Container();
     function main() {
         return __awaiter(this, void 0, void 0, function* () {
+            if (environment.currentPageType === 6 /* OAuth2 */) {
+                console.log("OAuth 2 landing page - no enhancements will be applied");
+                oAuth2LandingPage();
+                return;
+            }
             const valueContainer = container.getValueContainer();
+            const dropBox = container.getDropBox();
+            if (yield dropBox.isAuthorized()) {
+                dropBox.synchronize().catch(console.error);
+            }
             const menuBarEnhancer = container.getMenuBar();
             yield menuBarEnhancer.enhance();
             if (environment.currentPageType === 2 /* Alerts */ || environment.currentPageType === 3 /* Favorites */) {
