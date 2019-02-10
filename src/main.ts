@@ -69,8 +69,10 @@ async function main() {
 			const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
 			if (amount / (max - 550) >= 1) {
-				await readValue.set(true);
 				window.removeEventListener("scroll", markRead);
+				console.log("Setting '%s' chapter '%s' to read", currentStory.title,
+					currentStory.chapters.find(c => c.id === environment.currentChapterId).name);
+				await readValue.set(true);
 			}
 		};
 
