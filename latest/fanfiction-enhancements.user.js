@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.0+61.970dfd4
+// @version      0.6.1+63.05f52eb
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -381,7 +381,7 @@
         }
         get(url) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log("%c[Api] %cGET %c%s", "color: gray", "color: blue", "color: inherit", url);
+                console.debug("%c[Api] %cGET %c%s", "color: gray", "color: blue", "color: inherit", url);
                 const response = yield fetch(url);
                 return response.text();
             });
@@ -413,7 +413,7 @@
         }
         post(url, data, expect) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
+                console.debug("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
                 const formData = new FormData();
                 for (const key in data) {
                     if (!data.hasOwnProperty(key)) {
@@ -708,6 +708,11 @@
         }
         set(value) {
             return __awaiter(this, void 0, void 0, function* () {
+                const saved = yield this.getCached();
+                if (saved === value) {
+                    yield this.setCached(value);
+                    return;
+                }
                 if (this.setter) {
                     yield this.setter(value);
                 }
@@ -732,7 +737,10 @@
         update(value) {
             return __awaiter(this, void 0, void 0, function* () {
                 yield this.setCached(value);
-                yield this.trigger(value);
+                const saved = yield this.getCached();
+                if (saved !== value) {
+                    yield this.trigger(value);
+                }
             });
         }
         trigger(value) {
@@ -920,7 +928,7 @@
             synchronizer.onValueUpdate((key, value) => __awaiter(this, void 0, void 0, function* () {
                 const instance = this.instances[key];
                 if (!instance) {
-                    yield GM.setValue(key, value);
+                    yield GM.setValue(key, JSON.stringify(value));
                     yield GM.setValue(key + "+timestamp", new Date().getTime());
                     return;
                 }
@@ -1045,6 +1053,7 @@
         }
         synchronize() {
             return __awaiter(this, void 0, void 0, function* () {
+                console.log("Synchronizing data with DropBox");
                 const rawData = yield this.readFile(FFE_DATA_PATH);
                 const remoteData = rawData ? JSON.parse(rawData) : {};
                 for (const key in remoteData) {
@@ -1068,7 +1077,7 @@
                     const remoteTimestamp = +remoteData[key + "+timestamp"] || 0;
                     if (localTimestamp > remoteTimestamp) {
                         hasUpdate = true;
-                        remoteData[key] = yield GM.getValue(key);
+                        remoteData[key] = JSON.parse(yield GM.getValue(key));
                         remoteData[key + "+timestamp"] = localTimestamp;
                     }
                 }
@@ -1104,7 +1113,7 @@
                 }
                 const token = yield GM.getValue(BEARER_TOKEN_KEY);
                 const fmtUrl = "https://content.dropboxapi.com/2" + url + "?arg=" + encodeURIComponent(JSON.stringify(params));
-                console.log("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
+                console.debug("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
                 const response = yield fetch(fmtUrl, {
                     method: "POST",
                     headers: {
@@ -1131,7 +1140,7 @@
                 }
                 const token = yield GM.getValue(BEARER_TOKEN_KEY);
                 const fmtUrl = "https://api.dropboxapi.com/2" + url;
-                console.log("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
+                console.debug("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
                 const response = yield fetch(fmtUrl, {
                     method: "POST",
                     headers: {
@@ -1418,6 +1427,7 @@
                 toDropBox.addEventListener("click", (event) => __awaiter(this, void 0, void 0, function* () {
                     event.preventDefault();
                     yield this.dropBox.authorize();
+                    toDropBox.classList.add("ffe-mb-checked");
                 }));
                 const separator = document.createElement("span");
                 separator.classList.add("ffe-mb-separator");
@@ -1575,8 +1585,9 @@
                     const amount = document.documentElement.scrollTop;
                     const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
                     if (amount / (max - 550) >= 1) {
-                        yield readValue.set(true);
                         window.removeEventListener("scroll", markRead);
+                        console.log("Setting '%s' chapter '%s' to read", currentStory.title, currentStory.chapters.find(c => c.id === environment.currentChapterId).name);
+                        yield readValue.set(true);
                     }
                 });
                 window.addEventListener("scroll", markRead);
