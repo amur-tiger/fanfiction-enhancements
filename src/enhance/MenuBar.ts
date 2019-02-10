@@ -43,6 +43,7 @@ export class MenuBar implements Enhancer {
 		toDropBox.addEventListener("click", async event => {
 			event.preventDefault();
 			await this.dropBox.authorize();
+			toDropBox.classList.add("ffe-mb-checked");
 		});
 
 		const separator = document.createElement("span");

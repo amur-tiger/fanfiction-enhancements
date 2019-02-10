@@ -52,6 +52,7 @@ export class DropBox implements Synchronizer {
 	}
 
 	public async synchronize(): Promise<void> {
+		console.log("Synchronizing data with DropBox");
 		const rawData = await this.readFile(FFE_DATA_PATH);
 		const remoteData = rawData ? JSON.parse(rawData) : {};
 
@@ -123,7 +124,7 @@ export class DropBox implements Synchronizer {
 
 		const token = await GM.getValue(BEARER_TOKEN_KEY);
 		const fmtUrl = "https://content.dropboxapi.com/2" + url + "?arg=" + encodeURIComponent(JSON.stringify(params));
-		console.log("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
+		console.debug("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
 
 		const response = await fetch(fmtUrl, {
 			method: "POST",
@@ -154,7 +155,7 @@ export class DropBox implements Synchronizer {
 
 		const token = await GM.getValue(BEARER_TOKEN_KEY);
 		const fmtUrl = "https://api.dropboxapi.com/2" + url;
-		console.log("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
+		console.debug("%c[DropBox] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", fmtUrl);
 
 		const response = await fetch(fmtUrl, {
 			method: "POST",

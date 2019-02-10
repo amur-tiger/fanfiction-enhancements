@@ -77,7 +77,7 @@ export class Api {
 	}
 
 	private async get(url: string): Promise<string> {
-		console.log("%c[Api] %cGET %c%s", "color: gray", "color: blue", "color: inherit", url);
+		console.debug("%c[Api] %cGET %c%s", "color: gray", "color: blue", "color: inherit", url);
 
 		const response = await fetch(url);
 
@@ -114,7 +114,7 @@ export class Api {
 	}
 
 	private async post(url: string, data: any, expect: "json" | "html"): Promise<any> {
-		console.log("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
+		console.debug("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
 
 		const formData = new FormData();
 		for (const key in data) {
