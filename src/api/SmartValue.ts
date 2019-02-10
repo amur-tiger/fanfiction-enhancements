@@ -81,6 +81,13 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
 	}
 
 	public async set(value: T): Promise<void> {
+		const saved = await this.getCached();
+		if (saved === value) {
+			await this.setCached(value);
+
+			return;
+		}
+
 		if (this.setter) {
 			await this.setter(value);
 		} else if (this.getter) {
@@ -108,7 +115,11 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
 
 	public async update(value: T): Promise<void> {
 		await this.setCached(value);
-		await this.trigger(value);
+
+		const saved = await this.getCached();
+		if (saved !== value) {
+			await this.trigger(value);
+		}
 	}
 
 	protected async trigger(value: T): Promise<void> {

@@ -69,8 +69,8 @@ async function main() {
 			const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
 			if (amount / (max - 550) >= 1) {
-				await readValue.set(true);
 				window.removeEventListener("scroll", markRead);
+				await readValue.set(true);
 			}
 		};
 
