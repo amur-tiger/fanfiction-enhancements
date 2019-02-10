@@ -70,7 +70,7 @@ export class ValueContainer {
 		synchronizer.onValueUpdate(async (key, value) => {
 			const instance = this.instances[key];
 			if (!instance) {
-				await GM.setValue(key, value);
+				await GM.setValue(key, JSON.stringify(value));
 				await GM.setValue(key + "+timestamp", new Date().getTime());
 
 				return;

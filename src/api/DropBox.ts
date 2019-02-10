@@ -82,7 +82,7 @@ export class DropBox implements Synchronizer {
 
 			if (localTimestamp > remoteTimestamp) {
 				hasUpdate = true;
-				remoteData[key] = await GM.getValue(key);
+				remoteData[key] = JSON.parse(await GM.getValue(key) as string);
 				remoteData[key + "+timestamp"] = localTimestamp;
 			}
 		}
