@@ -1,4 +1,3 @@
-import { ffnServices } from "../util/environment";
 import { CacheName } from "./ValueContainer";
 
 declare const unsafeWindow: Window;
@@ -36,7 +35,7 @@ export class DropBox implements Synchronizer {
 				resolve(callbackToken);
 			};
 
-			const popup = ffnServices.xwindow("https://www.dropbox.com/oauth2/authorize?response_type=token" +
+			const popup = xwindow("https://www.dropbox.com/oauth2/authorize?response_type=token" +
 				"&client_id=" + encodeURIComponent(CLIENT_ID) +
 				"&redirect_uri=" + encodeURIComponent(REDIRECT_URI), 775, 550);
 
