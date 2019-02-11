@@ -1,11 +1,11 @@
 {
 	"compilerOptions": {
 		"moduleResolution": "node",
-		"target": "es6",
+		"target": "es2017",
 		"sourceMap": true,
 		"lib": [
 			"dom",
-			"es7"
+			"es2017"
 		],
 		"typeRoots": [
 			"node_modules/@types",
