@@ -114,9 +114,8 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
 	}
 
 	public async update(value: T): Promise<void> {
-		await this.setCached(value);
-
 		const saved = await this.getCached();
+		await this.setCached(value);
 		if (saved !== value) {
 			await this.trigger(value);
 		}

@@ -207,3 +207,33 @@ export function parseFollowedStoryList(fragment: string | Document | DocumentFra
 			};
 		});
 }
+
+export function parseStoryList(fragment: string | Document | DocumentFragment):
+	(FollowedStory & { row: HTMLElement })[] {
+	const container = typeof fragment === "string" ? (() => {
+		const template = document.createElement("template");
+		template.innerHTML = fragment;
+
+		return template.content;
+	})() : fragment;
+
+	const rows = container.querySelectorAll(".z-list") as NodeListOf<HTMLDivElement>;
+
+	return Array.from(rows)
+		.map((row: HTMLDivElement) => {
+			const storyAnchor = row.firstElementChild as HTMLAnchorElement;
+			const authorAnchor = row.querySelector("a[href^=\"/u/\"]") as HTMLAnchorElement;
+
+			return {
+				row: row,
+				id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
+				title: storyAnchor.textContent,
+				author: {
+					id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
+					name: authorAnchor.textContent,
+					profileUrl: authorAnchor.href,
+					avatarUrl: "",
+				},
+			};
+		});
+}

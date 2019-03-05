@@ -38,7 +38,7 @@ describe("Story Text", function() {
 
 		td.verify(global["_fontastic_save"]());
 		assert.equal((fragment.firstElementChild as HTMLElement).style.fontSize, "1.2em");
-		assert.equal((fragment.firstElementChild as HTMLElement).style.lineHeight, "2.00");
+		assert.equal(+(fragment.firstElementChild as HTMLElement).style.lineHeight, 2);
 	});
 
 	it("should not set styles if styles were modified", async function() {

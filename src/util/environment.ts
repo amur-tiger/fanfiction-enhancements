@@ -6,6 +6,7 @@ export const enum Page {
 	Story,
 	Chapter,
 	OAuth2,
+	StoryList,
 }
 
 export const environment = {
@@ -47,6 +48,12 @@ export function getPage(location: Location): Page {
 
 	if (location.pathname.indexOf("/ffe-oauth2-return") === 0) {
 		return Page.OAuth2;
+	}
+
+	if (location.pathname.match(/^\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/.+$/i) ||
+		location.pathname.match(/^\/[^\/]+-Crossovers\//i) ||
+		location.pathname.indexOf("/community/") === 0) {
+		return Page.StoryList;
 	}
 
 	return Page.Other;
