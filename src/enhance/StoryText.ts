@@ -1,4 +1,3 @@
-import { ffnServices } from "../util/environment";
 import { getCookie } from "../utils";
 import { Enhancer } from "./Enhancer";
 
@@ -14,19 +13,18 @@ export class StoryText implements Enhancer {
 		this.fixUserSelect(textContainer);
 
 		if (!getCookie("xcookie2")) {
-			const cookie = {
-				read_font: "Open Sans",
-				read_font_size: "1.2",
-				read_line_height: "2.00",
-				read_width: 75,
-			};
-			ffnServices.fontastic.save(cookie);
+			XCOOKIE.read_font = "Open Sans";
+			XCOOKIE.read_font_size = 1.2;
+			XCOOKIE.read_line_height = 2;
+			XCOOKIE.read_width = 75;
+
+			_fontastic_save();
 
 			const text = textContainer.firstElementChild as HTMLElement;
-			text.style.fontFamily = cookie.read_font;
-			text.style.fontSize = cookie.read_font_size + "em";
-			text.style.lineHeight = cookie.read_line_height;
-			text.style.width = cookie.read_width + "%";
+			text.style.fontFamily = XCOOKIE.read_font;
+			text.style.fontSize = XCOOKIE.read_font_size + "em";
+			text.style.lineHeight = XCOOKIE.read_line_height + "";
+			text.style.width = XCOOKIE.read_width + "%";
 		}
 	}
 

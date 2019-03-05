@@ -3,6 +3,7 @@ import { ChapterList } from "./enhance/ChapterList";
 import { DropBox } from "./api/DropBox";
 import { FollowsList } from "./enhance/FollowsList";
 import { MenuBar } from "./enhance/MenuBar";
+import { StoryList } from "./enhance/StoryList";
 import { StoryProfile } from "./enhance/StoryProfile";
 import { ValueContainer } from "./api/ValueContainer";
 
@@ -11,6 +12,7 @@ export class Container {
 	private valueManager: ValueContainer;
 	private menuBar: MenuBar;
 	private followsList: FollowsList;
+	private storyList: StoryList;
 	private storyProfile: StoryProfile;
 	private chapterList: ChapterList;
 	private dropBox: DropBox;
@@ -30,6 +32,10 @@ export class Container {
 
 	public getFollowsList(): FollowsList {
 		return this.followsList || (this.followsList = new FollowsList(this.getValueContainer()));
+	}
+
+	public getStoryListEnhancer(): StoryList {
+		return this.storyList || (this.storyList = new StoryList(this.getValueContainer()));
 	}
 
 	public getStoryProfile(): StoryProfile {

@@ -36,6 +36,11 @@ async function main() {
 		await followsListEnhancer.enhance();
 	}
 
+	if (environment.currentPageType === Page.StoryList) {
+		const storyListEnhancer = container.getStoryListEnhancer();
+		await storyListEnhancer.enhance();
+	}
+
 	if (environment.currentPageType === Page.Story) {
 		const currentStory = parseProfile(document);
 		const storyValue = valueContainer.getStoryValue(currentStory.id);
