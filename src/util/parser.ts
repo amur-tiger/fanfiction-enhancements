@@ -67,6 +67,44 @@ export function parseProfile(fragment: string | Document | DocumentFragment): St
 	};
 }
 
+export function parseZListItem(container: HTMLElement): StoryData {
+	const titleElement = container.querySelector(".stitle") as HTMLAnchorElement;
+	const authorElement = container.querySelector("a[href^=\"/u/\"]") as HTMLAnchorElement;
+	const descriptionElement = container.querySelector(".z-indent");
+	const tagsElement = container.querySelector(".z-padtop2");
+
+	const resultMeta = parseTags(tagsElement);
+
+	// will probably get placeholder as cover as well
+	const cover = titleElement.querySelector("img");
+	if (cover) {
+		resultMeta.imageUrl = (cover as HTMLImageElement).src;
+		resultMeta.imageOriginalUrl = cover.dataset.dataOriginal;
+	}
+
+	return {
+		id: +titleElement.href.match(/\/s\/(\d+)\//i)[1],
+		title: titleElement.textContent,
+		author: authorElement.textContent,
+		authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+		description: Array.from(descriptionElement.childNodes).find(node => node.nodeName === "#text").nodeValue,
+		chapters: undefined,
+		imageUrl: resultMeta.imageUrl,
+		imageOriginalUrl: resultMeta.imageOriginalUrl,
+		favorites: resultMeta.favs,
+		follows: resultMeta.follows,
+		reviews: resultMeta.reviews,
+		genre: resultMeta.genre,
+		language: resultMeta.language,
+		published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
+		updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
+		rating: resultMeta.rating,
+		words: resultMeta.words,
+		characters: resultMeta.characters,
+		status: resultMeta.status,
+	};
+}
+
 function parseTags(tagsElement: Element): StoryMetaData {
 	const result: StoryMetaData = {
 		genre: [],
@@ -77,7 +115,8 @@ function parseTags(tagsElement: Element): StoryMetaData {
 	const tempElement = document.createElement("div");
 
 	tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
-	result.rating = (tempElement.firstElementChild as HTMLElement).textContent;
+	result.rating = tempElement.firstElementChild ?
+		(tempElement.firstElementChild as HTMLElement).textContent : tempElement.textContent;
 
 	result.language = tagsArray[1].trim();
 	result.genre = tagsArray[2].trim().split("/");
@@ -91,7 +130,12 @@ function parseTags(tagsElement: Element): StoryMetaData {
 	for (let i = 3; i < tagsArray.length; i++) {
 		const tagNameMatch = tagsArray[i].match(/^(\w+):/);
 		if (!tagNameMatch) {
-			result.characters = parseCharacters(tagsArray[i]);
+			if (tagsArray[i] === "Complete") {
+				result.status = tagsArray[i];
+			} else {
+				result.characters = parseCharacters(tagsArray[i]);
+			}
+
 			continue;
 		}
 
@@ -101,7 +145,8 @@ function parseTags(tagsElement: Element): StoryMetaData {
 		switch (tagName) {
 			case "reviews":
 				tempElement.innerHTML = tagValue;
-				result.reviews = +(tempElement.firstElementChild as HTMLElement).textContent.replace(/,/g, "");
+				result.reviews = tempElement.firstElementChild ?
+					+(tempElement.firstElementChild as HTMLElement).textContent.replace(/,/g, "") : +tempElement.textContent;
 				break;
 			case "published":
 			case "updated":

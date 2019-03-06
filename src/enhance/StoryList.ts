@@ -1,6 +1,7 @@
-import { parseStoryList } from "../util/parser";
+import { parseStoryList, parseZListItem } from "../util/parser";
 import { ChapterList } from "./component/ChapterList";
 import { Enhancer } from "./Enhancer";
+import { Story } from "../api/Story";
 import { StoryCard } from "./component/StoryCard";
 import { ValueContainer } from "../api/ValueContainer";
 
@@ -24,7 +25,7 @@ export class StoryList implements Enhancer {
 			item.classList.add("ffe-follows-item");
 			container.appendChild(item);
 
-			const story = await this.valueContainer.getStory(followedStory.id);
+			const story = new Story(parseZListItem(followedStory.row), this.valueContainer);
 			const card = new StoryCard({ story: story }).render();
 			item.appendChild(card);
 
@@ -33,9 +34,9 @@ export class StoryList implements Enhancer {
 			followedStory.row.parentElement.removeChild(followedStory.row);
 		}
 
-		for (const [story, item] of deferChapterList) {
+		/*for (const [story, item] of deferChapterList) {
 			const chapterList = new ChapterList({ story: story });
 			item.appendChild(chapterList.render());
-		}
+		}*/
 	}
 }
