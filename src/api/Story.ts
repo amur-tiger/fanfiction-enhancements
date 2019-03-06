@@ -52,7 +52,7 @@ export class Story {
 		this.id = data.id;
 		this.title = data.title;
 		this.description = data.description;
-		this.chapters = data.chapters.map(chapter => new Chapter(chapter, valueManager));
+		this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(chapter, valueManager)) : undefined;
 		this.imageUrl = data.imageUrl;
 		this.imageOriginalUrl = data.imageOriginalUrl;
 		this.favorites = data.favorites;
