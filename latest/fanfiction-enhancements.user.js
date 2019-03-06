@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.2+65.05ada00
+// @version      0.6.3+67.73689bb
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -117,6 +117,40 @@
 	        status: resultMeta.status,
 	    };
 	}
+	function parseZListItem(container) {
+	    const titleElement = container.querySelector(".stitle");
+	    const authorElement = container.querySelector("a[href^=\"/u/\"]");
+	    const descriptionElement = container.querySelector(".z-indent");
+	    const tagsElement = container.querySelector(".z-padtop2");
+	    const resultMeta = parseTags(tagsElement);
+	    // will probably get placeholder as cover as well
+	    const cover = titleElement.querySelector("img");
+	    if (cover) {
+	        resultMeta.imageUrl = cover.src;
+	        resultMeta.imageOriginalUrl = cover.dataset.dataOriginal;
+	    }
+	    return {
+	        id: +titleElement.href.match(/\/s\/(\d+)\//i)[1],
+	        title: titleElement.textContent,
+	        author: authorElement.textContent,
+	        authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
+	        description: Array.from(descriptionElement.childNodes).find(node => node.nodeName === "#text").nodeValue,
+	        chapters: undefined,
+	        imageUrl: resultMeta.imageUrl,
+	        imageOriginalUrl: resultMeta.imageOriginalUrl,
+	        favorites: resultMeta.favs,
+	        follows: resultMeta.follows,
+	        reviews: resultMeta.reviews,
+	        genre: resultMeta.genre,
+	        language: resultMeta.language,
+	        published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
+	        updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
+	        rating: resultMeta.rating,
+	        words: resultMeta.words,
+	        characters: resultMeta.characters,
+	        status: resultMeta.status,
+	    };
+	}
 	function parseTags(tagsElement) {
 	    const result = {
 	        genre: [],
@@ -125,7 +159,8 @@
 	    const tagsArray = tagsElement.innerHTML.split(" - ");
 	    const tempElement = document.createElement("div");
 	    tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
-	    result.rating = tempElement.firstElementChild.textContent;
+	    result.rating = tempElement.firstElementChild ?
+	        tempElement.firstElementChild.textContent : tempElement.textContent;
 	    result.language = tagsArray[1].trim();
 	    result.genre = tagsArray[2].trim().split("/");
 	    // Some stories might not have a genre tagged. If so, index 2 should be the characters instead.
@@ -136,7 +171,12 @@
 	    for (let i = 3; i < tagsArray.length; i++) {
 	        const tagNameMatch = tagsArray[i].match(/^(\w+):/);
 	        if (!tagNameMatch) {
-	            result.characters = parseCharacters(tagsArray[i]);
+	            if (tagsArray[i] === "Complete") {
+	                result.status = tagsArray[i];
+	            }
+	            else {
+	                result.characters = parseCharacters(tagsArray[i]);
+	            }
 	            continue;
 	        }
 	        const tagName = tagNameMatch[1].toLowerCase();
@@ -144,7 +184,8 @@
 	        switch (tagName) {
 	            case "reviews":
 	                tempElement.innerHTML = tagValue;
-	                result.reviews = +tempElement.firstElementChild.textContent.replace(/,/g, "");
+	                result.reviews = tempElement.firstElementChild ?
+	                    +tempElement.firstElementChild.textContent.replace(/,/g, "") : +tempElement.textContent;
 	                break;
 	            case "published":
 	            case "updated":
@@ -799,7 +840,7 @@
 	        this.id = data.id;
 	        this.title = data.title;
 	        this.description = data.description;
-	        this.chapters = data.chapters.map(chapter => new Chapter(chapter, valueManager));
+	        this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(chapter, valueManager)) : undefined;
 	        this.imageUrl = data.imageUrl;
 	        this.imageOriginalUrl = data.imageOriginalUrl;
 	        this.favorites = data.favorites;
@@ -1385,21 +1426,19 @@
 	        container.classList.add("ffe-follows-list");
 	        const firstElement = document.getElementsByClassName("z-list")[0];
 	        firstElement.parentElement.insertBefore(container, firstElement);
-	        const deferChapterList = [];
 	        for (const followedStory of list) {
 	            const item = document.createElement("li");
 	            item.classList.add("ffe-follows-item");
 	            container.appendChild(item);
-	            const story = await this.valueContainer.getStory(followedStory.id);
+	            const story = new Story(parseZListItem(followedStory.row), this.valueContainer);
 	            const card = new StoryCard({ story: story }).render();
 	            item.appendChild(card);
-	            deferChapterList.push([story, item]);
 	            followedStory.row.parentElement.removeChild(followedStory.row);
 	        }
-	        for (const [story, item] of deferChapterList) {
+	        /*for (const [story, item] of deferChapterList) {
 	            const chapterList = new ChapterList({ story: story });
 	            item.appendChild(chapterList.render());
-	        }
+	        }*/
 	    }
 	}
 
