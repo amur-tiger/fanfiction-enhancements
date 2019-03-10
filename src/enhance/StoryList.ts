@@ -33,10 +33,5 @@ export class StoryList implements Enhancer {
 
 			followedStory.row.parentElement.removeChild(followedStory.row);
 		}
-
-		/*for (const [story, item] of deferChapterList) {
-			const chapterList = new ChapterList({ story: story });
-			item.appendChild(chapterList.render());
-		}*/
 	}
 }

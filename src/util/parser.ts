@@ -114,6 +114,11 @@ function parseTags(tagsElement: Element): StoryMetaData {
 	const tagsArray = tagsElement.innerHTML.split(" - ");
 	const tempElement = document.createElement("div");
 
+	if (tagsArray[0] === "Crossover") {
+		tagsArray.shift(); // "Crossover"
+		tagsArray.shift(); // the two things crossed over
+	}
+
 	tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
 	result.rating = tempElement.firstElementChild ?
 		(tempElement.firstElementChild as HTMLElement).textContent : tempElement.textContent;
