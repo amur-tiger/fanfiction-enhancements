@@ -1,6 +1,6 @@
 {
   "name": "fanfiction-enhancements",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "FanFiction.net Enhancements",
   "main": "fanfiction-enhancements.user.js",
   "directories": {
