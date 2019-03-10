@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.3+67.73689bb
+// @version      0.6.4+69.104ab52
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -158,6 +158,10 @@
 	    };
 	    const tagsArray = tagsElement.innerHTML.split(" - ");
 	    const tempElement = document.createElement("div");
+	    if (tagsArray[0] === "Crossover") {
+	        tagsArray.shift(); // "Crossover"
+	        tagsArray.shift(); // the two things crossed over
+	    }
 	    tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
 	    result.rating = tempElement.firstElementChild ?
 	        tempElement.firstElementChild.textContent : tempElement.textContent;
@@ -1416,6 +1420,9 @@
 	    }
 	}
 
+	var css$6 = ".ffe-story-list {\n\tlist-style: none;\n\tmargin: 0 auto;\n\twidth: 1050px;\n}\n\n.ffe-story-item {\n\tmargin: 10px 0;\n}\n\n.ffe-story-item .ffe-sc {\n\tbackground-color: #fff;\n\tborder: 1px solid #d4d4d4;\n\tpadding: 5px .5em;\n}\n\n.ffe-story-item .ffe-sc-footer {\n\tmargin-top: 1em;\n}\n";
+	styleInject(css$6);
+
 	class StoryList {
 	    constructor(valueContainer) {
 	        this.valueContainer = valueContainer;
@@ -1423,27 +1430,23 @@
 	    async enhance() {
 	        const list = parseStoryList(document);
 	        const container = document.createElement("ul");
-	        container.classList.add("ffe-follows-list");
-	        const firstElement = document.getElementsByClassName("z-list")[0];
-	        firstElement.parentElement.insertBefore(container, firstElement);
+	        container.classList.add("ffe-story-list");
+	        const cw = document.getElementById("content_wrapper");
+	        cw.parentElement.insertBefore(container, undefined);
 	        for (const followedStory of list) {
 	            const item = document.createElement("li");
-	            item.classList.add("ffe-follows-item");
+	            item.classList.add("ffe-story-item");
 	            container.appendChild(item);
 	            const story = new Story(parseZListItem(followedStory.row), this.valueContainer);
 	            const card = new StoryCard({ story: story }).render();
 	            item.appendChild(card);
 	            followedStory.row.parentElement.removeChild(followedStory.row);
 	        }
-	        /*for (const [story, item] of deferChapterList) {
-	            const chapterList = new ChapterList({ story: story });
-	            item.appendChild(chapterList.render());
-	        }*/
 	    }
 	}
 
-	var css$6 = "";
-	styleInject(css$6);
+	var css$7 = "";
+	styleInject(css$7);
 
 	class StoryProfile {
 	    constructor(valueContainer) {
@@ -1494,8 +1497,8 @@
 	    }
 	}
 
-	var css$7 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
-	styleInject(css$7);
+	var css$8 = ".storytext p {\n\tcolor: #333;\n\ttext-align: justify;\n}\n\n.storytext.xlight p {\n\tcolor: #ddd;\n}\n";
+	styleInject(css$8);
 
 	class StoryText {
 	    async enhance() {
