@@ -13,7 +13,7 @@ export class StoryList implements Enhancer {
 	public async enhance(): Promise<any> {
 		const list = parseStoryList(document);
 		const container = document.createElement("ul");
-		container.classList.add("ffe-story-list");
+		container.classList.add("ffe-story-list", "maxwidth");
 
 		const cw = document.getElementById("content_wrapper");
 		cw.parentElement.insertBefore(container, undefined);
