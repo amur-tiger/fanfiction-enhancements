@@ -76,18 +76,17 @@ export function parseZListItem(container: HTMLElement): StoryData {
 	const resultMeta = parseTags(tagsElement);
 
 	// will probably get placeholder as cover as well
-	const cover = titleElement.querySelector("img");
+	const cover = titleElement.querySelector("img") as HTMLImageElement;
 	if (cover) {
-		resultMeta.imageUrl = (cover as HTMLImageElement).src;
-		resultMeta.imageOriginalUrl = cover.dataset.dataOriginal;
+		resultMeta.imageUrl = cover.dataset.original ? cover.dataset.original : cover.src;
 	}
 
 	return {
 		id: +titleElement.href.match(/\/s\/(\d+)\//i)[1],
-		title: titleElement.textContent,
-		author: authorElement.textContent,
+		title: titleElement.textContent.trim(),
+		author: authorElement.textContent.trim(),
 		authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-		description: Array.from(descriptionElement.childNodes).find(node => node.nodeName === "#text").nodeValue,
+		description: Array.from(descriptionElement.childNodes).find(node => node.nodeName === "#text").nodeValue.trim(),
 		chapters: undefined,
 		imageUrl: resultMeta.imageUrl,
 		imageOriginalUrl: resultMeta.imageOriginalUrl,
@@ -111,12 +110,16 @@ function parseTags(tagsElement: Element): StoryMetaData {
 		characters: [],
 	};
 
-	const tagsArray = tagsElement.innerHTML.split(" - ");
+	const tagsArray = tagsElement.innerHTML.split(/\s+-\s+/);
 	const tempElement = document.createElement("div");
 
 	if (tagsArray[0] === "Crossover") {
 		tagsArray.shift(); // "Crossover"
-		tagsArray.shift(); // the two things crossed over
+		tagsArray.shift(); // the two story universes
+	}
+
+	if (tagsArray[1].startsWith("Rated:")) {
+		tagsArray.shift(); // the story universe
 	}
 
 	tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
