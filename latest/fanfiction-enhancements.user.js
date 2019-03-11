@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.4+69.104ab52
+// @version      0.6.5+71.e30ecfd
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -70,6 +70,7 @@
 	    })() : fragment;
 	    const profileElement = container.getElementById("profile_top");
 	    const chapterElement = container.getElementById("chap_select");
+	    const breadCrumbElement = container.getElementById("pre_story_links");
 	    if (!profileElement) {
 	        console.error("Profile node not found. Cannot parse story info.");
 	        return undefined;
@@ -91,31 +92,20 @@
 	            resultMeta.imageOriginalUrl = oImage.getAttribute("data-original");
 	        }
 	    }
-	    return {
-	        id: resultMeta.id,
-	        title: titleElement.textContent,
-	        author: authorElement.textContent,
-	        authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-	        description: descriptionElement.textContent,
-	        chapters: chapterElement ? parseChapters(resultMeta.id, chapterElement) : [{
-	                storyId: resultMeta.id,
-	                id: 1,
-	                name: titleElement.textContent,
-	            }],
-	        imageUrl: resultMeta.imageUrl,
-	        imageOriginalUrl: resultMeta.imageOriginalUrl,
-	        favorites: resultMeta.favs,
-	        follows: resultMeta.follows,
-	        reviews: resultMeta.reviews,
-	        genre: resultMeta.genre,
-	        language: resultMeta.language,
-	        published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
-	        updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
-	        rating: resultMeta.rating,
-	        words: resultMeta.words,
-	        characters: resultMeta.characters,
-	        status: resultMeta.status,
-	    };
+	    const universeLink = breadCrumbElement.querySelector("span :last-child");
+	    const universes = universeLink.href.includes("Crossovers") ?
+	        universeLink.textContent.split(/\s+\+\s+/) : [universeLink.textContent];
+	    resultMeta.title = titleElement.textContent.trim();
+	    resultMeta.author = authorElement.textContent.trim();
+	    resultMeta.authorId = +authorElement.href.match(/\/u\/(\d+)\//i)[1];
+	    resultMeta.description = descriptionElement.textContent.trim();
+	    resultMeta.chapters = chapterElement ? parseChapters(resultMeta.id, chapterElement) : [{
+	            storyId: resultMeta.id,
+	            id: 1,
+	            name: titleElement.textContent.trim(),
+	        }];
+	    resultMeta.universes = universes;
+	    return resultMeta;
 	}
 	function parseZListItem(container) {
 	    const titleElement = container.querySelector(".stitle");
@@ -126,41 +116,30 @@
 	    // will probably get placeholder as cover as well
 	    const cover = titleElement.querySelector("img");
 	    if (cover) {
-	        resultMeta.imageUrl = cover.src;
-	        resultMeta.imageOriginalUrl = cover.dataset.dataOriginal;
+	        resultMeta.imageUrl = cover.dataset.original ? cover.dataset.original : cover.src;
 	    }
-	    return {
-	        id: +titleElement.href.match(/\/s\/(\d+)\//i)[1],
-	        title: titleElement.textContent,
-	        author: authorElement.textContent,
-	        authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-	        description: Array.from(descriptionElement.childNodes).find(node => node.nodeName === "#text").nodeValue,
-	        chapters: undefined,
-	        imageUrl: resultMeta.imageUrl,
-	        imageOriginalUrl: resultMeta.imageOriginalUrl,
-	        favorites: resultMeta.favs,
-	        follows: resultMeta.follows,
-	        reviews: resultMeta.reviews,
-	        genre: resultMeta.genre,
-	        language: resultMeta.language,
-	        published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
-	        updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
-	        rating: resultMeta.rating,
-	        words: resultMeta.words,
-	        characters: resultMeta.characters,
-	        status: resultMeta.status,
-	    };
+	    resultMeta.id = +titleElement.href.match(/\/s\/(\d+)\//i)[1];
+	    resultMeta.title = titleElement.textContent.trim();
+	    resultMeta.author = authorElement.textContent.trim();
+	    resultMeta.authorId = +authorElement.href.match(/\/u\/(\d+)\//i)[1];
+	    resultMeta.description = Array.from(descriptionElement.childNodes)
+	        .find(node => node.nodeName === "#text").nodeValue.trim();
+	    return resultMeta;
 	}
 	function parseTags(tagsElement) {
 	    const result = {
 	        genre: [],
 	        characters: [],
 	    };
-	    const tagsArray = tagsElement.innerHTML.split(" - ");
+	    const tagsArray = tagsElement.innerHTML.split(/\s+-\s+/);
 	    const tempElement = document.createElement("div");
 	    if (tagsArray[0] === "Crossover") {
-	        tagsArray.shift(); // "Crossover"
-	        tagsArray.shift(); // the two things crossed over
+	        tagsArray.shift();
+	        const universes = tagsArray.shift();
+	        result.universes = universes.split(/\s+(?:&|&amp;)\s+/).map(u => u.trim());
+	    }
+	    if (tagsArray[1].startsWith("Rated:")) {
+	        result.universes = [tagsArray.shift().trim()];
 	    }
 	    tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
 	    result.rating = tempElement.firstElementChild ?
@@ -186,6 +165,9 @@
 	        const tagName = tagNameMatch[1].toLowerCase();
 	        const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
 	        switch (tagName) {
+	            case "favs":
+	                result.favorites = +tagValue.replace(/,/g, "");
+	                break;
 	            case "reviews":
 	                tempElement.innerHTML = tagValue;
 	                result.reviews = tempElement.firstElementChild ?
@@ -194,8 +176,10 @@
 	            case "published":
 	            case "updated":
 	                tempElement.innerHTML = tagValue;
-	                result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
-	                result[tagName + "Words"] = tempElement.firstElementChild.textContent.trim();
+	                result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000).toISOString();
+	                break;
+	            case "chapters":
+	                // get chapter count via story.chapters.length instead
 	                break;
 	            default:
 	                if (/^[0-9,.]*$/.test(tagValue)) {
@@ -858,6 +842,7 @@
 	        this.words = data.words;
 	        this.characters = data.characters;
 	        this.status = data.status;
+	        this.universes = data.universes;
 	        this.author = {
 	            id: data.authorId,
 	            name: data.author,
@@ -1208,7 +1193,7 @@
 	    }
 	}
 
-	var css$3 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tdisplay: flex;\n\tflex-wrap: wrap;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-bottom: 8px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
+	var css$3 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tdisplay: flex;\n\tflex-wrap: wrap;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-bottom: 8px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-universe {\n\tbackground-color: #44b7b7;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
 	styleInject(css$3);
 
 	class StoryCard {
@@ -1266,6 +1251,11 @@
 	        const tags = React.createElement("div", { class: "ffe-sc-tags" });
 	        if (story.language) {
 	            tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-language" }, story.language));
+	        }
+	        if (story.universes) {
+	            for (const universe of story.universes) {
+	                tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-universe" }, universe));
+	            }
 	        }
 	        if (story.genre) {
 	            for (const genre of story.genre) {
@@ -1420,7 +1410,7 @@
 	    }
 	}
 
-	var css$6 = ".ffe-story-list {\n\tlist-style: none;\n\tmargin: 0 auto;\n\twidth: 1050px;\n}\n\n.ffe-story-item {\n\tmargin: 10px 0;\n}\n\n.ffe-story-item .ffe-sc {\n\tbackground-color: #fff;\n\tborder: 1px solid #d4d4d4;\n\tpadding: 5px .5em;\n}\n\n.ffe-story-item .ffe-sc-footer {\n\tmargin-top: 1em;\n}\n";
+	var css$6 = ".ffe-story-list {\n\tlist-style: none;\n\tmargin: 0 auto;\n}\n\n.ffe-story-item {\n\tmargin: 10px 0;\n}\n\n.ffe-story-item .ffe-sc {\n\tbackground-color: #fff;\n\tborder: 1px solid #d4d4d4;\n\tpadding: 5px .5em;\n}\n\n.ffe-story-item .ffe-sc-footer {\n\tmargin-top: 1em;\n}\n";
 	styleInject(css$6);
 
 	class StoryList {
@@ -1430,7 +1420,7 @@
 	    async enhance() {
 	        const list = parseStoryList(document);
 	        const container = document.createElement("ul");
-	        container.classList.add("ffe-story-list");
+	        container.classList.add("ffe-story-list", "maxwidth");
 	        const cw = document.getElementById("content_wrapper");
 	        cw.parentElement.insertBefore(container, undefined);
 	        for (const followedStory of list) {
