@@ -232,6 +232,11 @@ describe("Api", function () {
 		it("should retrieve story data", async function () {
 			const page = `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 			<div id="test-wrapper">
+				<div id="pre_story_links">
+					<span>
+						<a href="bla">uni</a>
+					</span>
+				</div>
 				<div id="profile_top">
 					<span><img src="/src/img.jpg" /></span>
 					<button><!-- follow+fav button --></button>

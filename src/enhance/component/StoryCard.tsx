@@ -80,6 +80,12 @@ export class StoryCard implements Component {
 			tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-language">{story.language}</span>);
 		}
 
+		if (story.universes) {
+			for (const universe of story.universes) {
+				tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-universe">{universe}</span>);
+			}
+		}
+
 		if (story.genre) {
 			for (const genre of story.genre) {
 				tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-genre">{genre}</span>);

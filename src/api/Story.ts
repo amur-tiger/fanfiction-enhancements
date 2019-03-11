@@ -23,6 +23,7 @@ export interface StoryData {
 	words?: number;
 	characters?: (string | string[])[];
 	status?: string;
+	universes?: string[];
 }
 
 export class Story {
@@ -43,6 +44,7 @@ export class Story {
 	public readonly words: number;
 	public readonly characters: (string | string[])[];
 	public readonly status: string;
+	public readonly universes: string[];
 
 	public readonly author: User;
 	public readonly alert: SmartValue<boolean>;
@@ -66,6 +68,7 @@ export class Story {
 		this.words = data.words;
 		this.characters = data.characters;
 		this.status = data.status;
+		this.universes = data.universes;
 
 		this.author = {
 			id: data.authorId,
