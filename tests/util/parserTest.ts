@@ -15,6 +15,11 @@ describe("Parser", function () {
 			{
 				fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 <div id="test-wrapper">
+	<div id="pre_story_links">
+		<span>
+			<a href="bla">LOTR</a>
+		</span>
+	</div>
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
 		<button><!-- follow+fav button --></button>
@@ -61,10 +66,16 @@ describe("Parser", function () {
 				published: 1426879324000,
 				publishedWords: "Mar 20, 2015",
 				id: 12345678,
+				universes: ["LOTR"],
 			},
 			{
 				fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 <div id="test-wrapper">
+	<div id="pre_story_links">
+		<span>
+			<a href="bla">Star Trek</a>
+		</span>
+	</div>
 	<div id="profile_top">
 		<button><!-- follow+fav button --></button>
 		<b>story</b>
@@ -106,10 +117,16 @@ describe("Parser", function () {
 				published: 1426879324000,
 				publishedWords: "Mar 20, 2015",
 				id: 12345678,
+				universes: ["Star Trek"],
 			},
 			{
 				fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute, HtmlUnknownTag -->
 <div id="test-wrapper">
+	<div id="pre_story_links">
+		<span>
+			<a href="Crossovers/bla">Naruto + Books</a>
+		</span>
+	</div>
 	<div id="profile_top">
 		<span><img src="/image/12345/75/" width="75" height="100"></span>
 		<button><!-- follow+fav button --></button>
@@ -152,10 +169,16 @@ describe("Parser", function () {
 				published: 1315014342000,
 				publishedWords: "Sep 3, 2011",
 				id: 123456,
+				universes: ["Naruto", "Books"],
 			},
 			{
 				fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
 <div id="test-wrapper">
+	<div id="pre_story_links">
+		<span>
+			<a href="bla">Some Book + Another</a>
+		</span>
+	</div>
 	<div id="profile_top">
 		<span><img src="/src/img.jpg" /></span>
 		<button><!-- follow+fav button --></button>
@@ -199,10 +222,16 @@ describe("Parser", function () {
 				published: 1426879324000,
 				publishedWords: "Mar 20, 2015",
 				id: 12345678,
+				universes: ["Some Book + Another"],
 			},
 			{
 				fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute, HtmlUnknownTag -->
 <div id="test-wrapper">
+	<div id="pre_story_links">
+		<span>
+			<a href="bla">Naruto</a>
+		</span>
+	</div>
 	<div id="profile_top">
 		<span><img src="/image/12345/75/" width="75" height="100"></span>
 		<button><!-- follow+fav button --></button>
@@ -245,6 +274,7 @@ describe("Parser", function () {
 				published: 1315014342000,
 				publishedWords: "Sep 3, 2011",
 				id: 123456,
+				universes: ["Naruto"],
 			},
 		];
 
@@ -334,6 +364,14 @@ describe("Parser", function () {
 					const result = parseProfile(param.fragment);
 					assert.equal(result.words, param.words);
 				});
+
+				it("should recognize universes", function () {
+					const result = parseProfile(param.fragment);
+					assert.equal(result.universes.length, param.universes.length);
+					for (let i = 0; i < param.universes.length; i++) {
+						assert.equal(result.universes[i], param.universes[i]);
+					}
+				});
 			});
 		});
 	});
@@ -387,6 +425,7 @@ describe("Parser", function () {
 				updated: 1536603442000,
 				published: 1493474903000,
 				id: 123456,
+				universes: ["Harry Potter"],
 			},
 			{
 				fragment: `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute -->
@@ -431,6 +470,7 @@ describe("Parser", function () {
 				updated: 1542787849000,
 				published: 1522323646000,
 				id: 1234,
+				universes: ["Harry Potter", "Final Fantasy VII"],
 			},
 		];
 
@@ -519,6 +559,14 @@ describe("Parser", function () {
 				it("should recognize words", function() {
 					const result = parseZListItem(fragment);
 					assert.equal(result.words, param.words);
+				});
+
+				it("should recognize universes", function () {
+					const result = parseZListItem(fragment);
+					assert.equal(result.universes.length, param.universes.length);
+					for (let i = 0; i < param.universes.length; i++) {
+						assert.equal(result.universes[i], param.universes[i]);
+					}
 				});
 			});
 		});

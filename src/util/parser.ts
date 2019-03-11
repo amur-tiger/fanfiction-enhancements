@@ -13,6 +13,7 @@ export function parseProfile(fragment: string | Document | DocumentFragment): St
 
 	const profileElement = container.getElementById("profile_top");
 	const chapterElement = container.getElementById("chap_select");
+	const breadCrumbElement = container.getElementById("pre_story_links");
 
 	if (!profileElement) {
 		console.error("Profile node not found. Cannot parse story info.");
@@ -40,31 +41,22 @@ export function parseProfile(fragment: string | Document | DocumentFragment): St
 		}
 	}
 
-	return {
-		id: resultMeta.id,
-		title: titleElement.textContent,
-		author: authorElement.textContent,
-		authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-		description: descriptionElement.textContent,
-		chapters: chapterElement ? parseChapters(resultMeta.id, chapterElement) : [{
-			storyId: resultMeta.id,
-			id: 1,
-			name: titleElement.textContent,
-		}],
-		imageUrl: resultMeta.imageUrl,
-		imageOriginalUrl: resultMeta.imageOriginalUrl,
-		favorites: resultMeta.favs,
-		follows: resultMeta.follows,
-		reviews: resultMeta.reviews,
-		genre: resultMeta.genre,
-		language: resultMeta.language,
-		published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
-		updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
-		rating: resultMeta.rating,
-		words: resultMeta.words,
-		characters: resultMeta.characters,
-		status: resultMeta.status,
-	};
+	const universeLink = breadCrumbElement.querySelector("span :last-child") as HTMLAnchorElement;
+	const universes = universeLink.href.includes("Crossovers") ?
+		universeLink.textContent.split(/\s+\+\s+/) : [universeLink.textContent];
+
+	resultMeta.title = titleElement.textContent.trim();
+	resultMeta.author = authorElement.textContent.trim();
+	resultMeta.authorId = +authorElement.href.match(/\/u\/(\d+)\//i)[1];
+	resultMeta.description = descriptionElement.textContent.trim();
+	resultMeta.chapters = chapterElement ? parseChapters(resultMeta.id, chapterElement) : [{
+		storyId: resultMeta.id,
+		id: 1,
+		name: titleElement.textContent.trim(),
+	}];
+	resultMeta.universes = universes;
+
+	return resultMeta;
 }
 
 export function parseZListItem(container: HTMLElement): StoryData {
@@ -81,31 +73,18 @@ export function parseZListItem(container: HTMLElement): StoryData {
 		resultMeta.imageUrl = cover.dataset.original ? cover.dataset.original : cover.src;
 	}
 
-	return {
-		id: +titleElement.href.match(/\/s\/(\d+)\//i)[1],
-		title: titleElement.textContent.trim(),
-		author: authorElement.textContent.trim(),
-		authorId: +authorElement.href.match(/\/u\/(\d+)\//i)[1],
-		description: Array.from(descriptionElement.childNodes).find(node => node.nodeName === "#text").nodeValue.trim(),
-		chapters: undefined,
-		imageUrl: resultMeta.imageUrl,
-		imageOriginalUrl: resultMeta.imageOriginalUrl,
-		favorites: resultMeta.favs,
-		follows: resultMeta.follows,
-		reviews: resultMeta.reviews,
-		genre: resultMeta.genre,
-		language: resultMeta.language,
-		published: resultMeta.published ? resultMeta.published.toISOString() : undefined,
-		updated: resultMeta.updated ? resultMeta.updated.toISOString() : undefined,
-		rating: resultMeta.rating,
-		words: resultMeta.words,
-		characters: resultMeta.characters,
-		status: resultMeta.status,
-	};
+	resultMeta.id = +titleElement.href.match(/\/s\/(\d+)\//i)[1];
+	resultMeta.title = titleElement.textContent.trim();
+	resultMeta.author = authorElement.textContent.trim();
+	resultMeta.authorId = +authorElement.href.match(/\/u\/(\d+)\//i)[1];
+	resultMeta.description = Array.from(descriptionElement.childNodes)
+		.find(node => node.nodeName === "#text").nodeValue.trim();
+
+	return resultMeta;
 }
 
-function parseTags(tagsElement: Element): StoryMetaData {
-	const result: StoryMetaData = {
+function parseTags(tagsElement: Element): StoryData {
+	const result: StoryData = {
 		genre: [],
 		characters: [],
 	};
@@ -114,12 +93,13 @@ function parseTags(tagsElement: Element): StoryMetaData {
 	const tempElement = document.createElement("div");
 
 	if (tagsArray[0] === "Crossover") {
-		tagsArray.shift(); // "Crossover"
-		tagsArray.shift(); // the two story universes
+		tagsArray.shift();
+		const universes = tagsArray.shift();
+		result.universes = universes.split(/\s+(?:&|&amp;)\s+/).map(u => u.trim());
 	}
 
 	if (tagsArray[1].startsWith("Rated:")) {
-		tagsArray.shift(); // the story universe
+		result.universes = [tagsArray.shift().trim()];
 	}
 
 	tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
@@ -151,6 +131,9 @@ function parseTags(tagsElement: Element): StoryMetaData {
 		const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
 
 		switch (tagName) {
+			case "favs":
+				result.favorites = +tagValue.replace(/,/g, "");
+				break;
 			case "reviews":
 				tempElement.innerHTML = tagValue;
 				result.reviews = tempElement.firstElementChild ?
@@ -159,8 +142,10 @@ function parseTags(tagsElement: Element): StoryMetaData {
 			case "published":
 			case "updated":
 				tempElement.innerHTML = tagValue;
-				result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000);
-				result[tagName + "Words"] = tempElement.firstElementChild.textContent.trim();
+				result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000).toISOString();
+				break;
+			case "chapters":
+				// get chapter count via story.chapters.length instead
 				break;
 			default:
 				if (/^[0-9,.]*$/.test(tagValue)) {
