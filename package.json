@@ -10,6 +10,7 @@
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
+    "@types/greasemonkey": "^4.0.0",
     "@types/jsdom": "^12.2.1",
     "@types/mocha": "^5.2.5",
     "chai": "^4.2.0",
@@ -23,7 +24,7 @@
     "parse5": "^5.1.0",
     "rollup": "^1.1.0",
     "rollup-plugin-postcss": "^1.6.3",
-    "rollup-plugin-typescript2": "^0.18.1",
+    "rollup-plugin-typescript2": "^0.24.2",
     "testdouble": "^3.9.3",
     "ts-node": "^7.0.1",
     "tslint": "^5.12.1",
