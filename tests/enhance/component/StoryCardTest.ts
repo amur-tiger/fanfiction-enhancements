@@ -116,7 +116,7 @@ describe("StoryCard Component", function () {
 
 		const element = new StoryCard({ story: story }).render();
 
-		const description = element.querySelector(".ffe-sc-description");
+		const description = element.querySelector(".ffe-sc-description")!;
 		assert.equal(description.tagName, "DIV");
 		assert.equal(description.textContent, "this is a description");
 	});
@@ -146,15 +146,15 @@ describe("StoryCard Component", function () {
 		assert.equal(tags[2].className, "ffe-sc-tag ffe-sc-tag-genre");
 
 		assert.equal(tags[3].className, "ffe-sc-tag ffe-sc-tag-ship");
-		assert.equal(tags[3].firstElementChild.textContent, "Adam");
-		assert.equal(tags[3].firstElementChild.className, "ffe-sc-tag-character");
-		assert.equal(tags[3].lastElementChild.textContent, "Eva");
-		assert.equal(tags[3].lastElementChild.className, "ffe-sc-tag-character");
+		assert.equal(tags[3].firstElementChild!.textContent, "Adam");
+		assert.equal(tags[3].firstElementChild!.className, "ffe-sc-tag-character");
+		assert.equal(tags[3].lastElementChild!.textContent, "Eva");
+		assert.equal(tags[3].lastElementChild!.className, "ffe-sc-tag-character");
 		assert.equal(tags[4].textContent, "Steve");
 		assert.equal(tags[4].className, "ffe-sc-tag ffe-sc-tag-character");
 
 		assert.equal(tags[5].textContent, "Reviews:\u00A011");
-		assert.equal(tags[5].firstElementChild.tagName, "A");
+		assert.equal(tags[5].firstElementChild!.tagName, "A");
 		assert.equal((tags[5].firstElementChild as HTMLAnchorElement).href, "/r/123/");
 
 		assert.equal(tags[6].textContent, "Favorites:\u00A01");
@@ -174,13 +174,13 @@ describe("StoryCard Component", function () {
 
 		const element = new StoryCard({ story: story }).render();
 
-		const footer = element.querySelector(".ffe-sc-footer");
+		const footer = element.querySelector(".ffe-sc-footer")!;
 		assert.equal(footer.childElementCount, 4);
 		assert.equal(footer.children[0].textContent, "12,345 words");
 		assert.equal(footer.children[1].textContent, "Complete");
-		assert.equal(footer.children[2].lastElementChild.tagName, "TIME");
+		assert.equal(footer.children[2].lastElementChild!.tagName, "TIME");
 		assert.equal(footer.children[2].textContent, "Published:\u00A02/3/2012");
-		assert.equal(footer.children[3].lastElementChild.tagName, "TIME");
+		assert.equal(footer.children[3].lastElementChild!.tagName, "TIME");
 		assert.equal(footer.children[3].textContent, "Updated:\u00A012/24/2012");
 	});
 });

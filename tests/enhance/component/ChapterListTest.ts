@@ -12,12 +12,12 @@ const assert = chai.assert;
 
 describe("ChapterList Component", function () {
 	function isRead(item: Element) {
-		assert.isTrue((item.firstElementChild.firstElementChild as HTMLInputElement).checked,
+		assert.isTrue((item.firstElementChild!.firstElementChild as HTMLInputElement).checked,
 			"Expected chapter to be marked read");
 	}
 
 	function isNotRead(item: Element) {
-		assert.isFalse((item.firstElementChild.firstElementChild as HTMLInputElement).checked,
+		assert.isFalse((item.firstElementChild!.firstElementChild as HTMLInputElement).checked,
 			"Expected chapter to be marked unread");
 	}
 
@@ -44,17 +44,13 @@ describe("ChapterList Component", function () {
 			get: () => Promise.resolve(read),
 			subscribe: () => undefined,
 		} as any;
-		const w: SmartValue<number> = {
-			get: () => Promise.resolve(1),
-			subscribe: () => undefined,
-		} as any;
 
 		return {
 			storyId: 0,
 			id: chapterId,
 			name: "Chapter " + chapterId,
 			read: r,
-			words: w,
+			words: 1,
 		};
 	}
 

@@ -27,7 +27,7 @@ export class Button implements Component {
 			this.props.bind.subscribe(active => element.classList.toggle("ffe-active", active));
 			this.props.bind.get().then(active => element.classList.toggle("ffe-active", active));
 			element.addEventListener("click", async () => {
-				await this.props.bind.set(!element.classList.contains("ffe-active"));
+				await this.props.bind!.set(!element.classList.contains("ffe-active"));
 			});
 		}
 

@@ -2,17 +2,9 @@ import { FollowedStory } from "./data";
 import { Api } from "./Api";
 import { Synchronizer } from "./DropBox";
 import { SmartValue, SmartValueLocal, SmartValueRoaming } from "./SmartValue";
-import { Story, StoryData } from "./Story";
+import { Story } from "./Story";
 
 export class CacheName {
-	public static story(id: number): string {
-		return `ffe-story-${id}`;
-	}
-
-	public static isStoryKey(key: string): boolean {
-		return /^ffe-story-\d+$/.test(key);
-	}
-
 	public static storyAlert(id: number): string {
 		return `ffe-story-${id}-alert`;
 	}
@@ -27,14 +19,6 @@ export class CacheName {
 
 	public static isStoryFavoriteKey(key: string): boolean {
 		return /^ffe-story-\d+-favorite$/.test(key);
-	}
-
-	public static wordCount(storyId: number, chapterId: number): string {
-		return `ffe-story-${storyId}-chapter-${chapterId}-words`;
-	}
-
-	public static isWordCountKey(key: string): boolean {
-		return /^ffe-story-\d+-chapter-\d+-words$/.test(key);
 	}
 
 	public static chapterRead(storyId: number, chapterId: number): string {
@@ -59,12 +43,12 @@ export class ValueContainer {
 		private readonly synchronizer: Synchronizer,
 	) {
 		addEventListener("storage", async event => {
-			const value = this.instances[event.key];
+			const value = this.instances[event.key!];
 			if (!value) {
 				return;
 			}
 
-			await (value as any).trigger(JSON.parse(event.newValue));
+			await (value as any).trigger(JSON.parse(event.newValue!));
 		});
 
 		synchronizer.onValueUpdate(async (key, value) => {
@@ -80,20 +64,16 @@ export class ValueContainer {
 		});
 	}
 
-	public async getStory(id: number): Promise<Story> {
-		const storyData = await this.getStoryValue(id).get();
+	public async getStories(ids: number[]): Promise<Story[]> {
+		const storyData = await this.api.getStories(ids);
 
-		return new Story(storyData, this);
+		return storyData.map(data => new Story(data, this));
 	}
 
-	public getStoryValue(id: number): SmartValue<StoryData> {
-		const key = CacheName.story(id);
-		if (!this.instances[key]) {
-			this.instances[key] = new SmartValueLocal(key, this.storage,
-				() => this.api.getStoryData(id));
-		}
+	public async getStory(id: number): Promise<Story> {
+		const storyData = await this.api.getStory(id);
 
-		return this.instances[key];
+		return new Story(storyData, this);
 	}
 
 	public getAlertValue(id: number): SmartValue<boolean> {
@@ -135,16 +115,6 @@ export class ValueContainer {
 						await this.api.removeStoryFavorite(id);
 					}
 				});
-		}
-
-		return this.instances[key];
-	}
-
-	public getWordCountValue(storyId: number, chapterId: number): SmartValue<number> {
-		const key = CacheName.wordCount(storyId, chapterId);
-		if (!this.instances[key]) {
-			this.instances[key] = new SmartValueLocal<number>(key, this.storage,
-				() => this.api.getChapterWordCount(storyId, chapterId));
 		}
 
 		return this.instances[key];

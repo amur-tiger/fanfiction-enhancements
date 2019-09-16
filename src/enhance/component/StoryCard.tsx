@@ -54,7 +54,7 @@ export class StoryCard implements Component {
 		if (story.imageOriginalUrl) {
 			const imageUrlReplacer = () => {
 				image.removeEventListener("error", imageUrlReplacer);
-				image.src = story.imageUrl;
+				image.src = story.imageUrl!;
 			};
 
 			image.addEventListener("error", imageUrlReplacer);

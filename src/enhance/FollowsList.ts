@@ -15,24 +15,30 @@ export class FollowsList implements Enhancer {
 		const container = document.createElement("ul");
 		container.classList.add("ffe-follows-list");
 
-		const table = document.getElementById("gui_table1i").parentElement;
-		table.parentElement.insertBefore(container, table);
+		const tableElement = document.getElementById("gui_table1i");
+		if (!tableElement) {
+			return;
+		}
 
-		for (const followedStory of list) {
+		const table = tableElement.parentElement!;
+		table.parentElement!.insertBefore(container, table);
+
+		const stories = await this.valueContainer.getStories(list.map(fs => fs.id));
+
+		for (const story of stories) {
 			const item = document.createElement("li");
 			item.classList.add("ffe-follows-item");
 			container.appendChild(item);
 
-			const story = await this.valueContainer.getStory(followedStory.id);
 			const card = new StoryCard({ story: story }).render();
 			item.appendChild(card);
 
 			const chapterList = new ChapterList({ story: story }).render();
 			item.appendChild(chapterList);
 
-			followedStory.row.parentElement.removeChild(followedStory.row);
+			// followedStory.row.parentElement!.removeChild(followedStory.row);
 		}
 
-		table.parentElement.removeChild(table);
+		table.parentElement!.removeChild(table);
 	}
 }

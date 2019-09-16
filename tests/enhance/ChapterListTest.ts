@@ -3,6 +3,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { JSDOM } from "jsdom";
 import * as td from "testdouble";
 
+import { environment } from "../../src/util/environment";
 import { Chapter } from "../../src/api/Chapter";
 import { ChapterList } from "../../src/enhance/ChapterList";
 import { SmartValue } from "../../src/api/SmartValue";
@@ -56,7 +57,7 @@ describe("Chapter List", function () {
 			<div style="height:5px"></div>
 		</div>`;
 
-	function createStory(chapters: Chapter[] = undefined): Story {
+	function createStory(chapters: Chapter[] | undefined = undefined): Story {
 		const story: Story = {
 			id: 0,
 		} as any;
@@ -75,19 +76,17 @@ describe("Chapter List", function () {
 			get: () => Promise.resolve(true),
 			subscribe: () => undefined,
 		} as any;
-		const w: SmartValue<number> = {
-			get: () => Promise.resolve(1),
-			subscribe: () => undefined,
-		} as any;
 
 		return {
 			storyId: 0,
-			id: id,
-			name: name,
+			id,
+			name,
 			read: r,
-			words: w,
+			words,
 		};
 	}
+
+	environment.currentStoryId = 123;
 
 	afterEach(function () {
 		document.body.innerHTML = "";
@@ -118,7 +117,7 @@ describe("Chapter List", function () {
 		const storyText = document.getElementById("storytextp");
 		assert.isNull(storyText);
 
-		assert.equal(document.getElementById("content_wrapper_inner").children.length, 7);
+		assert.equal(document.getElementById("content_wrapper_inner")!.children.length, 7);
 	});
 
 	it("should insert chapter list", async function () {

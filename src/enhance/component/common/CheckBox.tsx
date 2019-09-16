@@ -22,7 +22,7 @@ export class CheckBox implements Component {
 
 		this.props.bind.subscribe(apply);
 		this.props.bind.get().then(apply);
-		element.firstElementChild.addEventListener("change", async () => {
+		element.firstElementChild!.addEventListener("change", async () => {
 			await this.props.bind.set((element.firstElementChild as HTMLInputElement).checked);
 		});
 

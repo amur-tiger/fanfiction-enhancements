@@ -8,16 +8,6 @@ describe("Utility Functions", function() {
 	global["window"] = domFragment.window;
 	global["document"] = domFragment.window.document;
 
-	describe("Loading Scripts", function() {
-		it("should return a promise", function() {
-			const promise = loadScript("some url");
-			assert.isTrue(promise instanceof Promise);
-			promise.catch(() => {
-				// do nothing
-			});
-		});
-	});
-
 	describe("Parsing RGB values", function() {
 		it("should parse valid RGB values", function() {
 			assert.equal(rgbToHex("rgb(82,160,186)"), "#52a0ba");
@@ -35,7 +25,6 @@ describe("Utility Functions", function() {
 			assert.equal(rgbToHex("true"), false);
 			assert.equal(rgbToHex("#f2df0c"), false);
 			assert.equal(rgbToHex("2345.23"), false);
-			assert.equal(rgbToHex(undefined), false);
 		});
 	});
 
@@ -56,7 +45,6 @@ describe("Utility Functions", function() {
 			assert.equal(ptToEm("size"), false);
 			assert.equal(ptToEm("16px"), false);
 			assert.equal(ptToEm("32.23"), false);
-			assert.equal(ptToEm(undefined), false);
 		});
 
 		it("should scale sizes correctly if given", function() {

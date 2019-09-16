@@ -16,9 +16,12 @@ export class StoryList implements Enhancer {
 		container.classList.add("ffe-story-list", "maxwidth");
 
 		const cw = document.getElementById("content_wrapper");
-		cw.parentElement.insertBefore(container, undefined);
+		if (!cw) {
+			return;
+		}
 
-		const deferChapterList = [];
+		cw.parentElement!.insertBefore(container, undefined!);
+
 		for (const followedStory of list) {
 			const item = document.createElement("li");
 			item.classList.add("ffe-story-item");
@@ -28,9 +31,7 @@ export class StoryList implements Enhancer {
 			const card = new StoryCard({ story: story }).render();
 			item.appendChild(card);
 
-			deferChapterList.push([story, item]);
-
-			followedStory.row.parentElement.removeChild(followedStory.row);
+			followedStory.row.parentElement!.removeChild(followedStory.row);
 		}
 	}
 }

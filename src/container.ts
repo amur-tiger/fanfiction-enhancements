@@ -8,14 +8,14 @@ import { StoryProfile } from "./enhance/StoryProfile";
 import { ValueContainer } from "./api/ValueContainer";
 
 export class Container {
-	private api: Api;
-	private valueManager: ValueContainer;
-	private menuBar: MenuBar;
-	private followsList: FollowsList;
-	private storyList: StoryList;
-	private storyProfile: StoryProfile;
-	private chapterList: ChapterList;
-	private dropBox: DropBox;
+	private api?: Api;
+	private valueManager?: ValueContainer;
+	private menuBar?: MenuBar;
+	private followsList?: FollowsList;
+	private storyList?: StoryList;
+	private storyProfile?: StoryProfile;
+	private chapterList?: ChapterList;
+	private dropBox?: DropBox;
 
 	public getApi(): Api {
 		return this.api || (this.api = new Api());

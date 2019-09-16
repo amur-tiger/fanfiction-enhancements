@@ -19,7 +19,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,
@@ -40,7 +40,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,
@@ -61,7 +61,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,
@@ -82,7 +82,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,
@@ -103,7 +103,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,
@@ -124,7 +124,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,
@@ -145,7 +145,7 @@ describe("Environment", function () {
 				port: "",
 				protocol: "https:",
 				search: "",
-				ancestorOrigins: undefined,
+				ancestorOrigins: undefined!,
 
 				assign: noOp,
 				reload: noOp,

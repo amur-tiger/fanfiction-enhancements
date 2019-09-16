@@ -7,8 +7,11 @@ export class ChapterList implements Enhancer {
 	public constructor(private readonly valueContainer: ValueContainer) {
 	}
 
-	public async enhance(): Promise<any> {
+	public async enhance(): Promise<void> {
 		const contentWrapper = document.getElementById("content_wrapper_inner");
+		if (!contentWrapper || !environment.currentStoryId) {
+			return;
+		}
 
 		// clean up content
 		Array.from(contentWrapper.children)
@@ -16,7 +19,10 @@ export class ChapterList implements Enhancer {
 				|| (e.firstElementChild && e.firstElementChild.nodeName === "SELECT")
 				|| (e.className === "lc-wrapper" && e.id !== "pre_story_links"))
 			.forEach(e => contentWrapper.removeChild(e));
-		contentWrapper.removeChild(document.getElementById("storytextp"));
+		const storyText = document.getElementById("storytextp");
+		if (storyText) {
+			contentWrapper.removeChild(storyText);
+		}
 
 		// add chapter list
 		const story = await this.valueContainer.getStory(environment.currentStoryId);

@@ -1,4 +1,3 @@
-import { Container } from "../container";
 import { environment } from "../util/environment";
 import { Enhancer } from "./Enhancer";
 import { StoryCard } from "./component/StoryCard";
@@ -12,12 +11,16 @@ export class StoryProfile implements Enhancer {
 
 	public async enhance(): Promise<any> {
 		const profile = document.getElementById("profile_top");
-		const story = await this.valueContainer.getStory(environment.currentStoryId);
+		if (!profile) {
+			return;
+		}
+
+		const story = await this.valueContainer.getStory(environment.currentStoryId!);
 		const card = new StoryCard({ story: story });
 		const replacement = card.render();
 
-		// profile.parentElement.replaceChild(replacement, profile);
-		profile.parentElement.insertBefore(replacement, profile);
+		// profile.parentElement!.replaceChild(replacement, profile);
+		profile.parentElement!.insertBefore(replacement, profile);
 		profile.style.display = "none";
 	}
 }

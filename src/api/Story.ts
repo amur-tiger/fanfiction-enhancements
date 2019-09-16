@@ -4,26 +4,27 @@ import { SmartValue } from "./SmartValue";
 import { ValueContainer } from "./ValueContainer";
 
 export interface StoryData {
-	id?: number;
-	title?: string;
-	author?: string;
-	authorId?: number;
-	description?: string;
-	chapters?: ChapterData[];
+	id: number;
+	title: string;
+	description: string;
 	imageUrl?: string;
 	imageOriginalUrl?: string;
-	favorites?: number;
-	follows?: number;
-	reviews?: number;
-	genre?: string[];
-	language?: string;
-	published?: string;
-	updated?: string;
-	rating?: string;
-	words?: number;
-	characters?: (string | string[])[];
-	status?: string;
-	universes?: string[];
+	favorites: number;
+	follows: number;
+	reviews: number;
+	genre: string[];
+	language: string;
+	published: Date;
+	updated?: Date;
+	rating: string;
+	words: number;
+	characters: string[][];
+	status: string;
+	universes: string[];
+	chapters: ChapterData[];
+
+	author: string;
+	authorId: number;
 }
 
 export class Story {
@@ -31,15 +32,15 @@ export class Story {
 	public readonly title: string;
 	public readonly description: string;
 	public readonly chapters: Chapter[];
-	public readonly imageUrl: string;
-	public readonly imageOriginalUrl: string;
+	public readonly imageUrl: string | undefined;
+	public readonly imageOriginalUrl: string | undefined;
 	public readonly favorites: number;
 	public readonly follows: number;
 	public readonly reviews: number;
 	public readonly genre: string[];
 	public readonly language: string;
 	public readonly published: Date;
-	public readonly updated: Date;
+	public readonly updated: Date | undefined;
 	public readonly rating: string;
 	public readonly words: number;
 	public readonly characters: (string | string[])[];
@@ -54,7 +55,7 @@ export class Story {
 		this.id = data.id;
 		this.title = data.title;
 		this.description = data.description;
-		this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(chapter, valueManager)) : undefined;
+		this.chapters = data.chapters.map(chapter => new Chapter(chapter, valueManager));
 		this.imageUrl = data.imageUrl;
 		this.imageOriginalUrl = data.imageOriginalUrl;
 		this.favorites = data.favorites;
@@ -62,8 +63,8 @@ export class Story {
 		this.reviews = data.reviews;
 		this.genre = data.genre;
 		this.language = data.language;
-		this.published = data.published ? new Date(data.published) : undefined;
-		this.updated = data.updated ? new Date(data.updated) : undefined;
+		this.published = data.published;
+		this.updated = data.updated;
 		this.rating = data.rating;
 		this.words = data.words;
 		this.characters = data.characters;
@@ -73,8 +74,8 @@ export class Story {
 		this.author = {
 			id: data.authorId,
 			name: data.author,
-			profileUrl: undefined,
-			avatarUrl: undefined,
+			profileUrl: undefined!,
+			avatarUrl: undefined!,
 		};
 		this.alert = valueManager.getAlertValue(data.id);
 		this.favorite = valueManager.getFavoriteValue(data.id);

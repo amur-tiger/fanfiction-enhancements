@@ -1,6 +1,6 @@
 import { Container } from "./container";
 import { environment, Page } from "./util/environment";
-import { parseFollowedStoryList, parseProfile } from "./util/parser";
+import { parseFollowedStoryList } from "./util/parser";
 import { oAuth2LandingPage } from "./api/DropBox";
 import { StoryText } from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
@@ -42,10 +42,6 @@ async function main() {
 	}
 
 	if (environment.currentPageType === Page.Story) {
-		const currentStory = parseProfile(document);
-		const storyValue = valueContainer.getStoryValue(currentStory.id);
-		await storyValue.update(currentStory);
-
 		const storyProfileEnhancer = container.getStoryProfile();
 		await storyProfileEnhancer.enhance();
 
@@ -54,13 +50,7 @@ async function main() {
 	}
 
 	if (environment.currentPageType === Page.Chapter) {
-		const currentStory = parseProfile(document);
-		const storyValue = valueContainer.getStoryValue(currentStory.id);
-		await storyValue.update(currentStory);
-
-		const wordCountValue = valueContainer.getWordCountValue(currentStory.id, environment.currentChapterId);
-		await wordCountValue.update(document.getElementById("storytext")
-			.textContent.trim().split(/\s+/).length);
+		const currentStory = await valueContainer.getStory(environment.currentStoryId!);
 
 		const storyProfileEnhancer = container.getStoryProfile();
 		await storyProfileEnhancer.enhance();
@@ -68,7 +58,7 @@ async function main() {
 		const storyTextEnhancer = new StoryText();
 		await storyTextEnhancer.enhance();
 
-		const readValue = valueContainer.getChapterReadValue(currentStory.id, environment.currentChapterId);
+		const readValue = valueContainer.getChapterReadValue(currentStory.id, environment.currentChapterId!);
 		const markRead = async () => {
 			const amount = document.documentElement.scrollTop;
 			const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -76,7 +66,7 @@ async function main() {
 			if (amount / (max - 550) >= 1) {
 				window.removeEventListener("scroll", markRead);
 				console.log("Setting '%s' chapter '%s' to read", currentStory.title,
-					currentStory.chapters.find(c => c.id === environment.currentChapterId).name);
+					currentStory.chapters.find(c => c.id === environment.currentChapterId)!.name);
 				await readValue.set(true);
 			}
 		};
@@ -113,3 +103,6 @@ async function migrate() {
 migrate()
 	.then(main)
 	.catch(console.error);
+
+// important: some broken tag recognition for stories in:
+// https://www.fanfiction.net/community/Rebirth-Society/92829/99/4/1/0/0/0/0/

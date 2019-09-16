@@ -30,6 +30,7 @@ export class DropBox implements Synchronizer {
 
 	public async authorize(): Promise<void> {
 		const token = await new Promise((resolve, reject) => {
+			// @ts-ignore
 			unsafeWindow[OAUTH2_CALLBACK] = callbackToken => {
 				clearInterval(handle);
 				resolve(callbackToken);
@@ -60,7 +61,7 @@ export class DropBox implements Synchronizer {
 				continue;
 			}
 
-			const localTimestamp = +await GM.getValue(key + "+timestamp", 0);
+			const localTimestamp = +(await GM.getValue(key + "+timestamp", 0))!;
 			const remoteTimestamp = +remoteData[key + "+timestamp"];
 
 			if (localTimestamp < remoteTimestamp) {
@@ -76,7 +77,7 @@ export class DropBox implements Synchronizer {
 				continue;
 			}
 
-			const localTimestamp = +await GM.getValue(key + "+timestamp", 0);
+			const localTimestamp = +(await GM.getValue(key + "+timestamp", 0))!;
 			const remoteTimestamp = +remoteData[key + "+timestamp"] || 0;
 
 			if (localTimestamp > remoteTimestamp) {
@@ -116,7 +117,7 @@ export class DropBox implements Synchronizer {
 		}, content);
 	}
 
-	private async content(url: string, params: any, body?: any): Promise<string> {
+	private async content(url: string, params: any, body?: any): Promise<string | undefined> {
 		if (!await this.isAuthorized()) {
 			throw new Error("Not authorized with DropBox yet.");
 		}
@@ -171,9 +172,9 @@ export class DropBox implements Synchronizer {
 
 export function oAuth2LandingPage() {
 	// This function will be executed inside the child popup window receiving the OAuth token.
-	document.body.firstElementChild.innerHTML = `<h2>Received oAuth2 token</h2>This page should close momentarily.`;
+	document.body.firstElementChild!.innerHTML = `<h2>Received oAuth2 token</h2>This page should close momentarily.`;
 
-	const token = /[?&#]access_token=([^&#]*)/i.exec(location.hash)[1];
+	const token = /[?&#]access_token=([^&#]*)/i.exec(location.hash)![1];
 	window.opener[OAUTH2_CALLBACK](token);
 	window.close();
 }

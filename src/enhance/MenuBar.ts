@@ -14,8 +14,16 @@ export class MenuBar implements Enhancer {
 		}
 
 		const loginElement = document.querySelector("#name_login a");
+		if (!loginElement) {
+			return;
+		}
+
 		const parent = loginElement.parentElement;
 		const ref = loginElement.nextElementSibling;
+
+		if (!parent) {
+			return;
+		}
 
 		const toAlerts = document.createElement("a");
 		toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "icon-bookmark-2");

@@ -1,16 +1,58 @@
 import { FollowedStory } from "./data";
 import { environment } from "../util/environment";
-import { parseFollowedStoryList, parseProfile } from "../util/parser";
+import { parseFollowedStoryList } from "../util/parser";
 import { parseGetParams } from "../utils";
 import { StoryData } from "./Story";
 
 export class Api {
 	/**
+	 * Retrieves a number of stories by id.
+	 *
+	 * @param ids
+	 */
+	public async getStories(ids: number[]): Promise<StoryData[]> {
+		const query = this.buildQuery(ids);
+		const response = await fetch("https://tiger.rocks/api/ffn", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query }),
+		});
+
+		const json = await response.json();
+		const stories = json.data.stories;
+		stories.forEach(story => {
+			story.published = new Date(story.published);
+			if (story.updated) {
+				story.updated = new Date(story.updated);
+			}
+
+			story.chapters.forEach(chapter => {
+				chapter.story = story;
+			});
+		});
+
+		return stories;
+	}
+
+	/**
+	 * Retrieves a single story by id.
+	 *
+	 * @param id
+	 */
+	public async getStory(id: number): Promise<StoryData> {
+		const stories = await this.getStories([id]);
+
+		return stories[0];
+	}
+
+	/**
 	 * Retrieves all story alerts that are set on FFN for the current user.
 	 */
 	public async getStoryAlerts(): Promise<FollowedStory[]> {
 		const fragments = await this.getMultiPage("/alert/story.php");
-		const result = [];
+		const result: FollowedStory[] = [];
 		for (const fragment of fragments) {
 			result.push(...parseFollowedStoryList(fragment));
 		}
@@ -23,7 +65,7 @@ export class Api {
 	 */
 	public async getStoryFavorites(): Promise<FollowedStory[]> {
 		const fragments = await this.getMultiPage("/favorites/story.php");
-		const result = [];
+		const result: FollowedStory[] = [];
 		for (const fragment of fragments) {
 			result.push(...parseFollowedStoryList(fragment));
 		}
@@ -31,22 +73,14 @@ export class Api {
 		return result;
 	}
 
-	public async getStoryData(id: number): Promise<StoryData> {
-		const data = await this.get("/s/" + id);
-
-		return parseProfile(data);
-	}
-
-	public async getChapterWordCount(storyId: number, chapterId: number): Promise<number> {
-		const body = await this.get("/s/" + storyId + "/" + chapterId);
-		const template = document.createElement("template");
-		template.innerHTML = body;
-
-		return template.content.getElementById("storytext")
-			.textContent.trim().split(/\s+/).length;
-	}
-
+	/**
+	 * Adds a story by id to the alerts list for the current user. Whenever a story updates, the user will then be
+	 * notified.
+	 *
+	 * @param id
+	 */
 	public async addStoryAlert(id: number): Promise<void> {
+		// noinspection SpellCheckingInspection
 		await this.post("/api/ajax_subs.php", {
 			storyid: id,
 			userid: environment.currentUserId,
@@ -54,6 +88,12 @@ export class Api {
 		}, "json");
 	}
 
+	/**
+	 * Removes a story by id from the alerts list for the current user. The user will no longer be notified when
+	 * the story updates.
+	 *
+	 * @param id
+	 */
 	public async removeStoryAlert(id: number): Promise<void> {
 		await this.post("/alert/story.php", {
 			action: "remove-multi",
@@ -61,7 +101,13 @@ export class Api {
 		}, "html");
 	}
 
+	/**
+	 * Adds a story by id to the favorites of the current user.
+	 *
+	 * @param id
+	 */
 	public async addStoryFavorite(id: number): Promise<void> {
+		// noinspection SpellCheckingInspection
 		await this.post("/api/ajax_subs.php", {
 			storyid: id,
 			userid: environment.currentUserId,
@@ -69,11 +115,45 @@ export class Api {
 		}, "json");
 	}
 
+	/**
+	 * Removes a story by id from the favorites of the current user.
+	 *
+	 * @param id
+	 */
 	public async removeStoryFavorite(id: number): Promise<void> {
 		await this.post("/favorites/story.php", {
 			action: "remove-multi",
 			"rids[]": id,
 		}, "html");
+	}
+
+	private buildQuery(ids: number[]): string {
+		return `{
+			stories(ids: [${ids.join(", ")}]) {
+				id,
+				title,
+				description,
+				imageUrl,
+				imageOriginalUrl,
+				favorites,
+				follows,
+				reviews,
+				genre,
+				language,
+				published,
+				updated,
+				rating,
+				words,
+				characters,
+				status,
+				universes,
+				chapters {
+					id,
+					name,
+					words
+				}
+			}
+		}`;
 	}
 
 	private async get(url: string): Promise<string> {
@@ -99,6 +179,7 @@ export class Api {
 		const relevantLink = lastLink && lastLink.textContent === "Last" ? lastLink : nextLink;
 		const max = +parseGetParams(relevantLink.href).p;
 
+		// noinspection ES6MissingAwait
 		const result = [Promise.resolve(template.content)];
 		for (let i = 2; i <= max; i++) {
 			result.push(this.get(url + "?p=" + i)
@@ -144,7 +225,7 @@ export class Api {
 
 			const err = template.content.querySelector(".gui_error");
 			if (err) {
-				throw new Error(err.textContent);
+				throw new Error(err.textContent || undefined);
 			}
 
 			const msg = template.content.querySelector(".gui_success");

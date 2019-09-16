@@ -5,11 +5,11 @@ export interface ValueGetter<T> {
 }
 
 export interface ValueSetter<T> {
-	(T): Promise<void>;
+	(arg: T): Promise<void>;
 }
 
 export interface ValueSubscriberCallback<T> {
-	(T): Promise<any> | any;
+	(arg: T): Promise<any> | any;
 }
 
 export interface SmartValue<T> {
@@ -127,7 +127,7 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
 			.filter(promise => promise && promise.then));
 	}
 
-	protected abstract getCached(): Promise<T>;
+	protected abstract getCached(): Promise<T | undefined>;
 
 	protected abstract setCached(value: T): Promise<void>;
 }
@@ -142,7 +142,7 @@ export class SmartValueLocal<T> extends SmartValueBase<T> {
 		super(name, getter, setter);
 	}
 
-	protected getCached(): Promise<T> {
+	protected getCached(): Promise<T | undefined> {
 		const data = this.storage.getItem(this.name);
 		if (!data) {
 			return Promise.resolve(undefined);
@@ -161,7 +161,7 @@ export class SmartValueLocal<T> extends SmartValueBase<T> {
 }
 
 export class SmartValueRoaming<T> extends SmartValueBase<T> {
-	private token: number;
+	private token?: number;
 
 	constructor(
 		public readonly name: string,
@@ -202,7 +202,7 @@ export class SmartValueRoaming<T> extends SmartValueBase<T> {
 		this.token = undefined;
 	}
 
-	protected async getCached(): Promise<T> {
+	protected async getCached(): Promise<T | undefined> {
 		const data = await GM.getValue(this.name);
 		if (!data) {
 			return;

@@ -1,7 +1,6 @@
 import { React } from "../../util/react";
 import { CheckBox } from "./common/CheckBox";
 import { Component } from "./Component";
-import { Label } from "./common/Label";
 import { Story } from "../../api/Story";
 
 import "./ChapterList.css";
@@ -19,7 +18,7 @@ export class ChapterList implements Component {
 					<a href={"/s/" + this.props.story.id + "/" + chapter.id}>{chapter.name}</a>
 				</span>
 				<span class="ffe-cl-words">
-					<b><Label bind={chapter.words}/></b> words
+					<b>{chapter.words}</b> words
 				</span>
 			</li>);
 		}
@@ -41,7 +40,7 @@ export class ChapterList implements Component {
 
 	private hideLongChapterList(list: HTMLElement) {
 		const elements = Array.from(list.children);
-		const isRead = (e: Element) => !!(e.firstElementChild.firstElementChild as HTMLInputElement).checked;
+		const isRead = (e: Element) => (e.firstElementChild!.firstElementChild as HTMLInputElement).checked;
 
 		let currentBlockIsRead = isRead(elements[0]);
 		let currentBlockCount = 0;
@@ -93,7 +92,7 @@ export class ChapterList implements Component {
 			showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
 			showLinkContainer.appendChild(showLink);
 
-			elements[0].parentElement.insertBefore(showLinkContainer, elements[i - off]);
+			elements[0].parentElement!.insertBefore(showLinkContainer, elements[i - off]);
 
 			currentBlockIsRead = read;
 			currentBlockCount = 1;
@@ -122,7 +121,7 @@ export class ChapterList implements Component {
 			showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
 			showLinkContainer.appendChild(showLink);
 
-			elements[0].parentElement.insertBefore(showLinkContainer, elements[elements.length - 3]);
+			elements[0].parentElement!.insertBefore(showLinkContainer, elements[elements.length - 3]);
 		}
 	}
 }
