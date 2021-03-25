@@ -1,30 +1,7 @@
-import { User } from "./data";
-import { Chapter, ChapterData } from "./Chapter";
+import { Story as StoryData, User } from "ffn-parser";
+import { Chapter } from "./Chapter";
 import { SmartValue } from "./SmartValue";
 import { ValueContainer } from "./ValueContainer";
-
-export interface StoryData {
-	id?: number;
-	title?: string;
-	author?: string;
-	authorId?: number;
-	description?: string;
-	chapters?: ChapterData[];
-	imageUrl?: string;
-	imageOriginalUrl?: string;
-	favorites?: number;
-	follows?: number;
-	reviews?: number;
-	genre?: string[];
-	language?: string;
-	published?: string;
-	updated?: string;
-	rating?: string;
-	words?: number;
-	characters?: (string | string[])[];
-	status?: string;
-	universes?: string[];
-}
 
 export class Story {
 	public readonly id: number;
@@ -54,9 +31,9 @@ export class Story {
 		this.id = data.id;
 		this.title = data.title;
 		this.description = data.description;
-		this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(chapter, valueManager)) : undefined;
+		this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(data.id, chapter, valueManager)) : undefined;
 		this.imageUrl = data.imageUrl;
-		this.imageOriginalUrl = data.imageOriginalUrl;
+		this.imageOriginalUrl = data.imageUrl;
 		this.favorites = data.favorites;
 		this.follows = data.follows;
 		this.reviews = data.reviews;
@@ -71,10 +48,8 @@ export class Story {
 		this.universes = data.universes;
 
 		this.author = {
-			id: data.authorId,
-			name: data.author,
-			profileUrl: undefined,
-			avatarUrl: undefined,
+			id: data.author.id,
+			name: data.author.name,
 		};
 		this.alert = valueManager.getAlertValue(data.id);
 		this.favorite = valueManager.getFavoriteValue(data.id);

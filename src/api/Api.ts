@@ -1,19 +1,22 @@
-import { FollowedStory } from "./data";
 import { environment } from "../util/environment";
-import { parseFollowedStoryList, parseProfile } from "../util/parser";
+import { Follow, parseFollows, parseStory, Story as StoryData } from "ffn-parser";
 import { parseGetParams } from "../utils";
-import { StoryData } from "./Story";
 
 export class Api {
 	/**
 	 * Retrieves all story alerts that are set on FFN for the current user.
 	 */
-	public async getStoryAlerts(): Promise<FollowedStory[]> {
+	public async getStoryAlerts(): Promise<Follow[]> {
 		const fragments = await this.getMultiPage("/alert/story.php");
 		const result = [];
-		for (const fragment of fragments) {
-			result.push(...parseFollowedStoryList(fragment));
-		}
+
+		await Promise.all(fragments.map(async fragment => {
+			const follows = await parseFollows(fragment);
+			console.debug(follows);
+			if (follows) {
+				result.push(...follows);
+			}
+		}));
 
 		return result;
 	}
@@ -21,20 +24,26 @@ export class Api {
 	/**
 	 * Retrieves all favorites that are set on FFN for the current user.
 	 */
-	public async getStoryFavorites(): Promise<FollowedStory[]> {
+	public async getStoryFavorites(): Promise<Follow[]> {
 		const fragments = await this.getMultiPage("/favorites/story.php");
 		const result = [];
-		for (const fragment of fragments) {
-			result.push(...parseFollowedStoryList(fragment));
-		}
+
+		await Promise.all(fragments.map(async fragment => {
+			const follows = await parseFollows(fragment);
+			if (follows) {
+				result.push(...follows);
+			}
+		}));
 
 		return result;
 	}
 
 	public async getStoryData(id: number): Promise<StoryData> {
-		const data = await this.get("/s/" + id);
+		const body = await this.get("/s/" + id);
+		const template = document.createElement("template");
+		template.innerHTML = body;
 
-		return parseProfile(data);
+		return parseStory(template.content);
 	}
 
 	public async getChapterWordCount(storyId: number, chapterId: number): Promise<number> {

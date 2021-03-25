@@ -1,4 +1,4 @@
-import { parseStoryList, parseZListItem } from "../util/parser";
+import { parseStoryList } from "ffn-parser";
 import { Enhancer } from "./Enhancer";
 import { Story } from "../api/Story";
 import { StoryCard } from "./component/StoryCard";
@@ -11,7 +11,7 @@ export class StoryList implements Enhancer {
 	}
 
 	public async enhance(): Promise<any> {
-		const list = parseStoryList(document);
+		const list = await parseStoryList(document);
 		const container = document.createElement("ul");
 		container.classList.add("ffe-story-list", "maxwidth");
 
@@ -24,13 +24,16 @@ export class StoryList implements Enhancer {
 			item.classList.add("ffe-story-item");
 			container.appendChild(item);
 
-			const story = new Story(parseZListItem(followedStory.row), this.valueContainer);
+			const story = new Story({
+				...followedStory,
+				chapters: [],
+			}, this.valueContainer);
 			const card = new StoryCard({ story: story }).render();
 			item.appendChild(card);
 
 			deferChapterList.push([story, item]);
-
-			followedStory.row.parentElement.removeChild(followedStory.row);
 		}
+
+		cw.parentElement.removeChild(cw);
 	}
 }

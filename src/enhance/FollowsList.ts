@@ -1,4 +1,4 @@
-import { parseFollowedStoryList } from "../util/parser";
+import { parseFollows } from "ffn-parser";
 import { ChapterList } from "./component/ChapterList";
 import { Enhancer } from "./Enhancer";
 import { StoryCard } from "./component/StoryCard";
@@ -11,7 +11,7 @@ export class FollowsList implements Enhancer {
 	}
 
 	public async enhance(): Promise<any> {
-		const list = parseFollowedStoryList(document);
+		const list = await parseFollows(document);
 		const container = document.createElement("ul");
 		container.classList.add("ffe-follows-list");
 
@@ -29,8 +29,6 @@ export class FollowsList implements Enhancer {
 
 			const chapterList = new ChapterList({ story: story }).render();
 			item.appendChild(chapterList);
-
-			followedStory.row.parentElement.removeChild(followedStory.row);
 		}
 
 		table.parentElement.removeChild(table);
