@@ -15,6 +15,7 @@ const assert = chai.assert;
 
 describe("SmartValue", function () {
 	beforeEach(function () {
+		// @ts-ignore
 		global["GM"] = td.object<UserScriptFunctions>();
 	});
 

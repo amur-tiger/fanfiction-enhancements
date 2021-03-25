@@ -17,8 +17,8 @@ describe("StoryCard Component", function () {
 		(story as any).published = new Date();
 		(story as any).updated = new Date();
 
-		td.when(story.alert.get()).thenResolve();
-		td.when(story.favorite.get()).thenResolve();
+		td.when(story.alert.get()).thenResolve(true);
+		td.when(story.favorite.get()).thenResolve(true);
 
 		if (props) {
 			for (const key in props) {

@@ -5,6 +5,7 @@ import { loadScript, ptToEm, rgbToHex } from "../src/utils";
 
 describe("Utility Functions", function() {
 	const domFragment = new JSDOM(`<!DOCTYPE html><html><head></head><body></body></html>`);
+	// @ts-ignore
 	global["window"] = domFragment.window;
 	global["document"] = domFragment.window.document;
 

@@ -6,6 +6,7 @@ import { Api } from "../../src/api/Api";
 describe("Api", function () {
 	beforeEach(function () {
 		td.replace(console, "log");
+		// @ts-ignore
 		global["fetch"] = td.function("fetch");
 	});
 
