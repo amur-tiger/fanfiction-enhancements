@@ -43,13 +43,16 @@ gulp.task("build-source", () => {
 		external: EXTERNAL,
 		plugins: [
 			postCss(),
-			(typescript as any)(),
-		],
+			(typescript as any)()
+		]
 	}).then(bundle => {
 		return bundle.write({
 			file: path.join(OUT_FOLDER, "latest", PACKAGE.main),
 			format: "iife",
 			banner: getHeader(),
+			globals: {
+				"ffn-parser": "ffnParser"
+			}
 		});
 	});
 });

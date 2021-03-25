@@ -8,8 +8,9 @@
 // @license      MIT, ${homepage}/blob/master/LICENSE
 // @homepageURL  ${homepage}
 // @supportURL   ${bugs}
-// @updateURL    https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
-// @downloadURL  https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
+// @updateURL    https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
+// @downloadURL  https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
+// @require      https://unpkg.com/ffn-parser@${ffn-parser.version}/lib/index.iife.min.js
 // @match        *://www.fanfiction.net/*
 // @grant        GM.getValue
 // @grant        GM.setValue
@@ -17,4 +18,5 @@
 // @grant        GM.listValues
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
+// @connect      self
 // ==/UserScript==
