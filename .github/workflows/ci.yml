@@ -45,5 +45,6 @@ jobs:
         uses: crazy-max/ghaction-github-pages@v2
         with:
           build_dir: target
+          keep_history: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
