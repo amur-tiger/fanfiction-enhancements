@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.5
+// @version      0.6.6
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
-// @license      MIT, https://github.com/NekiCat/fanfiction-enhancements/blob/master/LICENSE
-// @homepageURL  https://github.com/NekiCat/fanfiction-enhancements
-// @supportURL   https://github.com/NekiCat/fanfiction-enhancements/issues
-// @updateURL    https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
-// @downloadURL  https://nekicat.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
+// @license      MIT, https://github.com/amur-tiger/fanfiction-enhancements/blob/master/LICENSE
+// @homepageURL  https://github.com/amur-tiger/fanfiction-enhancements
+// @supportURL   https://github.com/amur-tiger/fanfiction-enhancements/issues
+// @updateURL    https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
+// @downloadURL  https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
+// @require      https://unpkg.com/ffn-parser@0.0.5/lib/index.iife.min.js
 // @match        *://www.fanfiction.net/*
 // @grant        GM.getValue
 // @grant        GM.setValue
@@ -17,9 +18,10 @@
 // @grant        GM.listValues
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
+// @connect      self
 // ==/UserScript==
 
-(function () {
+(function (ffnParser) {
 	'use strict';
 
 	const environment = {
@@ -60,234 +62,6 @@
 	        return 7 /* StoryList */;
 	    }
 	    return 0 /* Other */;
-	}
-
-	function parseProfile(fragment) {
-	    const container = typeof fragment === "string" ? (() => {
-	        const template = document.createElement("template");
-	        template.innerHTML = fragment;
-	        return template.content;
-	    })() : fragment;
-	    const profileElement = container.getElementById("profile_top");
-	    const chapterElement = container.getElementById("chap_select");
-	    const breadCrumbElement = container.getElementById("pre_story_links");
-	    if (!profileElement) {
-	        console.error("Profile node not found. Cannot parse story info.");
-	        return undefined;
-	    }
-	    let offset = 0;
-	    const cover = profileElement.children[0].firstElementChild;
-	    if (!cover || cover.nodeName !== "IMG") {
-	        offset--;
-	    }
-	    const titleElement = profileElement.children[offset + 2];
-	    const authorElement = profileElement.children[offset + 4];
-	    const descriptionElement = profileElement.children[offset + 7];
-	    const tagsElement = profileElement.children[offset + 8];
-	    const resultMeta = parseTags(tagsElement);
-	    if (cover && cover.nodeName === "IMG") {
-	        resultMeta.imageUrl = cover.src;
-	        const oImage = document && document.querySelector("#img_large img");
-	        if (oImage && oImage.nodeName === "IMG") {
-	            resultMeta.imageOriginalUrl = oImage.getAttribute("data-original");
-	        }
-	    }
-	    const universeLink = breadCrumbElement.querySelector("span :last-child");
-	    const universes = universeLink.href.includes("Crossovers") ?
-	        universeLink.textContent.split(/\s+\+\s+/) : [universeLink.textContent];
-	    resultMeta.title = titleElement.textContent.trim();
-	    resultMeta.author = authorElement.textContent.trim();
-	    resultMeta.authorId = +authorElement.href.match(/\/u\/(\d+)\//i)[1];
-	    resultMeta.description = descriptionElement.textContent.trim();
-	    resultMeta.chapters = chapterElement ? parseChapters(resultMeta.id, chapterElement) : [{
-	            storyId: resultMeta.id,
-	            id: 1,
-	            name: titleElement.textContent.trim(),
-	        }];
-	    resultMeta.universes = universes;
-	    return resultMeta;
-	}
-	function parseZListItem(container) {
-	    const titleElement = container.querySelector(".stitle");
-	    const authorElement = container.querySelector("a[href^=\"/u/\"]");
-	    const descriptionElement = container.querySelector(".z-indent");
-	    const tagsElement = container.querySelector(".z-padtop2");
-	    const resultMeta = parseTags(tagsElement);
-	    // will probably get placeholder as cover as well
-	    const cover = titleElement.querySelector("img");
-	    if (cover) {
-	        resultMeta.imageUrl = cover.dataset.original ? cover.dataset.original : cover.src;
-	    }
-	    resultMeta.id = +titleElement.href.match(/\/s\/(\d+)\//i)[1];
-	    resultMeta.title = titleElement.textContent.trim();
-	    resultMeta.author = authorElement.textContent.trim();
-	    resultMeta.authorId = +authorElement.href.match(/\/u\/(\d+)\//i)[1];
-	    resultMeta.description = Array.from(descriptionElement.childNodes)
-	        .find(node => node.nodeName === "#text").nodeValue.trim();
-	    return resultMeta;
-	}
-	function parseTags(tagsElement) {
-	    const result = {
-	        genre: [],
-	        characters: [],
-	    };
-	    const tagsArray = tagsElement.innerHTML.split(/\s+-\s+/);
-	    const tempElement = document.createElement("div");
-	    if (tagsArray[0] === "Crossover") {
-	        tagsArray.shift();
-	        const universes = tagsArray.shift();
-	        result.universes = universes.split(/\s+(?:&|&amp;)\s+/).map(u => u.trim());
-	    }
-	    if (tagsArray[1].startsWith("Rated:")) {
-	        result.universes = [tagsArray.shift().trim()];
-	    }
-	    tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
-	    result.rating = tempElement.firstElementChild ?
-	        tempElement.firstElementChild.textContent : tempElement.textContent;
-	    result.language = tagsArray[1].trim();
-	    result.genre = tagsArray[2].trim().split("/");
-	    // Some stories might not have a genre tagged. If so, index 2 should be the characters instead.
-	    if (result.genre.some(g => !environment.validGenres.includes(g))) {
-	        result.genre = [];
-	        result.characters = parseCharacters(tagsArray[2]);
-	    }
-	    for (let i = 3; i < tagsArray.length; i++) {
-	        const tagNameMatch = tagsArray[i].match(/^(\w+):/);
-	        if (!tagNameMatch) {
-	            if (tagsArray[i] === "Complete") {
-	                result.status = tagsArray[i];
-	            }
-	            else {
-	                result.characters = parseCharacters(tagsArray[i]);
-	            }
-	            continue;
-	        }
-	        const tagName = tagNameMatch[1].toLowerCase();
-	        const tagValue = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/)[1];
-	        switch (tagName) {
-	            case "favs":
-	                result.favorites = +tagValue.replace(/,/g, "");
-	                break;
-	            case "reviews":
-	                tempElement.innerHTML = tagValue;
-	                result.reviews = tempElement.firstElementChild ?
-	                    +tempElement.firstElementChild.textContent.replace(/,/g, "") : +tempElement.textContent;
-	                break;
-	            case "published":
-	            case "updated":
-	                tempElement.innerHTML = tagValue;
-	                result[tagName] = new Date(+tempElement.firstElementChild.getAttribute("data-xutime") * 1000).toISOString();
-	                break;
-	            case "chapters":
-	                // get chapter count via story.chapters.length instead
-	                break;
-	            default:
-	                if (/^[0-9,.]*$/.test(tagValue)) {
-	                    result[tagName] = +tagValue.replace(/,/g, "");
-	                }
-	                else {
-	                    result[tagName] = tagValue;
-	                }
-	                break;
-	        }
-	    }
-	    return result;
-	}
-	function parseCharacters(tag) {
-	    const result = [];
-	    const pairings = tag.trim().split(/([\[\]])\s*/).filter(pairing => pairing.length);
-	    let inPairing = false;
-	    for (const pairing of pairings) {
-	        if (pairing == "[") {
-	            inPairing = true;
-	            continue;
-	        }
-	        if (pairing == "]") {
-	            inPairing = false;
-	            continue;
-	        }
-	        const characters = pairing.split(/,\s+/);
-	        if (!inPairing || characters.length == 1) {
-	            result.push(...characters);
-	        }
-	        else {
-	            result.push(characters);
-	        }
-	    }
-	    return result;
-	}
-	/**
-	 * Parses chapters of the currently opened story. Warning: chapter word counts will not be set!
-	 *
-	 * @param {number} storyId
-	 * @param {ParentNode} selectElement
-	 * @returns {Chapter[]}
-	 */
-	function parseChapters(storyId, selectElement) {
-	    const result = [];
-	    for (let i = 0; i < selectElement.children.length; i++) {
-	        const option = selectElement.children[i];
-	        if (option.tagName !== "OPTION") {
-	            continue;
-	        }
-	        result.push({
-	            storyId: storyId,
-	            id: +option.getAttribute("value"),
-	            name: option.textContent,
-	        });
-	    }
-	    return result;
-	}
-	function parseFollowedStoryList(fragment) {
-	    const container = typeof fragment === "string" ? (() => {
-	        const template = document.createElement("template");
-	        template.innerHTML = fragment;
-	        return template.content;
-	    })() : fragment;
-	    const rows = container.querySelectorAll("#gui_table1i tbody tr");
-	    return Array.from(rows)
-	        .filter(row => {
-	        return row.firstElementChild.colSpan === 1;
-	    })
-	        .map(row => {
-	        const storyAnchor = row.children[0].firstElementChild;
-	        const authorAnchor = row.children[1].firstElementChild;
-	        return {
-	            row: row,
-	            id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-	            title: storyAnchor.textContent,
-	            author: {
-	                id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-	                name: authorAnchor.textContent,
-	                profileUrl: authorAnchor.href,
-	                avatarUrl: "",
-	            },
-	        };
-	    });
-	}
-	function parseStoryList(fragment) {
-	    const container = typeof fragment === "string" ? (() => {
-	        const template = document.createElement("template");
-	        template.innerHTML = fragment;
-	        return template.content;
-	    })() : fragment;
-	    const rows = container.querySelectorAll(".z-list");
-	    return Array.from(rows)
-	        .map((row) => {
-	        const storyAnchor = row.firstElementChild;
-	        const authorAnchor = row.querySelector("a[href^=\"/u/\"]");
-	        return {
-	            row: row,
-	            id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-	            title: storyAnchor.textContent,
-	            author: {
-	                id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-	                name: authorAnchor.textContent,
-	                profileUrl: authorAnchor.href,
-	                avatarUrl: "",
-	            },
-	        };
-	    });
 	}
 
 	/**
@@ -338,9 +112,13 @@
 	    async getStoryAlerts() {
 	        const fragments = await this.getMultiPage("/alert/story.php");
 	        const result = [];
-	        for (const fragment of fragments) {
-	            result.push(...parseFollowedStoryList(fragment));
-	        }
+	        await Promise.all(fragments.map(async (fragment) => {
+	            const follows = await ffnParser.parseFollows(fragment);
+	            console.debug(follows);
+	            if (follows) {
+	                result.push(...follows);
+	            }
+	        }));
 	        return result;
 	    }
 	    /**
@@ -349,14 +127,19 @@
 	    async getStoryFavorites() {
 	        const fragments = await this.getMultiPage("/favorites/story.php");
 	        const result = [];
-	        for (const fragment of fragments) {
-	            result.push(...parseFollowedStoryList(fragment));
-	        }
+	        await Promise.all(fragments.map(async (fragment) => {
+	            const follows = await ffnParser.parseFollows(fragment);
+	            if (follows) {
+	                result.push(...follows);
+	            }
+	        }));
 	        return result;
 	    }
 	    async getStoryData(id) {
-	        const data = await this.get("/s/" + id);
-	        return parseProfile(data);
+	        const body = await this.get("/s/" + id);
+	        const template = document.createElement("template");
+	        template.innerHTML = body;
+	        return ffnParser.parseStory(template.content);
 	    }
 	    async getChapterWordCount(storyId, chapterId) {
 	        const body = await this.get("/s/" + storyId + "/" + chapterId);
@@ -814,12 +597,12 @@
 	}
 
 	class Chapter {
-	    constructor(data, valueManager) {
-	        this.storyId = data.storyId;
+	    constructor(storyId, data, valueManager) {
+	        this.storyId = storyId;
 	        this.id = data.id;
-	        this.name = data.name;
-	        this.words = valueManager.getWordCountValue(data.storyId, data.id);
-	        this.read = valueManager.getChapterReadValue(data.storyId, data.id);
+	        this.name = data.title;
+	        this.words = valueManager.getWordCountValue(storyId, data.id);
+	        this.read = valueManager.getChapterReadValue(storyId, data.id);
 	    }
 	}
 
@@ -828,9 +611,9 @@
 	        this.id = data.id;
 	        this.title = data.title;
 	        this.description = data.description;
-	        this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(chapter, valueManager)) : undefined;
+	        this.chapters = data.chapters ? data.chapters.map(chapter => new Chapter(data.id, chapter, valueManager)) : undefined;
 	        this.imageUrl = data.imageUrl;
-	        this.imageOriginalUrl = data.imageOriginalUrl;
+	        this.imageOriginalUrl = data.imageUrl;
 	        this.favorites = data.favorites;
 	        this.follows = data.follows;
 	        this.reviews = data.reviews;
@@ -844,10 +627,8 @@
 	        this.status = data.status;
 	        this.universes = data.universes;
 	        this.author = {
-	            id: data.authorId,
-	            name: data.author,
-	            profileUrl: undefined,
-	            avatarUrl: undefined,
+	            id: data.author.id,
+	            name: data.author.name,
 	        };
 	        this.alert = valueManager.getAlertValue(data.id);
 	        this.favorite = valueManager.getFavoriteValue(data.id);
@@ -1343,7 +1124,7 @@
 	        this.valueContainer = valueContainer;
 	    }
 	    async enhance() {
-	        const list = parseFollowedStoryList(document);
+	        const list = await ffnParser.parseFollows(document);
 	        const container = document.createElement("ul");
 	        container.classList.add("ffe-follows-list");
 	        const table = document.getElementById("gui_table1i").parentElement;
@@ -1357,7 +1138,6 @@
 	            item.appendChild(card);
 	            const chapterList = new ChapterList({ story: story }).render();
 	            item.appendChild(chapterList);
-	            followedStory.row.parentElement.removeChild(followedStory.row);
 	        }
 	        table.parentElement.removeChild(table);
 	    }
@@ -1418,7 +1198,7 @@
 	        this.valueContainer = valueContainer;
 	    }
 	    async enhance() {
-	        const list = parseStoryList(document);
+	        const list = await ffnParser.parseStoryList(document);
 	        const container = document.createElement("ul");
 	        container.classList.add("ffe-story-list", "maxwidth");
 	        const cw = document.getElementById("content_wrapper");
@@ -1427,11 +1207,11 @@
 	            const item = document.createElement("li");
 	            item.classList.add("ffe-story-item");
 	            container.appendChild(item);
-	            const story = new Story(parseZListItem(followedStory.row), this.valueContainer);
+	            const story = new Story(Object.assign(Object.assign({}, followedStory), { chapters: [] }), this.valueContainer);
 	            const card = new StoryCard({ story: story }).render();
 	            item.appendChild(card);
-	            followedStory.row.parentElement.removeChild(followedStory.row);
 	        }
+	        cw.parentElement.removeChild(cw);
 	    }
 	}
 
@@ -1544,7 +1324,7 @@
 	    await menuBarEnhancer.enhance();
 	    if (environment.currentPageType === 2 /* Alerts */ || environment.currentPageType === 3 /* Favorites */) {
 	        const getterName = environment.currentPageType === 2 /* Alerts */ ? "getAlertValue" : "getFavoriteValue";
-	        const list = parseFollowedStoryList(document);
+	        const list = await ffnParser.parseFollows(document);
 	        for (const item of list) {
 	            const value = valueContainer[getterName](item.id);
 	            await value.update(true);
@@ -1557,7 +1337,7 @@
 	        await storyListEnhancer.enhance();
 	    }
 	    if (environment.currentPageType === 4 /* Story */) {
-	        const currentStory = parseProfile(document);
+	        const currentStory = await ffnParser.parseStory(document);
 	        const storyValue = valueContainer.getStoryValue(currentStory.id);
 	        await storyValue.update(currentStory);
 	        const storyProfileEnhancer = container.getStoryProfile();
@@ -1566,7 +1346,7 @@
 	        await chapterListEnhancer.enhance();
 	    }
 	    if (environment.currentPageType === 5 /* Chapter */) {
-	        const currentStory = parseProfile(document);
+	        const currentStory = await ffnParser.parseStory(document);
 	        const storyValue = valueContainer.getStoryValue(currentStory.id);
 	        await storyValue.update(currentStory);
 	        const wordCountValue = valueContainer.getWordCountValue(currentStory.id, environment.currentChapterId);
@@ -1582,7 +1362,7 @@
 	            const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 	            if (amount / (max - 550) >= 1) {
 	                window.removeEventListener("scroll", markRead);
-	                console.log("Setting '%s' chapter '%s' to read", currentStory.title, currentStory.chapters.find(c => c.id === environment.currentChapterId).name);
+	                console.log("Setting '%s' chapter '%s' to read", currentStory.title, currentStory.chapters.find(c => c.id === environment.currentChapterId).title);
 	                await readValue.set(true);
 	            }
 	        };
@@ -1613,4 +1393,4 @@
 	    .then(main)
 	    .catch(console.error);
 
-}());
+}(ffnParser));
