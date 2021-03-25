@@ -1,8 +1,8 @@
-import { FollowedStory } from "./data";
+import { Follow, Story as StoryData } from "ffn-parser";
 import { Api } from "./Api";
 import { Synchronizer } from "./DropBox";
 import { SmartValue, SmartValueLocal, SmartValueRoaming } from "./SmartValue";
-import { Story, StoryData } from "./Story";
+import { Story } from "./Story";
 
 export class CacheName {
 	public static story(id: number): string {
@@ -161,7 +161,7 @@ export class ValueContainer {
 
 	private async followedStoryDiff(
 		matchFn: (key: string) => boolean,
-		updated: FollowedStory[],
+		updated: Follow[],
 		valueGetter: (id: number) => SmartValue<boolean>,
 	) {
 		const visited = new Set();

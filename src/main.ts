@@ -1,6 +1,6 @@
 import { Container } from "./container";
 import { environment, Page } from "./util/environment";
-import { parseFollowedStoryList, parseProfile } from "./util/parser";
+import { parseFollows, parseStory } from "ffn-parser";
 import { oAuth2LandingPage } from "./api/DropBox";
 import { StoryText } from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
@@ -26,7 +26,7 @@ async function main() {
 
 	if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
 		const getterName = environment.currentPageType === Page.Alerts ? "getAlertValue" : "getFavoriteValue";
-		const list = parseFollowedStoryList(document);
+		const list = await parseFollows(document);
 		for (const item of list) {
 			const value = valueContainer[getterName](item.id);
 			await value.update(true);
@@ -42,7 +42,7 @@ async function main() {
 	}
 
 	if (environment.currentPageType === Page.Story) {
-		const currentStory = parseProfile(document);
+		const currentStory = await parseStory(document);
 		const storyValue = valueContainer.getStoryValue(currentStory.id);
 		await storyValue.update(currentStory);
 
@@ -54,7 +54,7 @@ async function main() {
 	}
 
 	if (environment.currentPageType === Page.Chapter) {
-		const currentStory = parseProfile(document);
+		const currentStory = await parseStory(document);
 		const storyValue = valueContainer.getStoryValue(currentStory.id);
 		await storyValue.update(currentStory);
 
@@ -76,7 +76,7 @@ async function main() {
 			if (amount / (max - 550) >= 1) {
 				window.removeEventListener("scroll", markRead);
 				console.log("Setting '%s' chapter '%s' to read", currentStory.title,
-					currentStory.chapters.find(c => c.id === environment.currentChapterId).name);
+					currentStory.chapters.find(c => c.id === environment.currentChapterId).title);
 				await readValue.set(true);
 			}
 		};
