@@ -8,6 +8,7 @@ import { StoryText } from "../../src/enhance/StoryText";
 describe("Story Text", function() {
 	beforeEach(function() {
 		global["XCOOKIE"] = {};
+		// @ts-ignore
 		global["_fontastic_save"] = td.function("_fontastic_save");
 	});
 
