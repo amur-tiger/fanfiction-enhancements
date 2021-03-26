@@ -13,8 +13,8 @@ const EXTERNAL = Object.keys(PACKAGE.dependencies || {});
 const OUT_FOLDER = "target";
 
 function getHeader(): string {
-	const build = process.env.TRAVIS_BUILD_NUMBER;
-	const commit = process.env.TRAVIS_COMMIT;
+	const build = process.env.GITHUB_RUN_NUMBER;
+	const commit = process.env.GITHUB_SHA;
 	const version = PACKAGE.version +
 		(build || commit ? "+" : "") +
 		(build ? build : "") +
