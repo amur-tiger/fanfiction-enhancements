@@ -1,48 +1,42 @@
 import { Component } from "../enhance/component/Component";
 
 interface ReactAttrs {
-	[key: string]: any;
+  [key: string]: any;
 }
 
 type ReactType<T extends Component> = string | (new (props: ReactAttrs) => T);
 
-export class React {
-	public static createElement<T extends Component>(
-		tag: ReactType<T>,
-		attrs: ReactAttrs,
-		...children
-	): HTMLElement {
-		let element;
-		if (typeof tag === "string") {
-			element = document.createElement(tag);
+export default class React {
+  public static createElement<T extends Component>(
+    tag: ReactType<T>,
+    attrs: ReactAttrs,
+    ...children: HTMLElement[]
+  ): HTMLElement {
+    let element;
+    if (typeof tag === "string") {
+      element = document.createElement(tag);
 
-			for (const name in attrs) {
-				if (!attrs.hasOwnProperty(name)) {
-					continue;
-				}
+      for (const [name, value] of Object.entries(attrs)) {
+        if (typeof value === "function") {
+          (element as any)[name as any] = value;
+        } else if (value === true) {
+          element.setAttribute(name, name);
+        } else if (value !== false && value != null) {
+          element.setAttribute(name, value.toString());
+        }
+      }
+    } else {
+      // eslint-disable-next-line new-cap
+      const component = new tag(attrs);
+      element = component.render();
+    }
 
-				const value = attrs[name];
-				if (typeof value === "function") {
-					element[name] = value;
-				} else if (value === true) {
-					element.setAttribute(name, name);
-				} else if (value !== false && value != undefined) {
-					element.setAttribute(name, value.toString());
-				}
-			}
-		} else {
-			const component = new tag(attrs);
-			element = component.render();
-		}
+    for (const child of children) {
+      if (child) {
+        element.appendChild(child.nodeType == null ? document.createTextNode(child.toString()) : child);
+      }
+    }
 
-		for (const child of children) {
-			if (!child) {
-				continue;
-			}
-
-			element.appendChild(child.nodeType == undefined ? document.createTextNode(child.toString()) : child);
-		}
-
-		return element;
-	}
+    return element;
+  }
 }

@@ -1,10 +1,32 @@
 {
   "name": "fanfiction-enhancements",
   "version": "0.6.6",
+  "author": "Arne 'TigeR' Linck",
   "description": "FanFiction.net Enhancements",
+  "license": "MIT",
+  "homepage": "https://github.com/amur-tiger/fanfiction-enhancements",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NekiCat/fanfiction-enhancements.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amur-tiger/fanfiction-enhancements/issues"
+  },
+  "keywords": [
+    "userscript",
+    "fanfiction"
+  ],
   "main": "fanfiction-enhancements.user.js",
   "directories": {
     "test": "tests"
+  },
+  "scripts": {
+    "format": "prettier --write \"src/**/*.ts\"",
+    "pretest": "npm run lint",
+    "test": "mocha -r ts-node/register -r ignore-styles -r jsdom-global/register tests/**/*.ts",
+    "lint": "eslint \"src/**/*.ts\"",
+    "build": "gulp build",
+    "clean": "gulp clean"
   },
   "dependencies": {
     "ffn-parser": "^0.0.5"
@@ -15,8 +37,15 @@
     "@types/greasemonkey": "^4.0.1",
     "@types/jsdom": "^12.2.4",
     "@types/mocha": "^5.2.7",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
+    "eslint": "^7.22.0",
+    "eslint-config-airbnb-typescript": "^12.3.1",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.3.1",
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "ignore-styles": "^5.0.1",
@@ -24,33 +53,15 @@
     "jsdom-global": "^3.0.2",
     "mocha": "^5.2.0",
     "parse5": "^5.1.1",
+    "prettier": "^2.2.1",
     "rollup": "^1.32.1",
     "rollup-plugin-postcss": "^1.6.3",
     "rollup-plugin-typescript2": "^0.24.3",
     "testdouble": "^3.16.1",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.20.1",
-    "typescript": "^3.9.9"
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
   },
-  "scripts": {
-    "pretest": "npm run lint",
-    "test": "mocha -r ts-node/register -r ignore-styles -r jsdom-global/register tests/**/*.ts",
-    "lint": "tslint --project .",
-    "build": "gulp build",
-    "clean": "gulp clean"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/NekiCat/fanfiction-enhancements.git"
-  },
-  "keywords": [
-    "userscript",
-    "fanfiction"
-  ],
-  "author": "Arne 'TigeR' Linck",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/amur-tiger/fanfiction-enhancements/issues"
-  },
-  "homepage": "https://github.com/amur-tiger/fanfiction-enhancements"
+  "prettier": {
+    "printWidth": 120
+  }
 }

@@ -1,20 +1,13 @@
 {
-	"compilerOptions": {
-		"moduleResolution": "node",
-		"target": "es2017",
-		"sourceMap": true,
-		"lib": [
-			"dom",
-			"es2017"
-		],
-		"typeRoots": [
-			"node_modules/@types",
-			"typings"
-		],
-		"jsx": "react"
-	},
-	"exclude": [
-		"node_modules",
-		"gulpfile.ts"
-	]
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": ["dom", "es2017"],
+    "moduleResolution": "node",
+    "rootDir": "src",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2017",
+    "typeRoots": ["node_modules/@types", "typings"]
+  },
+  "exclude": ["node_modules", "gulpfile.ts"]
 }

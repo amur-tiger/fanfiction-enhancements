@@ -1,4 +1,3 @@
-export interface Component {
-	// createElement(from: any): HTMLElement;
-	render(): HTMLElement;
+export default interface Component {
+  render(): HTMLElement;
 }

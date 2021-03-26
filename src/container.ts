@@ -1,60 +1,97 @@
-import { Api } from "./api/Api";
+import { Api, ValueContainer } from "./api";
 import { ChapterList } from "./enhance/ChapterList";
 import { DropBox } from "./api/DropBox";
 import { FollowsList } from "./enhance/FollowsList";
 import { MenuBar } from "./enhance/MenuBar";
 import { StoryList } from "./enhance/StoryList";
 import { StoryProfile } from "./enhance/StoryProfile";
-import { ValueContainer } from "./api/ValueContainer";
 
-export class Container {
-	private api: Api;
-	private valueManager: ValueContainer;
-	private menuBar: MenuBar;
-	private followsList: FollowsList;
-	private storyList: StoryList;
-	private storyProfile: StoryProfile;
-	private chapterList: ChapterList;
-	private dropBox: DropBox;
+export default class Container {
+  private api?: Api;
 
-	public getApi(): Api {
-		return this.api || (this.api = new Api());
-	}
+  private valueManager?: ValueContainer;
 
-	public getValueContainer(): ValueContainer {
-		return this.valueManager ||
-			(this.valueManager = new ValueContainer(this.getStorage(), this.getApi(), this.getDropBox()));
-	}
+  private menuBar?: MenuBar;
 
-	public getMenuBar(): MenuBar {
-		return this.menuBar || (this.menuBar = new MenuBar(this.getDropBox()));
-	}
+  private followsList?: FollowsList;
 
-	public getFollowsList(): FollowsList {
-		return this.followsList || (this.followsList = new FollowsList(this.getValueContainer()));
-	}
+  private storyList?: StoryList;
 
-	public getStoryListEnhancer(): StoryList {
-		return this.storyList || (this.storyList = new StoryList(this.getValueContainer()));
-	}
+  private storyProfile?: StoryProfile;
 
-	public getStoryProfile(): StoryProfile {
-		return this.storyProfile || (this.storyProfile = new StoryProfile(this.getValueContainer()));
-	}
+  private chapterList?: ChapterList;
 
-	public getChapterList(): ChapterList {
-		return this.chapterList || (this.chapterList = new ChapterList(this.getValueContainer()));
-	}
+  private dropBox?: DropBox;
 
-	public getDropBox(): DropBox {
-		return this.dropBox || (this.dropBox = new DropBox());
-	}
+  public getApi(): Api {
+    if (!this.api) {
+      this.api = new Api();
+    }
 
-	public getContainer(): Container {
-		return this;
-	}
+    return this.api;
+  }
 
-	public getStorage(): Storage {
-		return localStorage;
-	}
+  public getValueContainer(): ValueContainer {
+    if (!this.valueManager) {
+      this.valueManager = new ValueContainer(this.getStorage(), this.getApi(), this.getDropBox());
+    }
+
+    return this.valueManager;
+  }
+
+  public getMenuBar(): MenuBar {
+    if (!this.menuBar) {
+      this.menuBar = new MenuBar(this.getDropBox());
+    }
+
+    return this.menuBar;
+  }
+
+  public getFollowsList(): FollowsList {
+    if (!this.followsList) {
+      this.followsList = new FollowsList(this.getValueContainer());
+    }
+
+    return this.followsList;
+  }
+
+  public getStoryListEnhancer(): StoryList {
+    if (!this.storyList) {
+      this.storyList = new StoryList(this.getValueContainer());
+    }
+
+    return this.storyList;
+  }
+
+  public getStoryProfile(): StoryProfile {
+    if (!this.storyProfile) {
+      this.storyProfile = new StoryProfile(this.getValueContainer());
+    }
+
+    return this.storyProfile;
+  }
+
+  public getChapterList(): ChapterList {
+    if (!this.chapterList) {
+      this.chapterList = new ChapterList(this.getValueContainer());
+    }
+
+    return this.chapterList;
+  }
+
+  public getDropBox(): DropBox {
+    if (!this.dropBox) {
+      this.dropBox = new DropBox();
+    }
+
+    return this.dropBox;
+  }
+
+  public getContainer(): Container {
+    return this;
+  }
+
+  public getStorage(): Storage {
+    return localStorage;
+  }
 }
