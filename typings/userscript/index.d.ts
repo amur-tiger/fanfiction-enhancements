@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+
 type GMValue = string | number | boolean;
 
 // Important note: All used functions, despite being declared in this file, still need to be declared in the
@@ -7,7 +9,7 @@ type GMValue = string | number | boolean;
 type ListenerId = number;
 
 interface GMValueChangedCallback {
-	(name: string, oldValue: GMValue, newValue: GMValue, remote: boolean): any;
+  (name: string, oldValue: GMValue, newValue: GMValue, remote: boolean): any;
 }
 
 /**
@@ -23,4 +25,4 @@ declare function GM_addValueChangeListener(name: string, callback: GMValueChange
  * Important: This function may not be supported by all user-script runners.
  * @param listenerId
  */
-declare function GM_removeValueChangeListener(listenerId: ListenerId);
+declare function GM_removeValueChangeListener(listenerId: ListenerId): void;

@@ -15,6 +15,10 @@ export default class StoryProfile implements Enhancer {
     }
 
     const story = await this.valueContainer.getStory(environment.currentStoryId);
+    if (!story) {
+      return;
+    }
+
     const card = new StoryCard({ story });
     const replacement = card.render();
 

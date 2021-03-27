@@ -1,5 +1,5 @@
 import React from "../../../util/react";
-import { Component } from "../Component";
+import Component from "../Component";
 import { SmartValue } from "../../../api/SmartValue";
 
 export default class Button implements Component {
@@ -14,9 +14,7 @@ export default class Button implements Component {
   ) {}
 
   public render(): HTMLElement {
-    const element: HTMLElement = (
-      <span class={"btn " + this.props.class}>{this.props.text}</span>
-    );
+    const element: HTMLElement = <span class={`btn ${this.props.class}`}>{this.props.text}</span>;
 
     if (this.props.click) {
       element.addEventListener("click", this.props.click);
@@ -27,12 +25,8 @@ export default class Button implements Component {
     }
 
     if (this.props.bind) {
-      this.props.bind.subscribe((active) =>
-        element.classList.toggle("ffe-active", active)
-      );
-      this.props.bind
-        .get()
-        .then((active) => element.classList.toggle("ffe-active", active));
+      this.props.bind.subscribe((active) => element.classList.toggle("ffe-active", active));
+      this.props.bind.get().then((active) => element.classList.toggle("ffe-active", active));
       element.addEventListener("click", async () => {
         await this.props.bind?.set(!element.classList.contains("ffe-active"));
       });

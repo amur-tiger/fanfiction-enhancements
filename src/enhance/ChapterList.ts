@@ -12,6 +12,11 @@ export default class ChapterList implements Enhancer {
       return;
     }
 
+    const story = await this.valueContainer.getStory(environment.currentStoryId);
+    if (!story) {
+      return;
+    }
+
     // clean up content
     Array.from(contentWrapper.children)
       .filter(
@@ -27,7 +32,6 @@ export default class ChapterList implements Enhancer {
     }
 
     // add chapter list
-    const story = await this.valueContainer.getStory(environment.currentStoryId);
     const chapterList = new ChapterListComponent({ story });
     contentWrapper.insertBefore(chapterList.render(), document.getElementById("review_success"));
   }

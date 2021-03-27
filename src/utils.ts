@@ -22,7 +22,7 @@ export function loadScript(url: string): Promise<Event> {
  * @param {string} rgb
  * @returns {string|boolean}
  */
-export function rgbToHex(rgb: string): string | boolean {
+export function rgbToHex(rgb: string | undefined): string | boolean {
   if (!rgb || rgb === "inherit") {
     return false;
   }
@@ -44,7 +44,7 @@ export function rgbToHex(rgb: string): string | boolean {
  * @param {number} [base]
  * @returns {string|boolean}
  */
-export function ptToEm(pt: string, base?: number): string | boolean {
+export function ptToEm(pt: string | undefined, base?: number): string | boolean {
   if (!pt || pt.slice(-2) !== "pt") {
     return false;
   }

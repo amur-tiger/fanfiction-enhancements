@@ -20,7 +20,7 @@ export interface SmartValue<T> {
    * Retrieves the value from cache. If the value is not in the cache and a getter is present, it
    * fetches a new value from the api. The fetched value is saved to the cache before returning.
    */
-  get(): Promise<T>;
+  get(): Promise<T | undefined>;
 
   /**
    * Sets the value. If a getter is present but no setter, this will throw an exception instead of writing
@@ -70,14 +70,14 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
     protected readonly setter?: ValueSetter<T>
   ) {}
 
-  public async get(): Promise<T> {
+  public async get(): Promise<T | undefined> {
     let value = await this.getCached();
     if (value == null && this.getter) {
       value = await this.getter();
       await this.setCached(value);
     }
 
-    return value as T;
+    return value;
   }
 
   public async set(value: T): Promise<void> {
@@ -129,7 +129,7 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
     );
   }
 
-  protected abstract getCached(): Promise<T>;
+  protected abstract getCached(): Promise<T | undefined>;
 
   protected abstract setCached(value: T): Promise<void>;
 }
@@ -144,21 +144,19 @@ export class SmartValueLocal<T> extends SmartValueBase<T> {
     super(name, getter, setter);
   }
 
-  protected getCached(): Promise<T> {
+  protected async getCached(): Promise<T | undefined> {
     const data = this.storage.getItem(this.name);
     if (!data) {
-      return Promise.resolve(undefined);
+      return undefined;
     }
 
-    return Promise.resolve(JSON.parse(data));
+    return JSON.parse(data);
   }
 
-  protected setCached(value: T): Promise<void> {
+  protected async setCached(value: T): Promise<void> {
     const data = JSON.stringify(value);
     this.storage.setItem(this.name, data);
     this.storage.setItem(`${this.name}+timestamp`, `${new Date().getTime()}`);
-
-    return Promise.resolve();
   }
 }
 
@@ -204,7 +202,7 @@ export class SmartValueRoaming<T> extends SmartValueBase<T> {
     this.token = undefined;
   }
 
-  protected async getCached(): Promise<T> {
+  protected async getCached(): Promise<T | undefined> {
     const data = await GM.getValue(this.name);
     if (!data) {
       return undefined;

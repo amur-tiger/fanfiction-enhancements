@@ -1,4 +1,4 @@
-import { Component } from "../enhance/component/Component";
+import { Component } from "../enhance/component";
 
 interface ReactAttrs {
   [key: string]: any;
@@ -9,14 +9,14 @@ type ReactType<T extends Component> = string | (new (props: ReactAttrs) => T);
 export default class React {
   public static createElement<T extends Component>(
     tag: ReactType<T>,
-    attrs: ReactAttrs,
-    ...children: HTMLElement[]
-  ): HTMLElement {
+    attrs: ReactAttrs | null,
+    ...children: Element[]
+  ): Element {
     let element;
     if (typeof tag === "string") {
       element = document.createElement(tag);
 
-      for (const [name, value] of Object.entries(attrs)) {
+      for (const [name, value] of Object.entries(attrs ?? {})) {
         if (typeof value === "function") {
           (element as any)[name as any] = value;
         } else if (value === true) {
@@ -27,7 +27,7 @@ export default class React {
       }
     } else {
       // eslint-disable-next-line new-cap
-      const component = new tag(attrs);
+      const component = new tag(attrs ?? {});
       element = component.render();
     }
 

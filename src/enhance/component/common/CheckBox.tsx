@@ -1,5 +1,5 @@
 import React from "../../../util/react";
-import { Component } from "../Component";
+import Component from "../Component";
 import { SmartValue } from "../../../api/SmartValue";
 
 import "./CheckBox.css";
@@ -17,16 +17,14 @@ export default class CheckBox implements Component {
       </span>
     );
 
-    const apply = (value: boolean) => {
-      (element.firstElementChild as HTMLInputElement).checked = value;
+    const apply = (value: boolean | undefined) => {
+      (element.firstElementChild as HTMLInputElement).checked = value ?? false;
     };
 
     this.props.bind.subscribe(apply);
     this.props.bind.get().then(apply);
     element.firstElementChild?.addEventListener("change", async () => {
-      await this.props.bind.set(
-        (element.firstElementChild as HTMLInputElement).checked
-      );
+      await this.props.bind.set((element.firstElementChild as HTMLInputElement).checked);
     });
 
     return element;

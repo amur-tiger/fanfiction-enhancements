@@ -8,12 +8,7 @@ export default class Rating implements Component {
 
   public render(): HTMLAnchorElement {
     const element = (
-      <a
-        href="https://www.fictionratings.com/"
-        class="ffe-rating"
-        rel="noreferrer"
-        target="rating"
-      >
+      <a href="https://www.fictionratings.com/" class="ffe-rating" rel="noreferrer" target="rating">
         {this.props.rating}
       </a>
     );

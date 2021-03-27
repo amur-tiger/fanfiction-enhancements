@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention,camelcase,no-underscore-dangle */
+
 /**
  * Shows a small popup message for a specified amount of time in milliseconds. If no time is specified, the
  * message will be shown for 2500 milliseconds.
@@ -63,38 +65,38 @@ declare const isMobile: boolean;
  * Interface for Fontastic settings. These settings are usually saved to a cookie.
  */
 interface FontasticCookie {
-	/**
-	 * The used gui font name, "Verdana" by default.
-	 */
-	gui_font: string;
+  /**
+   * The used gui font name, "Verdana" by default.
+   */
+  gui_font: string;
 
-	/**
-	 * The used font name, "Verdana" by default.
-	 */
-	read_font: string;
+  /**
+   * The used font name, "Verdana" by default.
+   */
+  read_font: string;
 
-	/**
-	 * The used font size in em, 1 by default.
-	 */
-	read_font_size: number;
+  /**
+   * The used font size in em, 1 by default.
+   */
+  read_font_size: number;
 
-	/**
-	 * The used line height, 1.25 by default.
-	 */
-	read_line_height: number;
+  /**
+   * The used line height, 1.25 by default.
+   */
+  read_line_height: number;
 
-	/**
-	 * The used theme, "light" by default.
-	 */
-	read_theme: "light" | "dark";
+  /**
+   * The used theme, "light" by default.
+   */
+  read_theme: "light" | "dark";
 
-	/**
-	 * The used width in percent, 100 by default.
-	 */
-	read_width: number;
+  /**
+   * The used width in percent, 100 by default.
+   */
+  read_width: number;
 
-	read_light_texture: string;
-	read_dark_texture: string;
+  read_light_texture: string;
+  read_dark_texture: string;
 }
 
 /**
@@ -188,17 +190,17 @@ declare const _xmonth_full: string[];
 
 // tslint:disable-next-line:class-name
 declare interface _xotime {
-	date: Date;
-	unix: number;
-	year: number;
-	year_short: number;
-	month_short: string;
-	month_full: string;
-	month: number;
-	day: number;
-	hour: number;
-	min: number;
-	sec: number;
+  date: Date;
+  unix: number;
+  year: number;
+  year_short: number;
+  month_short: string;
+  month_full: string;
+  month: number;
+  day: number;
+  hour: number;
+  min: number;
+  sec: number;
 }
 
 /**

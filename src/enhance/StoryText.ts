@@ -1,5 +1,5 @@
 import { getCookie } from "../utils";
-import { Enhancer } from "./Enhancer";
+import Enhancer from "./Enhancer";
 
 import "./StoryText.css";
 

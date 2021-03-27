@@ -15,9 +15,7 @@ export default class ChapterList implements Component {
         <li class="ffe-cl-chapter">
           <CheckBox bind={chapter.read} />
           <span class="ffe-cl-chapter-title">
-            <a href={"/s/" + this.props.story.id + "/" + chapter.id}>
-              {chapter.name}
-            </a>
+            <a href={`/s/${this.props.story.id}/${chapter.id}`}>{chapter.name}</a>
           </span>
           <span class="ffe-cl-words">
             <b>
@@ -46,9 +44,7 @@ export default class ChapterList implements Component {
 
   private hideLongChapterList(list: HTMLElement) {
     const elements = Array.from(list.children);
-    const isRead = (e: Element) =>
-      (e.firstElementChild?.firstElementChild as HTMLInputElement)?.checked ??
-      false;
+    const isRead = (e: Element) => (e.firstElementChild?.firstElementChild as HTMLInputElement)?.checked ?? false;
 
     let currentBlockIsRead = isRead(elements[0]);
     let currentBlockCount = 0;
@@ -57,7 +53,8 @@ export default class ChapterList implements Component {
       const read = isRead(elements[i]);
       if (read === currentBlockIsRead) {
         // no change from previous chapter, continue
-        currentBlockCount++;
+        currentBlockCount += 1;
+        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -65,7 +62,7 @@ export default class ChapterList implements Component {
         // didn't go over enough chapters to hide any
         currentBlockIsRead = read;
         currentBlockCount = 1;
-
+        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -73,11 +70,13 @@ export default class ChapterList implements Component {
       if (currentBlockIsRead) {
         // we can hide more chapters if they are already read
         elements.slice(i - currentBlockCount, i).forEach((element) => {
+          // eslint-disable-next-line no-param-reassign
           (element as HTMLElement).style.display = "none";
         });
       } else {
         // some unread chapters here, show a bit more of them
         elements.slice(i - currentBlockCount + 2, i - 2).forEach((element) => {
+          // eslint-disable-next-line no-param-reassign
           (element as HTMLElement).style.display = "none";
         });
         off = 2;
@@ -86,9 +85,7 @@ export default class ChapterList implements Component {
       // insert a link to show the hidden chapters
       const showLink = document.createElement("a");
       showLink.style.cursor = "pointer";
-      showLink.textContent = `Show ${
-        currentBlockCount - off * 2
-      } hidden chapters`;
+      showLink.textContent = `Show ${currentBlockCount - off * 2} hidden chapters`;
       showLink.addEventListener("click", () => {
         for (let j = 0; j < list.children.length; j++) {
           const element = list.children.item(j) as HTMLElement;
@@ -104,10 +101,7 @@ export default class ChapterList implements Component {
       showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
       showLinkContainer.appendChild(showLink);
 
-      elements[0].parentElement?.insertBefore(
-        showLinkContainer,
-        elements[i - off]
-      );
+      elements[0].parentElement?.insertBefore(showLinkContainer, elements[i - off]);
 
       currentBlockIsRead = read;
       currentBlockCount = 1;
@@ -115,11 +109,10 @@ export default class ChapterList implements Component {
 
     // the last visited block might be long enough to hide
     if (currentBlockCount > 6) {
-      elements
-        .slice(elements.length - currentBlockCount + 2, elements.length - 3)
-        .forEach((element) => {
-          (element as HTMLElement).style.display = "none";
-        });
+      elements.slice(elements.length - currentBlockCount + 2, elements.length - 3).forEach((element) => {
+        // eslint-disable-next-line no-param-reassign
+        (element as HTMLElement).style.display = "none";
+      });
 
       const showLink = document.createElement("a");
       showLink.style.cursor = "pointer";
@@ -139,10 +132,7 @@ export default class ChapterList implements Component {
       showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
       showLinkContainer.appendChild(showLink);
 
-      elements[0].parentElement?.insertBefore(
-        showLinkContainer,
-        elements[elements.length - 3]
-      );
+      elements[0].parentElement?.insertBefore(showLinkContainer, elements[elements.length - 3]);
     }
   }
 }

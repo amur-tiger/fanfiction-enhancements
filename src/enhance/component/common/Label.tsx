@@ -1,5 +1,5 @@
 import React from "../../../util/react";
-import { Component } from "../Component";
+import Component from "../Component";
 import { SmartValue } from "../../../api/SmartValue";
 
 export default class Label implements Component {
@@ -7,11 +7,11 @@ export default class Label implements Component {
 
   public render(): HTMLElement {
     const element: HTMLElement = <span class="ffe-label" />;
-    const apply = (value: string | number) => {
+    const apply = (value: string | number | undefined) => {
       if (typeof value === "number") {
         element.textContent = value.toLocaleString("en");
       } else {
-        element.textContent = value;
+        element.textContent = value ?? null;
       }
     };
 

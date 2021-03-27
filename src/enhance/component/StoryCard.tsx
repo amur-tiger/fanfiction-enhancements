@@ -27,14 +27,11 @@ export default class StoryCard implements Component {
     const header = (
       <div class="ffe-sc-header">
         <Rating rating={story.rating} />
-        <a href={"/s/" + story.id} class="ffe-sc-title">
+        <a href={`/s/${story.id}`} class="ffe-sc-title">
           {story.title}
         </a>
         <span class="ffe-sc-by">by</span>
-        <a
-          href={"/u/" + (story.author ? story.author.id : "")}
-          class="ffe-sc-author"
-        >
+        <a href={`/u/${story.author ? story.author.id : ""}`} class="ffe-sc-author">
           {story.author ? story.author.name : "?"}
         </a>
 
@@ -60,7 +57,7 @@ export default class StoryCard implements Component {
     if (story.imageOriginalUrl) {
       const imageUrlReplacer = () => {
         image.removeEventListener("error", imageUrlReplacer);
-        image.src = story.imageUrl;
+        image.src = story.imageUrl as string;
       };
 
       image.addEventListener("error", imageUrlReplacer);
@@ -74,9 +71,7 @@ export default class StoryCard implements Component {
   }
 
   private addDescription(element: HTMLDivElement, story: Story) {
-    const description = (
-      <div class="ffe-sc-description">{story.description}</div>
-    );
+    const description = <div class="ffe-sc-description">{story.description}</div>;
 
     element.appendChild(description);
   }
@@ -85,39 +80,29 @@ export default class StoryCard implements Component {
     const tags: HTMLElement = <div class="ffe-sc-tags" />;
 
     if (story.language) {
-      tags.appendChild(
-        <span class="ffe-sc-tag ffe-sc-tag-language">{story.language}</span>
-      );
+      tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-language">{story.language}</span>);
     }
 
     if (story.universes) {
       for (const universe of story.universes) {
-        tags.appendChild(
-          <span class="ffe-sc-tag ffe-sc-tag-universe">{universe}</span>
-        );
+        tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-universe">{universe}</span>);
       }
     }
 
     if (story.genre) {
       for (const genre of story.genre) {
-        tags.appendChild(
-          <span class="ffe-sc-tag ffe-sc-tag-genre">{genre}</span>
-        );
+        tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-genre">{genre}</span>);
       }
     }
 
     if (story.characters && story.characters.length) {
       for (const character of story.characters) {
         if (typeof character === "string") {
-          tags.appendChild(
-            <span class="ffe-sc-tag ffe-sc-tag-character">{character}</span>
-          );
+          tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-character">{character}</span>);
         } else {
           const ship: HTMLElement = <span class="ffe-sc-tag ffe-sc-tag-ship" />;
           for (const shipCharacter of character) {
-            ship.appendChild(
-              <span class="ffe-sc-tag-character">{shipCharacter}</span>
-            );
+            ship.appendChild(<span class="ffe-sc-tag-character">{shipCharacter}</span>);
           }
 
           tags.appendChild(ship);
@@ -126,35 +111,23 @@ export default class StoryCard implements Component {
     }
 
     if (story.chapters && story.chapters.length > 1) {
-      tags.appendChild(
-        <span class="ffe-sc-tag ffe-sc-tag-chapters">
-          Chapters:&nbsp;{story.chapters.length}
-        </span>
-      );
+      tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters:&nbsp;{story.chapters.length}</span>);
     }
 
     if (story.reviews) {
       tags.appendChild(
         <span class="ffe-sc-tag ffe-sc-tag-reviews">
-          <a href={"/r/" + story.id + "/"}>Reviews:&nbsp;{story.reviews}</a>
+          <a href={`/r/${story.id}/`}>Reviews:&nbsp;{story.reviews}</a>
         </span>
       );
     }
 
     if (story.favorites) {
-      tags.appendChild(
-        <span class="ffe-sc-tag ffe-sc-tag-favorites">
-          Favorites:&nbsp;{story.favorites}
-        </span>
-      );
+      tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-favorites">Favorites:&nbsp;{story.favorites}</span>);
     }
 
     if (story.follows) {
-      tags.appendChild(
-        <span class="ffe-sc-tag ffe-sc-tag-follows">
-          Follows:&nbsp;{story.follows}
-        </span>
-      );
+      tags.appendChild(<span class="ffe-sc-tag ffe-sc-tag-follows">Follows:&nbsp;{story.follows}</span>);
     }
 
     element.appendChild(tags);
@@ -187,9 +160,7 @@ export default class StoryCard implements Component {
       const published = (
         <span class="ffe-sc-footer-info">
           <b>Published:</b>&nbsp;
-          <time datetime={story.published.toISOString()}>
-            {story.published.toLocaleDateString("en")}
-          </time>
+          <time datetime={story.published.toISOString()}>{story.published.toLocaleDateString("en")}</time>
         </span>
       );
 
@@ -200,9 +171,7 @@ export default class StoryCard implements Component {
       const updated = (
         <span class="ffe-sc-footer-info">
           <b>Updated:</b>&nbsp;
-          <time datetime={story.updated.toISOString()}>
-            {story.updated.toLocaleDateString("en")}
-          </time>
+          <time datetime={story.updated.toISOString()}>{story.updated.toLocaleDateString("en")}</time>
         </span>
       );
 

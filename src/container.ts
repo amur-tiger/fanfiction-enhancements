@@ -1,10 +1,6 @@
 import { Api, ValueContainer } from "./api";
-import { ChapterList } from "./enhance/ChapterList";
+import { ChapterList, FollowsList, MenuBar, StoryList, StoryProfile } from "./enhance";
 import { DropBox } from "./api/DropBox";
-import { FollowsList } from "./enhance/FollowsList";
-import { MenuBar } from "./enhance/MenuBar";
-import { StoryList } from "./enhance/StoryList";
-import { StoryProfile } from "./enhance/StoryProfile";
 
 export default class Container {
   private api?: Api;

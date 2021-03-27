@@ -81,8 +81,11 @@ export default class ValueContainer {
     });
   }
 
-  public async getStory(id: number): Promise<Story> {
+  public async getStory(id: number): Promise<Story | undefined> {
     const storyData = await this.getStoryValue(id).get();
+    if (!storyData) {
+      return undefined;
+    }
 
     return new Story(storyData, this);
   }

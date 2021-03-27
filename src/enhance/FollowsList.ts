@@ -32,11 +32,13 @@ export default class FollowsList implements Enhancer {
       // suppressed to keep sorting
       // eslint-disable-next-line no-await-in-loop
       const story = await this.valueContainer.getStory(followedStory.id);
-      const card = new StoryCard({ story }).render();
-      item.appendChild(card);
+      if (story) {
+        const card = new StoryCard({ story }).render();
+        item.appendChild(card);
 
-      const chapterList = new ChapterList({ story }).render();
-      item.appendChild(chapterList);
+        const chapterList = new ChapterList({ story }).render();
+        item.appendChild(chapterList);
+      }
     }
 
     table.parentElement?.removeChild(table);

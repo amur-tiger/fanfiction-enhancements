@@ -1,7 +1,7 @@
 import { Story as StoryData, User } from "ffn-parser";
 import Chapter from "./Chapter";
 import { SmartValue } from "./SmartValue";
-import { ValueContainer } from "./ValueContainer";
+import ValueContainer from "./ValueContainer";
 
 export default class Story {
   public readonly id: number;
@@ -12,9 +12,9 @@ export default class Story {
 
   public readonly chapters: Chapter[];
 
-  public readonly imageUrl: string;
+  public readonly imageUrl: string | undefined;
 
-  public readonly imageOriginalUrl: string;
+  public readonly imageOriginalUrl: string | undefined;
 
   public readonly favorites: number;
 
@@ -28,7 +28,7 @@ export default class Story {
 
   public readonly published: Date;
 
-  public readonly updated: Date;
+  public readonly updated: Date | undefined;
 
   public readonly rating: string;
 
@@ -50,9 +50,7 @@ export default class Story {
     this.id = data.id;
     this.title = data.title;
     this.description = data.description;
-    this.chapters = data.chapters
-      ? data.chapters.map((chapter) => new Chapter(data.id, chapter, valueManager))
-      : undefined;
+    this.chapters = data.chapters ? data.chapters.map((chapter) => new Chapter(data.id, chapter, valueManager)) : [];
     this.imageUrl = data.imageUrl;
     this.imageOriginalUrl = data.imageUrl;
     this.favorites = data.favorites;
@@ -60,8 +58,8 @@ export default class Story {
     this.reviews = data.reviews;
     this.genre = data.genre;
     this.language = data.language;
-    this.published = data.published ? new Date(data.published) : undefined;
-    this.updated = data.updated ? new Date(data.updated) : undefined;
+    this.published = data.published;
+    this.updated = data.updated;
     this.rating = data.rating;
     this.words = data.words;
     this.characters = data.characters;
