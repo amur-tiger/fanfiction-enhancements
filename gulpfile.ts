@@ -4,37 +4,11 @@ import gulp from "gulp";
 import { rollup } from "rollup";
 import postCss from "rollup-plugin-postcss";
 import typescript from "rollup-plugin-typescript2";
+import header from "./scripts/header";
 
 const PACKAGE = JSON.parse(fs.readFileSync("./package.json").toString("utf-8"));
 const EXTERNAL = Object.keys(PACKAGE.dependencies || {});
 const OUT_FOLDER = "target";
-
-function getHeader(): string {
-  const build = process.env.GITHUB_RUN_NUMBER;
-  const commit = process.env.GITHUB_SHA;
-  const version =
-    PACKAGE.version +
-    (build || commit ? "+" : "") +
-    (build ? build : "") +
-    (build && commit ? "." : "") +
-    (commit ? commit.substr(0, 7) : "");
-
-  let header = fs.readFileSync("./src/header.txt").toString("utf-8");
-
-  header = header
-    .replace(/\${version}/g, version)
-    .replace(/\${description}/g, PACKAGE.description)
-    .replace(/\${author}/g, PACKAGE.author)
-    .replace(/\${homepage}/g, PACKAGE.homepage)
-    .replace(/\${bugs}/g, PACKAGE.bugs.url);
-
-  for (const pkg of EXTERNAL) {
-    const searchKey = `\${${pkg}.version}`;
-    header = header.split(searchKey).join(PACKAGE.dependencies[pkg].replace(/^[~^]/, ""));
-  }
-
-  return header;
-}
 
 gulp.task("build-source", async () => {
   const bundle = await rollup({
@@ -46,7 +20,7 @@ gulp.task("build-source", async () => {
   await bundle.write({
     file: path.join(OUT_FOLDER, "latest", PACKAGE.main),
     format: "iife",
-    banner: getHeader(),
+    banner: header,
     globals: {
       "ffn-parser": "ffnParser",
     },
@@ -57,7 +31,7 @@ gulp.task("build-meta", (done) => {
   fs.existsSync(OUT_FOLDER) || fs.mkdirSync(OUT_FOLDER);
   fs.existsSync(path.join(OUT_FOLDER, "latest")) || fs.mkdirSync(path.join(OUT_FOLDER, "latest"));
 
-  fs.writeFileSync(path.join(OUT_FOLDER, "latest", PACKAGE.main.replace(".user.js", ".meta.js")), getHeader());
+  fs.writeFileSync(path.join(OUT_FOLDER, "latest", PACKAGE.main.replace(".user.js", ".meta.js")), header);
 
   done();
 });

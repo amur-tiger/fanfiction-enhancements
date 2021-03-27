@@ -4,6 +4,7 @@
     "jsx": "react",
     "lib": ["dom", "es2017"],
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "rootDir": "src",
     "sourceMap": true,
     "strict": true,
