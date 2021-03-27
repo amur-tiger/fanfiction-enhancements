@@ -1,39 +1,48 @@
 import { parseStoryList } from "ffn-parser";
-import { Enhancer } from "./Enhancer";
-import { Story } from "../api/Story";
-import { StoryCard } from "./component/StoryCard";
-import { ValueContainer } from "../api/ValueContainer";
+import Enhancer from "./Enhancer";
+import { Story, ValueContainer } from "../api";
+import { StoryCard } from "./component";
 
 import "./StoryList.css";
 
-export class StoryList implements Enhancer {
-	public constructor(private readonly valueContainer: ValueContainer) {
-	}
+export default class StoryList implements Enhancer {
+  public constructor(private readonly valueContainer: ValueContainer) {}
 
-	public async enhance(): Promise<any> {
-		const list = await parseStoryList(document);
-		const container = document.createElement("ul");
-		container.classList.add("ffe-story-list", "maxwidth");
+  public async enhance(): Promise<any> {
+    const list = await parseStoryList(document);
+    if (!list) {
+      return;
+    }
 
-		const cw = document.getElementById("content_wrapper");
-		cw.parentElement.insertBefore(container, undefined);
+    const container = document.createElement("ul");
+    container.classList.add("ffe-story-list", "maxwidth");
 
-		const deferChapterList = [];
-		for (const followedStory of list) {
-			const item = document.createElement("li");
-			item.classList.add("ffe-story-item");
-			container.appendChild(item);
+    const cw = document.getElementById("content_wrapper");
+    if (!cw) {
+      return;
+    }
 
-			const story = new Story({
-				...followedStory,
-				chapters: [],
-			}, this.valueContainer);
-			const card = new StoryCard({ story: story }).render();
-			item.appendChild(card);
+    cw.parentElement?.insertBefore(container, null);
 
-			deferChapterList.push([story, item]);
-		}
+    const deferChapterList = [];
+    for (const followedStory of list) {
+      const item = document.createElement("li");
+      item.classList.add("ffe-story-item");
+      container.appendChild(item);
 
-		cw.parentElement.removeChild(cw);
-	}
+      const story = new Story(
+        {
+          ...followedStory,
+          chapters: [],
+        },
+        this.valueContainer
+      );
+      const card = new StoryCard({ story }).render();
+      item.appendChild(card);
+
+      deferChapterList.push([story, item]);
+    }
+
+    cw.parentElement?.removeChild(cw);
+  }
 }

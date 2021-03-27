@@ -1,21 +1,24 @@
 import { Chapter as ChapterData } from "ffn-parser";
 import { SmartValue } from "./SmartValue";
-import { ValueContainer } from "./ValueContainer";
+import ValueContainer from "./ValueContainer";
 
-export class Chapter {
-	public readonly storyId: number;
-	public readonly id: number;
-	public readonly name: string;
+export default class Chapter {
+  public readonly storyId: number;
 
-	public readonly words: SmartValue<number>;
-	public readonly read: SmartValue<boolean>;
+  public readonly id: number;
 
-	constructor(storyId: number, data: ChapterData, valueManager: ValueContainer) {
-		this.storyId = storyId;
-		this.id = data.id;
-		this.name = data.title;
+  public readonly name: string;
 
-		this.words = valueManager.getWordCountValue(storyId, data.id);
-		this.read = valueManager.getChapterReadValue(storyId, data.id);
-	}
+  public readonly words: SmartValue<number>;
+
+  public readonly read: SmartValue<boolean>;
+
+  constructor(storyId: number, data: ChapterData, valueManager: ValueContainer) {
+    this.storyId = storyId;
+    this.id = data.id;
+    this.name = data.title;
+
+    this.words = valueManager.getWordCountValue(storyId, data.id);
+    this.read = valueManager.getChapterReadValue(storyId, data.id);
+  }
 }
