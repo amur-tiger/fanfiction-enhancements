@@ -58,8 +58,8 @@ export default class Story {
     this.reviews = data.reviews;
     this.genre = data.genre;
     this.language = data.language;
-    this.published = data.published;
-    this.updated = data.updated;
+    this.published = data.published instanceof Date ? data.published : new Date(data.published);
+    this.updated = data.updated == null || data.updated instanceof Date ? data.updated : new Date(data.updated);
     this.rating = data.rating;
     this.words = data.words;
     this.characters = data.characters;
