@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.6+6.9269d81
+// @version      0.6.7+7.81b220f
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck

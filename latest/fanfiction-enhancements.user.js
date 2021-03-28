@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.6+6.9269d81
+// @version      0.6.7+7.81b220f
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -267,8 +267,8 @@
           this.reviews = data.reviews;
           this.genre = data.genre;
           this.language = data.language;
-          this.published = data.published;
-          this.updated = data.updated;
+          this.published = data.published instanceof Date ? data.published : new Date(data.published);
+          this.updated = data.updated == null || data.updated instanceof Date ? data.updated : new Date(data.updated);
           this.rating = data.rating;
           this.words = data.words;
           this.characters = data.characters;
