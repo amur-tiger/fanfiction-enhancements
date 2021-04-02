@@ -1,4 +1,4 @@
-import render from "../../jsx/render";
+import render from "../../../jsx/render";
 
 import "./Rating.css";
 

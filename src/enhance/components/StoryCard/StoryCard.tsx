@@ -1,7 +1,7 @@
-import render from "../../jsx/render";
-import { Button } from "./common";
-import Rating from "./Rating";
-import { Story } from "../../api";
+import render from "../../../jsx/render";
+import Button from "../Button";
+import Rating from "../Rating/Rating";
+import { Story } from "../../../api";
 
 import "./StoryCard.css";
 

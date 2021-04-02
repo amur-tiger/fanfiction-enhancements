@@ -1,7 +1,8 @@
-import render from "../../jsx/render";
-import { CheckBox, Label } from "./common";
-import { useRef } from "../../jsx";
-import { Story } from "../../api";
+import render from "../../../jsx/render";
+import { useRef } from "../../../jsx";
+import { Story } from "../../../api";
+import CheckBox from "../CheckBox";
+import Label from "../Label";
 
 import "./ChapterList.css";
 

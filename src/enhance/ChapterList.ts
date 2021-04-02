@@ -1,5 +1,5 @@
 import { environment } from "../util/environment";
-import { ChapterList as ChapterListComponent } from "./component";
+import { ChapterList as ChapterListComponent } from "./components";
 import Enhancer from "./Enhancer";
 import { ValueContainer } from "../api";
 

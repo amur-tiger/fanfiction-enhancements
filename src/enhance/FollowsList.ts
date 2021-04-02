@@ -1,5 +1,5 @@
 import { parseFollows } from "ffn-parser";
-import { ChapterList, StoryCard } from "./component";
+import { ChapterList, StoryCard } from "./components";
 import Enhancer from "./Enhancer";
 import { ValueContainer } from "../api";
 

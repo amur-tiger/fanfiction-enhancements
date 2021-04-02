@@ -1,7 +1,7 @@
 import { parseStoryList } from "ffn-parser";
 import Enhancer from "./Enhancer";
 import { Story, ValueContainer } from "../api";
-import { StoryCard } from "./component";
+import { StoryCard } from "./components";
 
 import "./StoryList.css";
 

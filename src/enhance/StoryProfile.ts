@@ -1,6 +1,6 @@
 import { environment } from "../util/environment";
 import Enhancer from "./Enhancer";
-import { StoryCard } from "./component";
+import { StoryCard } from "./components";
 import { ValueContainer } from "../api";
 
 import "./StoryProfile.css";

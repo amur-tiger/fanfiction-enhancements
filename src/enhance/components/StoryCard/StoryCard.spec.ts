@@ -1,4 +1,4 @@
-import { Story } from "../../api";
+import { Story } from "../../../api";
 import StoryCard from "./StoryCard";
 
 describe("StoryCard Component", () => {
