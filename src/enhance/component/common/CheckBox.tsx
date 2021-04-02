@@ -1,32 +1,31 @@
-import React from "../../../util/react";
-import Component from "../Component";
+import render from "../../../jsx/render";
 import { SmartValue } from "../../../api/SmartValue";
 
 import "./CheckBox.css";
 
-export default class CheckBox implements Component {
-  constructor(private props: { bind: SmartValue<boolean> }) {}
+export interface CheckBoxProps {
+  bind: SmartValue<boolean>;
+}
 
-  public render(): HTMLElement {
-    const id = `ffe-check-${parseInt(`${Math.random() * 100000000}`, 10)}`;
+export default function CheckBox({ bind }: CheckBoxProps): Element {
+  const id = `ffe-check-${parseInt(`${Math.random() * 100000000}`, 10)}`;
 
-    const element: HTMLElement = (
-      <span class="ffe-checkbox">
-        <input type="checkbox" id={id} />
-        <label for={id} />
-      </span>
-    );
+  const element: HTMLElement = (
+    <span class="ffe-checkbox">
+      <input type="checkbox" id={id} />
+      <label for={id} />
+    </span>
+  );
 
-    const apply = (value: boolean | undefined) => {
-      (element.firstElementChild as HTMLInputElement).checked = value ?? false;
-    };
+  const apply = (value: boolean | undefined) => {
+    (element.firstElementChild as HTMLInputElement).checked = value ?? false;
+  };
 
-    this.props.bind.subscribe(apply);
-    this.props.bind.get().then(apply);
-    element.firstElementChild?.addEventListener("change", async () => {
-      await this.props.bind.set((element.firstElementChild as HTMLInputElement).checked);
-    });
+  bind.subscribe(apply);
+  bind.get().then(apply);
+  element.firstElementChild?.addEventListener("change", async () => {
+    await bind.set((element.firstElementChild as HTMLInputElement).checked);
+  });
 
-    return element;
-  }
+  return element;
 }

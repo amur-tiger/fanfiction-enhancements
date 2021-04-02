@@ -55,7 +55,7 @@ describe("ChapterList Component", () => {
       chapters: [chapter(true), chapter(true), chapter(true), chapter(false), chapter(false)],
     } as any;
 
-    const element = new ChapterList({ story }).render();
+    const element = ChapterList({ story });
     await timeout(10);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
@@ -90,7 +90,7 @@ describe("ChapterList Component", () => {
       ],
     } as any;
 
-    const element = new ChapterList({ story }).render();
+    const element = ChapterList({ story });
     await timeout(10);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
@@ -142,7 +142,7 @@ describe("ChapterList Component", () => {
       ],
     } as any;
 
-    const element = new ChapterList({ story }).render();
+    const element = ChapterList({ story });
     await timeout(10);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 

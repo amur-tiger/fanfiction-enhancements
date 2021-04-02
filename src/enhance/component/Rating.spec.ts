@@ -2,7 +2,7 @@ import Rating from "./Rating";
 
 describe("Rating Component", () => {
   it("should create an anchor element with certain properties", () => {
-    const element = new Rating({ rating: "K" }).render();
+    const element = Rating({ rating: "K" });
 
     expect(element.href).toBe("https://www.fictionratings.com/");
     expect(element.className).toContain("ffe-rating");
@@ -11,7 +11,7 @@ describe("Rating Component", () => {
   });
 
   it("should create default element for invalid ratings", () => {
-    const element = new Rating({ rating: "not a rating" }).render();
+    const element = Rating({ rating: "not a rating" });
 
     expect(element.textContent).toBe("?");
     expect(element.className).toBe("ffe-rating");
@@ -19,7 +19,7 @@ describe("Rating Component", () => {
   });
 
   it("should create element for general audiences", () => {
-    const element = new Rating({ rating: "K" }).render();
+    const element = Rating({ rating: "K" });
 
     expect(element.textContent).toBe("K");
     expect(element.className).toBe("ffe-rating ffe-rating-k");
@@ -27,7 +27,7 @@ describe("Rating Component", () => {
   });
 
   it("should create element for young children", () => {
-    const element = new Rating({ rating: "K+" }).render();
+    const element = Rating({ rating: "K+" });
 
     expect(element.textContent).toBe("K+");
     expect(element.className).toBe("ffe-rating ffe-rating-kp");
@@ -35,7 +35,7 @@ describe("Rating Component", () => {
   });
 
   it("should create element for teens", () => {
-    const element = new Rating({ rating: "T" }).render();
+    const element = Rating({ rating: "T" });
 
     expect(element.textContent).toBe("T");
     expect(element.className).toBe("ffe-rating ffe-rating-t");
@@ -43,7 +43,7 @@ describe("Rating Component", () => {
   });
 
   it("should create element for elder teens", () => {
-    const element = new Rating({ rating: "M" }).render();
+    const element = Rating({ rating: "M" });
 
     expect(element.textContent).toBe("M");
     expect(element.className).toBe("ffe-rating ffe-rating-m");
@@ -51,7 +51,7 @@ describe("Rating Component", () => {
   });
 
   it("should create element for mature audiences", () => {
-    const element = new Rating({ rating: "MA" }).render();
+    const element = Rating({ rating: "MA" });
 
     expect(element.textContent).toBe("MA");
     expect(element.className).toBe("ffe-rating ffe-rating-ma");

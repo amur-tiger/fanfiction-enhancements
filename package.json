@@ -28,8 +28,7 @@
     "clean": "rimraf target"
   },
   "dependencies": {
-    "ffn-parser": "^0.0.5",
-    "ts-jest": "^26.5.4"
+    "ffn-parser": "^0.0.5"
   },
   "devDependencies": {
     "@types/greasemonkey": "^4.0.1",
@@ -52,6 +51,7 @@
     "rollup": "^2.43.0",
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-typescript2": "^0.30.0",
+    "ts-jest": "^26.5.4",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   },

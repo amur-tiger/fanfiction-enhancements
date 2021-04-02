@@ -19,11 +19,10 @@ export default class StoryProfile implements Enhancer {
       return;
     }
 
-    const card = new StoryCard({ story });
-    const replacement = card.render();
+    const card = StoryCard({ story });
 
-    // profile.parentElement.replaceChild(replacement, profile);
-    profile.parentElement?.insertBefore(replacement, profile);
+    // profile.parentElement.replaceChild(card, profile);
+    profile.parentElement?.insertBefore(card, profile);
     profile.style.display = "none";
   }
 }

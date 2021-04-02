@@ -2,7 +2,8 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
-    "lib": ["dom", "es2017"],
+    "jsxFactory": "render",
+    "lib": ["dom", "es2020"],
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "rootDir": "src",
