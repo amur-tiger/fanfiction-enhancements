@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.7+7.81b220f
+// @version      0.6.7+8.3f4ec98
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -290,6 +290,12 @@
       }
   }
 
+  function isSmartValue(value) {
+      if (value == null || typeof value !== "object") {
+          return false;
+      }
+      return ["get", "set", "subscribe", "unsubscribe", "dispose", "update"].every((key) => typeof (value === null || value === void 0 ? void 0 : value[key]) === "function");
+  }
   class SmartValueBase {
       constructor(name, getter, setter) {
           this.name = name;
@@ -552,59 +558,85 @@
       }
   }
 
-  class React {
-      static createElement(tag, attrs, ...children) {
-          let element;
-          if (typeof tag === "string") {
-              element = document.createElement(tag);
-              for (const [name, value] of Object.entries(attrs !== null && attrs !== void 0 ? attrs : {})) {
-                  if (typeof value === "function") {
-                      element[name] = value;
-                  }
-                  else if (value === true) {
-                      element.setAttribute(name, name);
-                  }
-                  else if (value !== false && value != null) {
-                      element.setAttribute(name, value.toString());
-                  }
-              }
-          }
-          else {
-              // eslint-disable-next-line new-cap
-              const component = new tag(attrs !== null && attrs !== void 0 ? attrs : {});
-              element = component.render();
-          }
-          for (const child of children) {
-              if (child) {
-                  element.appendChild(child.nodeType == null ? document.createTextNode(child.toString()) : child);
-              }
-          }
-          return element;
-      }
+  function isReference(ref) {
+      var _a;
+      return typeof ((_a = ref) === null || _a === void 0 ? void 0 : _a.callback) === "function";
+  }
+  function useRef(callback) {
+      return { callback };
   }
 
-  class Button {
-      constructor(props) {
-          this.props = props;
+  function render(tag, props, ...children) {
+      const refCallbacks = [];
+      let element;
+      if (typeof tag === "string") {
+          element = document.createElement(tag);
+          for (const [name, value] of Object.entries(props !== null && props !== void 0 ? props : {})) {
+              if (name === "ref") {
+                  if (isReference(value)) {
+                      refCallbacks.push(value.callback);
+                  }
+              }
+              else if (typeof value === "function") {
+                  element[name] = value;
+              }
+              else if (value === true) {
+                  element.setAttribute(name, name);
+              }
+              else if (value !== false && value != null) {
+                  element.setAttribute(name, value.toString());
+              }
+          }
       }
-      render() {
-          const element = React.createElement("span", { class: `btn ${this.props.class}` }, this.props.text);
-          if (this.props.click) {
-              element.addEventListener("click", this.props.click);
-          }
-          if (this.props.active) {
-              element.classList.add("ffe-active");
-          }
-          if (this.props.bind) {
-              this.props.bind.subscribe((active) => element.classList.toggle("ffe-active", active));
-              this.props.bind.get().then((active) => element.classList.toggle("ffe-active", active));
-              element.addEventListener("click", async () => {
-                  var _a;
-                  await ((_a = this.props.bind) === null || _a === void 0 ? void 0 : _a.set(!element.classList.contains("ffe-active")));
-              });
-          }
-          return element;
+      else {
+          element = tag(props);
       }
+      if (element instanceof Element) {
+          const append = (child) => {
+              if (child == null) {
+                  return;
+              }
+              if (Array.isArray(child)) {
+                  child.forEach(append);
+              }
+              else if (isSmartValue(child)) {
+                  const textElement = document.createTextNode("");
+                  child.get().then((text) => {
+                      textElement.textContent = typeof text === "number" ? text.toLocaleString("en") : text !== null && text !== void 0 ? text : null;
+                  });
+                  child.subscribe((text) => {
+                      textElement.textContent = typeof text === "number" ? text.toLocaleString("en") : text !== null && text !== void 0 ? text : null;
+                  });
+                  element.appendChild(textElement);
+              }
+              else {
+                  element.appendChild(typeof child === "string" || typeof child === "number" || child.nodeType == null
+                      ? document.createTextNode(child.toString())
+                      : child);
+              }
+          };
+          children.forEach(append);
+      }
+      refCallbacks.forEach((callback) => callback(element));
+      return element;
+  }
+
+  function Button({ class: className, text, active, onClick, bind }) {
+      const element = render("span", { class: `btn ${className}` }, text);
+      if (onClick) {
+          element.addEventListener("click", onClick);
+      }
+      if (active) {
+          element.classList.add("ffe-active");
+      }
+      if (bind) {
+          bind.subscribe((act) => element.classList.toggle("ffe-active", act));
+          bind.get().then((act) => element.classList.toggle("ffe-active", act));
+          element.addEventListener("click", async () => {
+              await (bind === null || bind === void 0 ? void 0 : bind.set(!element.classList.contains("ffe-active")));
+          });
+      }
+      return element;
   }
 
   function styleInject(css, ref) {
@@ -637,344 +669,212 @@
   var css_248z$8 = ".ffe-checkbox {\n\talign-items: center;\n\tdisplay: flex;\n\tflex-flow: column;\n\tfloat: left;\n\theight: 2em;\n\tjustify-content: center;\n\tmargin-right: 18px;\n}\n\n.ffe-checkbox label {\n\tbackground-color: #bbb;\n\tborder-radius: 4px;\n\theight: 16px;\n\twidth: 16px;\n}\n\n.ffe-checkbox label:hover {\n\tbackground-color: #888;\n}\n\n.ffe-checkbox input:checked ~ label {\n\tbackground-color: #0f37a0;\n}\n\n.ffe-checkbox input:checked ~ label:before {\n\tcolor: white;\n\tcontent: \"✓\";\n\tdisplay: block;\n\tfont-size: 1.2em;\n\tmargin-top: -3px;\n\tpadding-right: 2px;\n\ttext-align: right;\n}\n\n.ffe-checkbox input {\n\tdisplay: none;\n}\n";
   styleInject(css_248z$8);
 
-  class CheckBox {
-      constructor(props) {
-          this.props = props;
-      }
-      render() {
-          var _a;
-          const id = `ffe-check-${parseInt(`${Math.random() * 100000000}`, 10)}`;
-          const element = (React.createElement("span", { class: "ffe-checkbox" },
-              React.createElement("input", { type: "checkbox", id: id }),
-              React.createElement("label", { for: id })));
-          const apply = (value) => {
-              element.firstElementChild.checked = value !== null && value !== void 0 ? value : false;
-          };
-          this.props.bind.subscribe(apply);
-          this.props.bind.get().then(apply);
-          (_a = element.firstElementChild) === null || _a === void 0 ? void 0 : _a.addEventListener("change", async () => {
-              await this.props.bind.set(element.firstElementChild.checked);
-          });
-          return element;
-      }
-  }
-
-  class Label {
-      constructor(props) {
-          this.props = props;
-      }
-      render() {
-          const element = React.createElement("span", { class: "ffe-label" });
-          const apply = (value) => {
-              if (typeof value === "number") {
-                  element.textContent = value.toLocaleString("en");
-              }
-              else {
-                  element.textContent = value !== null && value !== void 0 ? value : null;
-              }
-          };
-          this.props.bind.get().then(apply);
-          this.props.bind.subscribe(apply);
-          return element;
-      }
+  function CheckBox({ bind }) {
+      var _a;
+      const id = `ffe-check-${parseInt(`${Math.random() * 100000000}`, 10)}`;
+      const element = (render("span", { class: "ffe-checkbox" },
+          render("input", { type: "checkbox", id: id }),
+          render("label", { for: id })));
+      const apply = (value) => {
+          element.firstElementChild.checked = value !== null && value !== void 0 ? value : false;
+      };
+      bind.subscribe(apply);
+      bind.get().then(apply);
+      (_a = element.firstElementChild) === null || _a === void 0 ? void 0 : _a.addEventListener("change", async () => {
+          await bind.set(element.firstElementChild.checked);
+      });
+      return element;
   }
 
   var css_248z$7 = ".ffe-cl-container {\n\tmargin-bottom: 50px;\n\tpadding: 20px;\n}\n\n.ffe-cl ol {\n\tborder-top: 1px solid #cdcdcd;\n\tlist-style-type: none;\n\tmargin: 0;\n}\n\n.ffe-cl-chapter {\n\tbackground-color: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tfont-size: 1.1em;\n\tline-height: 2em;\n\tpadding: 4px 20px;\n}\n\n.ffe-cl-words {\n\tcolor: #555;\n\tfloat: right;\n\tfont-size: .9em;\n}\n\n.ffe-cl-collapsed {\n\ttext-align: center;\n}\n";
   styleInject(css_248z$7);
 
-  class ChapterList$1 {
-      constructor(props) {
-          this.props = props;
-      }
-      render() {
-          const list = React.createElement("ol", null);
-          for (const chapter of this.props.story.chapters) {
-              list.appendChild(React.createElement("li", { class: "ffe-cl-chapter" },
-                  React.createElement(CheckBox, { bind: chapter.read }),
-                  React.createElement("span", { class: "ffe-cl-chapter-title" },
-                      React.createElement("a", { href: `/s/${this.props.story.id}/${chapter.id}` }, chapter.name)),
-                  React.createElement("span", { class: "ffe-cl-words" },
-                      React.createElement("b", null,
-                          React.createElement(Label, { bind: chapter.words })),
-                      " ",
-                      "words")));
+  function hideLongChapterList(list) {
+      var _a, _b;
+      const elements = Array.from(list.children);
+      const isRead = (e) => { var _a, _b, _c; return (_c = (_b = (_a = e.firstElementChild) === null || _a === void 0 ? void 0 : _a.firstElementChild) === null || _b === void 0 ? void 0 : _b.checked) !== null && _c !== void 0 ? _c : false; };
+      let currentBlockIsRead = isRead(elements[0]);
+      let currentBlockCount = 0;
+      for (let i = 0; i < elements.length; i++) {
+          const read = isRead(elements[i]);
+          if (read === currentBlockIsRead) {
+              // no change from previous chapter, continue
+              currentBlockCount += 1;
+              // eslint-disable-next-line no-continue
+              continue;
           }
+          if (!currentBlockIsRead && currentBlockCount < 5) {
+              // didn't go over enough chapters to hide any
+              currentBlockIsRead = read;
+              currentBlockCount = 1;
+              // eslint-disable-next-line no-continue
+              continue;
+          }
+          let off = 0;
+          if (currentBlockIsRead) {
+              // we can hide more chapters if they are already read
+              elements.slice(i - currentBlockCount, i).forEach((element) => {
+                  // eslint-disable-next-line no-param-reassign
+                  element.style.display = "none";
+              });
+          }
+          else {
+              // some unread chapters here, show a bit more of them
+              elements.slice(i - currentBlockCount + 2, i - 2).forEach((element) => {
+                  // eslint-disable-next-line no-param-reassign
+                  element.style.display = "none";
+              });
+              off = 2;
+          }
+          // insert a link to show the hidden chapters
+          const showLink = document.createElement("a");
+          showLink.style.cursor = "pointer";
+          showLink.textContent = `Show ${currentBlockCount - off * 2} hidden chapters`;
+          showLink.addEventListener("click", () => {
+              for (let j = 0; j < list.children.length; j++) {
+                  const element = list.children.item(j);
+                  if (element.classList.contains("ffe-cl-collapsed")) {
+                      element.style.display = "none";
+                  }
+                  else {
+                      element.style.display = "block";
+                  }
+              }
+          });
+          const showLinkContainer = document.createElement("li");
+          showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
+          showLinkContainer.appendChild(showLink);
+          (_a = elements[0].parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(showLinkContainer, elements[i - off]);
+          currentBlockIsRead = read;
+          currentBlockCount = 1;
+      }
+      // the last visited block might be long enough to hide
+      if (currentBlockCount > 6) {
+          elements.slice(elements.length - currentBlockCount + 2, elements.length - 3).forEach((element) => {
+              // eslint-disable-next-line no-param-reassign
+              element.style.display = "none";
+          });
+          const showLinkContainer = (render("li", { class: "ffe-cl-chapter ffe-cl-collapsed" },
+              render("a", { style: "cursor: pointer;", onclick: () => {
+                      for (let j = 0; j < list.children.length; j++) {
+                          const element = list.children.item(j);
+                          if (element.classList.contains("ffe-cl-collapsed")) {
+                              element.style.display = "none";
+                          }
+                          else {
+                              element.style.display = "block";
+                          }
+                      }
+                  } },
+                  "Show ",
+                  currentBlockCount - 5,
+                  " hidden chapters")));
+          (_b = elements[0].parentElement) === null || _b === void 0 ? void 0 : _b.insertBefore(showLinkContainer, elements[elements.length - 3]);
+      }
+  }
+  function ChapterList$1({ story }) {
+      const ref = useRef((list) => {
           setTimeout(() => {
               // The getter for the read status are asynchronous, so the read status is not set immediately. This is
               // necessary for hideLongChapterList(), though, so it has to wait. Since the data is saved locally, this
               // little timeout should be plenty. If there are problems, though, maybe the getter have to be primed and
               // waited on.
-              this.hideLongChapterList(list);
+              hideLongChapterList(list);
           }, 5);
-          return (React.createElement("div", { class: "ffe-cl-container" },
-              React.createElement("div", { class: "ffe-cl" }, list)));
-      }
-      hideLongChapterList(list) {
-          var _a, _b;
-          const elements = Array.from(list.children);
-          const isRead = (e) => { var _a, _b, _c; return (_c = (_b = (_a = e.firstElementChild) === null || _a === void 0 ? void 0 : _a.firstElementChild) === null || _b === void 0 ? void 0 : _b.checked) !== null && _c !== void 0 ? _c : false; };
-          let currentBlockIsRead = isRead(elements[0]);
-          let currentBlockCount = 0;
-          for (let i = 0; i < elements.length; i++) {
-              const read = isRead(elements[i]);
-              if (read === currentBlockIsRead) {
-                  // no change from previous chapter, continue
-                  currentBlockCount += 1;
-                  // eslint-disable-next-line no-continue
-                  continue;
-              }
-              if (!currentBlockIsRead && currentBlockCount < 5) {
-                  // didn't go over enough chapters to hide any
-                  currentBlockIsRead = read;
-                  currentBlockCount = 1;
-                  // eslint-disable-next-line no-continue
-                  continue;
-              }
-              let off = 0;
-              if (currentBlockIsRead) {
-                  // we can hide more chapters if they are already read
-                  elements.slice(i - currentBlockCount, i).forEach((element) => {
-                      // eslint-disable-next-line no-param-reassign
-                      element.style.display = "none";
-                  });
-              }
-              else {
-                  // some unread chapters here, show a bit more of them
-                  elements.slice(i - currentBlockCount + 2, i - 2).forEach((element) => {
-                      // eslint-disable-next-line no-param-reassign
-                      element.style.display = "none";
-                  });
-                  off = 2;
-              }
-              // insert a link to show the hidden chapters
-              const showLink = document.createElement("a");
-              showLink.style.cursor = "pointer";
-              showLink.textContent = `Show ${currentBlockCount - off * 2} hidden chapters`;
-              showLink.addEventListener("click", () => {
-                  for (let j = 0; j < list.children.length; j++) {
-                      const element = list.children.item(j);
-                      if (element.classList.contains("ffe-cl-collapsed")) {
-                          element.style.display = "none";
-                      }
-                      else {
-                          element.style.display = "block";
-                      }
-                  }
-              });
-              const showLinkContainer = document.createElement("li");
-              showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
-              showLinkContainer.appendChild(showLink);
-              (_a = elements[0].parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(showLinkContainer, elements[i - off]);
-              currentBlockIsRead = read;
-              currentBlockCount = 1;
-          }
-          // the last visited block might be long enough to hide
-          if (currentBlockCount > 6) {
-              elements.slice(elements.length - currentBlockCount + 2, elements.length - 3).forEach((element) => {
-                  // eslint-disable-next-line no-param-reassign
-                  element.style.display = "none";
-              });
-              const showLink = document.createElement("a");
-              showLink.style.cursor = "pointer";
-              showLink.textContent = `Show ${currentBlockCount - 5} hidden chapters`;
-              showLink.addEventListener("click", () => {
-                  for (let j = 0; j < list.children.length; j++) {
-                      const element = list.children.item(j);
-                      if (element.classList.contains("ffe-cl-collapsed")) {
-                          element.style.display = "none";
-                      }
-                      else {
-                          element.style.display = "block";
-                      }
-                  }
-              });
-              const showLinkContainer = document.createElement("li");
-              showLinkContainer.classList.add("ffe-cl-chapter", "ffe-cl-collapsed");
-              showLinkContainer.appendChild(showLink);
-              (_b = elements[0].parentElement) === null || _b === void 0 ? void 0 : _b.insertBefore(showLinkContainer, elements[elements.length - 3]);
-          }
-      }
+      });
+      return (render("div", { class: "ffe-cl-container" },
+          render("div", { class: "ffe-cl" },
+              render("ol", { ref: ref }, story.chapters.map((chapter) => (render("li", { class: "ffe-cl-chapter" },
+                  render(CheckBox, { bind: chapter.read }),
+                  render("span", { class: "ffe-cl-chapter-title" },
+                      render("a", { href: `/s/${story.id}/${chapter.id}` }, chapter.name)),
+                  render("span", { class: "ffe-cl-words" },
+                      render("b", null, chapter.words),
+                      " words"))))))));
   }
 
   var css_248z$6 = ".ffe-rating {\n\tbackground: gray;\n\tpadding: 3px 5px;\n\tcolor: #fff !important;\n\tborder: 1px solid rgba(0, 0, 0, 0.2);\n\ttext-shadow: -1px -1px rgba(0, 0, 0, 0.2);\n\tborder-radius: 4px;\n\tmargin-right: 5px;\n\tvertical-align: 2px;\n}\n\n.ffe-rating:hover {\n\tborder-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;\n}\n\n.ffe-rating-k,\n.ffe-rating-kp {\n\tbackground: #78ac40;\n\tbox-shadow: 0 1px 0 #90ce4d inset;\n}\n\n.ffe-rating-t,\n.ffe-rating-m {\n\tbackground: #ffb400;\n\tbox-shadow: 0 1px 0 #ffd800 inset;\n}\n\n.ffe-rating-ma {\n\tbackground: #c03d2f;\n\tbox-shadow: 0 1px 0 #e64938 inset;\n}\n";
   styleInject(css_248z$6);
 
-  class Rating {
-      constructor(props) {
-          this.props = props;
+  function Rating({ rating }) {
+      const element = (render("a", { href: "https://www.fictionratings.com/", class: "ffe-rating", rel: "noreferrer", target: "rating" }, rating));
+      switch (rating) {
+          case "K":
+              element.title = "General Audience (5+)";
+              element.classList.add("ffe-rating-k");
+              break;
+          case "K+":
+              element.title = "Young Children (9+)";
+              element.classList.add("ffe-rating-kp");
+              break;
+          case "T":
+              element.title = "Teens (13+)";
+              element.classList.add("ffe-rating-t");
+              break;
+          case "M":
+              element.title = "Teens (16+)";
+              element.classList.add("ffe-rating-m");
+              break;
+          case "MA":
+              element.title = "Mature (18+)";
+              element.classList.add("ffe-rating-ma");
+              break;
+          default:
+              element.textContent = "?";
+              element.title = "No Rating Available";
+              break;
       }
-      render() {
-          const element = (React.createElement("a", { href: "https://www.fictionratings.com/", class: "ffe-rating", rel: "noreferrer", target: "rating" }, this.props.rating));
-          switch (this.props.rating) {
-              case "K":
-                  element.title = "General Audience (5+)";
-                  element.classList.add("ffe-rating-k");
-                  break;
-              case "K+":
-                  element.title = "Young Children (9+)";
-                  element.classList.add("ffe-rating-kp");
-                  break;
-              case "T":
-                  element.title = "Teens (13+)";
-                  element.classList.add("ffe-rating-t");
-                  break;
-              case "M":
-                  element.title = "Teens (16+)";
-                  element.classList.add("ffe-rating-m");
-                  break;
-              case "MA":
-                  element.title = "Mature (18+)";
-                  element.classList.add("ffe-rating-ma");
-                  break;
-              default:
-                  element.textContent = "?";
-                  element.title = "No Rating Available";
-                  break;
-          }
-          return element;
-      }
+      return element;
   }
 
-  var css_248z$5 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tdisplay: flex;\n\tflex-wrap: wrap;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-bottom: 8px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-universe {\n\tbackground-color: #44b7b7;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tfloat: left;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
+  var css_248z$5 = ".ffe-sc-header {\n\tborder-bottom: 1px solid #ddd;\n\tpadding-bottom: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-title {\n\tcolor: #000 !important;\n\tfont-size: 1.8em;\n}\n\n.ffe-sc-title:hover {\n\tborder-bottom: 0;\n\ttext-decoration: underline;\n}\n\n.ffe-sc-by {\n\tpadding: 0 .5em;\n}\n\n.ffe-sc-mark {\n\tfloat: right;\n}\n\n.ffe-sc-follow:hover,\n.ffe-sc-follow.ffe-active {\n\tcolor: #60cf23;\n}\n\n.ffe-sc-favorite:hover,\n.ffe-sc-favorite.ffe-active {\n\tcolor: #ffb400;\n}\n\n.ffe-sc-tags {\n\tborder-bottom: 1px solid #ddd;\n\tdisplay: flex;\n\tflex-wrap: wrap;\n\tline-height: 2em;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-tag {\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tcolor: black;\n\tline-height: 16px;\n\tmargin-bottom: 8px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-tag-language {\n\tbackground-color: #a151bd;\n\tcolor: white;\n}\n\n.ffe-sc-tag-universe {\n\tbackground-color: #44b7b7;\n\tcolor: white;\n}\n\n.ffe-sc-tag-genre {\n\tbackground-color: #4f91d6;\n\tcolor: white;\n}\n\n.ffe-sc-tag.ffe-sc-tag-character,\n.ffe-sc-tag.ffe-sc-tag-ship {\n\tbackground-color: #23b974;\n\tcolor: white;\n}\n\n.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {\n\tcontent: \" + \";\n}\n\n.ffe-sc-image {\n\tfloat: left;\n\tborder: 1px solid #ddd;\n\tborder-radius: 3px;\n\tpadding: 3px;\n\tmargin-right: 8px;\n\tmargin-bottom: 8px;\n}\n\n.ffe-sc-description {\n\tcolor: #333;\n\tfont-family: \"Open Sans\", sans-serif;\n\tfont-size: 1.1em;\n\tline-height: 1.4em;\n}\n\n.ffe-sc-footer {\n\tclear: left;\n\tbackground: #f6f7ee;\n\tborder-bottom: 1px solid #cdcdcd;\n\tborder-top: 1px solid #cdcdcd;\n\tcolor: #555;\n\tfont-size: .9em;\n\tmargin-left: -.5em;\n\tmargin-right: -.5em;\n\tmargin-top: 1em;\n\tpadding: 10px .5em;\n}\n\n.ffe-sc-footer-info {\n\tbackground: #fff;\n\tborder: 1px solid rgba(0, 0, 0, 0.15);\n\tborder-radius: 4px;\n\tline-height: 16px;\n\tmargin-top: -5px;\n\tmargin-right: 5px;\n\tpadding: 3px 8px;\n}\n\n.ffe-sc-footer-complete {\n\tbackground: #63bd40;\n\tcolor: #fff;\n}\n\n.ffe-sc-footer-incomplete {\n\tbackground: #f7a616;\n\tcolor: #fff;\n}\n";
   styleInject(css_248z$5);
 
-  class StoryCard {
-      constructor(props) {
-          this.props = props;
-      }
-      render() {
-          const { story } = this.props;
-          const element = document.createElement("div");
-          element.className = "ffe-sc";
-          this.addHeader(element, story);
-          this.addTags(element, story);
-          this.addImage(element, story);
-          this.addDescription(element, story);
-          this.addFooter(element, story);
-          return element;
-      }
-      addHeader(element, story) {
-          const header = (React.createElement("div", { class: "ffe-sc-header" },
-              React.createElement(Rating, { rating: story.rating }),
-              React.createElement("a", { href: `/s/${story.id}`, class: "ffe-sc-title" }, story.title),
-              React.createElement("span", { class: "ffe-sc-by" }, "by"),
-              React.createElement("a", { href: `/u/${story.author ? story.author.id : ""}`, class: "ffe-sc-author" }, story.author ? story.author.name : "?"),
-              React.createElement("div", { class: "ffe-sc-mark btn-group" },
-                  React.createElement(Button, { class: "ffe-sc-follow icon-bookmark-2", bind: story.alert }),
-                  React.createElement(Button, { class: "ffe-sc-favorite icon-heart", bind: story.favorite }))));
-          element.appendChild(header);
-      }
-      addImage(element, story) {
-          if (!story.imageUrl) {
-              return;
-          }
-          const imageContainer = document.createElement("div");
-          imageContainer.className = "ffe-sc-image";
-          const image = document.createElement("img");
-          if (story.imageOriginalUrl) {
-              const imageUrlReplacer = () => {
-                  image.removeEventListener("error", imageUrlReplacer);
-                  image.src = story.imageUrl;
-              };
-              image.addEventListener("error", imageUrlReplacer);
-              image.src = story.imageOriginalUrl;
-          }
-          else {
-              image.src = story.imageUrl;
-          }
-          imageContainer.appendChild(image);
-          element.appendChild(imageContainer);
-      }
-      addDescription(element, story) {
-          const description = React.createElement("div", { class: "ffe-sc-description" }, story.description);
-          element.appendChild(description);
-      }
-      addTags(element, story) {
-          const tags = React.createElement("div", { class: "ffe-sc-tags" });
-          if (story.language) {
-              tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-language" }, story.language));
-          }
-          if (story.universes) {
-              for (const universe of story.universes) {
-                  tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-universe" }, universe));
-              }
-          }
-          if (story.genre) {
-              for (const genre of story.genre) {
-                  tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-genre" }, genre));
-              }
-          }
-          if (story.characters && story.characters.length) {
-              for (const character of story.characters) {
-                  if (typeof character === "string") {
-                      tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-character" }, character));
-                  }
-                  else {
-                      const ship = React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-ship" });
-                      for (const shipCharacter of character) {
-                          ship.appendChild(React.createElement("span", { class: "ffe-sc-tag-character" }, shipCharacter));
-                      }
-                      tags.appendChild(ship);
-                  }
-              }
-          }
-          if (story.chapters && story.chapters.length > 1) {
-              tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-chapters" },
+  function StoryCard({ story }) {
+      return (render("div", { class: "ffe-sc" },
+          render("div", { class: "ffe-sc-header" },
+              render(Rating, { rating: story.rating }),
+              render("a", { href: `/s/${story.id}`, class: "ffe-sc-title" }, story.title),
+              render("span", { class: "ffe-sc-by" }, "by"),
+              render("a", { href: `/u/${story.author.id}`, class: "ffe-sc-author" }, story.author.name),
+              render("div", { class: "ffe-sc-mark btn-group" },
+                  render(Button, { class: "ffe-sc-follow icon-bookmark-2", bind: story.alert }),
+                  render(Button, { class: "ffe-sc-favorite icon-heart", bind: story.favorite }))),
+          render("div", { class: "ffe-sc-tags" },
+              story.language && render("span", { class: "ffe-sc-tag ffe-sc-tag-language" }, story.language),
+              story.universes &&
+                  story.universes.map((universe) => render("span", { class: "ffe-sc-tag ffe-sc-tag-universe" }, universe)),
+              story.genre && story.genre.map((genre) => render("span", { class: "ffe-sc-tag ffe-sc-tag-genre" }, genre)),
+              story.characters &&
+                  story.characters.length > 0 &&
+                  story.characters.map((character) => typeof character === "string" ? (render("span", { class: "ffe-sc-tag ffe-sc-tag-character" }, character)) : (render("span", { class: "ffe-sc-tag ffe-sc-tag-ship" }, character.map((shipCharacter) => (render("span", { class: "ffe-sc-tag-character" }, shipCharacter)))))),
+              story.chapters && story.chapters.length > 0 && (render("span", { class: "ffe-sc-tag ffe-sc-tag-chapters" },
                   "Chapters:\u00A0",
-                  story.chapters.length));
-          }
-          if (story.reviews) {
-              tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-reviews" },
-                  React.createElement("a", { href: `/r/${story.id}/` },
+                  story.chapters.length)),
+              story.reviews && (render("span", { class: "ffe-sc-tag ffe-sc-tag-reviews" },
+                  render("a", { href: `/r/${story.id}/` },
                       "Reviews:\u00A0",
-                      story.reviews)));
-          }
-          if (story.favorites) {
-              tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-favorites" },
+                      story.reviews))),
+              story.favorites && render("span", { class: "ffe-sc-tag ffe-sc-tag-favorites" },
                   "Favorites:\u00A0",
-                  story.favorites));
-          }
-          if (story.follows) {
-              tags.appendChild(React.createElement("span", { class: "ffe-sc-tag ffe-sc-tag-follows" },
+                  story.favorites),
+              story.follows && render("span", { class: "ffe-sc-tag ffe-sc-tag-follows" },
                   "Follows:\u00A0",
-                  story.follows));
-          }
-          element.appendChild(tags);
-      }
-      addFooter(element, story) {
-          const footer = React.createElement("div", { class: "ffe-sc-footer" }, "\u00A0");
-          if (story.words) {
-              const words = (React.createElement("div", { style: "float: right;" },
-                  React.createElement("b", null, story.words.toLocaleString("en")),
-                  " words"));
-              footer.appendChild(words);
-          }
-          const status = React.createElement("span", { class: "ffe-sc-footer-info" });
-          if (story.status === "Complete") {
-              status.classList.add("ffe-sc-footer-complete");
-              status.textContent = "Complete";
-          }
-          else {
-              status.classList.add("ffe-sc-footer-incomplete");
-              status.textContent = "Incomplete";
-          }
-          footer.appendChild(status);
-          if (story.published) {
-              const published = (React.createElement("span", { class: "ffe-sc-footer-info" },
-                  React.createElement("b", null, "Published:"),
-                  "\u00A0",
-                  React.createElement("time", { datetime: story.published.toISOString() }, story.published.toLocaleDateString("en"))));
-              footer.appendChild(published);
-          }
-          if (story.updated) {
-              const updated = (React.createElement("span", { class: "ffe-sc-footer-info" },
-                  React.createElement("b", null, "Updated:"),
-                  "\u00A0",
-                  React.createElement("time", { datetime: story.updated.toISOString() }, story.updated.toLocaleDateString("en"))));
-              footer.appendChild(updated);
-          }
-          element.appendChild(footer);
-      }
+                  story.follows)),
+          story.imageUrl && (render("div", { class: "ffe-sc-image" },
+              render("img", { src: story.imageUrl, alt: "Story Cover" }))),
+          render("div", { class: "ffe-sc-description" }, story.description),
+          render("div", { class: "ffe-sc-footer" },
+              story.words && (render("div", { style: "float: right;" },
+                  render("b", null, story.words.toLocaleString("en")),
+                  " words")),
+              story.status === "Complete" ? (render("span", { class: "ffe-sc-footer-info ffe-sc-footer-complete" }, "Complete")) : (render("span", { class: "ffe-sc-footer-info ffe-sc-footer-incomplete" }, "Incomplete")),
+              story.published && (render("span", { class: "ffe-sc-footer-info" },
+                  render("b", null, "Published:\u00A0"),
+                  render("time", { datetime: story.published.toISOString() }, story.published.toLocaleDateString("en")))),
+              story.updated && (render("span", { class: "ffe-sc-footer-info" },
+                  render("b", null, "Updated:\u00A0"),
+                  render("time", { datetime: story.updated.toISOString() }, story.updated.toLocaleDateString("en")))))));
   }
 
   class ChapterList {
@@ -1001,8 +901,8 @@
               contentWrapper.removeChild(storyText);
           }
           // add chapter list
-          const chapterList = new ChapterList$1({ story });
-          contentWrapper.insertBefore(chapterList.render(), document.getElementById("review_success"));
+          const chapterList = ChapterList$1({ story });
+          contentWrapper.insertBefore(chapterList, document.getElementById("review_success"));
       }
   }
 
@@ -1034,9 +934,9 @@
               // eslint-disable-next-line no-await-in-loop
               const story = await this.valueContainer.getStory(followedStory.id);
               if (story) {
-                  const card = new StoryCard({ story }).render();
+                  const card = StoryCard({ story });
                   item.appendChild(card);
-                  const chapterList = new ChapterList$1({ story }).render();
+                  const chapterList = ChapterList$1({ story });
                   item.appendChild(chapterList);
               }
           }
@@ -1120,7 +1020,7 @@
               item.classList.add("ffe-story-item");
               container.appendChild(item);
               const story = new Story(Object.assign(Object.assign({}, followedStory), { chapters: [] }), this.valueContainer);
-              const card = new StoryCard({ story }).render();
+              const card = StoryCard({ story });
               item.appendChild(card);
           }
           (_b = cw.parentElement) === null || _b === void 0 ? void 0 : _b.removeChild(cw);
@@ -1144,10 +1044,9 @@
           if (!story) {
               return;
           }
-          const card = new StoryCard({ story });
-          const replacement = card.render();
-          // profile.parentElement.replaceChild(replacement, profile);
-          (_a = profile.parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(replacement, profile);
+          const card = StoryCard({ story });
+          // profile.parentElement.replaceChild(card, profile);
+          (_a = profile.parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(card, profile);
           profile.style.display = "none";
       }
   }
