@@ -1,7 +1,7 @@
 import { parseStoryList } from "ffn-parser";
 import Enhancer from "./Enhancer";
 import { Story, ValueContainer } from "../api";
-import { StoryCard } from "./component";
+import { StoryCard } from "./components";
 
 import "./StoryList.css";
 
@@ -37,7 +37,7 @@ export default class StoryList implements Enhancer {
         },
         this.valueContainer
       );
-      const card = new StoryCard({ story }).render();
+      const card = StoryCard({ story });
       item.appendChild(card);
 
       deferChapterList.push([story, item]);

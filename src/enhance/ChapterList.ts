@@ -1,5 +1,5 @@
 import { environment } from "../util/environment";
-import { ChapterList as ChapterListComponent } from "./component";
+import { ChapterList as ChapterListComponent } from "./components";
 import Enhancer from "./Enhancer";
 import { ValueContainer } from "../api";
 
@@ -32,7 +32,7 @@ export default class ChapterList implements Enhancer {
     }
 
     // add chapter list
-    const chapterList = new ChapterListComponent({ story });
-    contentWrapper.insertBefore(chapterList.render(), document.getElementById("review_success"));
+    const chapterList = ChapterListComponent({ story });
+    contentWrapper.insertBefore(chapterList, document.getElementById("review_success"));
   }
 }

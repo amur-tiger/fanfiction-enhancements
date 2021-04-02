@@ -18,6 +18,7 @@ module.exports = {
     GM_removeValueChangeListener: "readonly",
   },
   rules: {
+    "@typescript-eslint/no-unused-vars": ["error", { varsIgnorePattern: "render" }],
     camelcase: [
       "error",
       {

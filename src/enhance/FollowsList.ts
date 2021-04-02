@@ -1,5 +1,5 @@
 import { parseFollows } from "ffn-parser";
-import { ChapterList, StoryCard } from "./component";
+import { ChapterList, StoryCard } from "./components";
 import Enhancer from "./Enhancer";
 import { ValueContainer } from "../api";
 
@@ -33,10 +33,10 @@ export default class FollowsList implements Enhancer {
       // eslint-disable-next-line no-await-in-loop
       const story = await this.valueContainer.getStory(followedStory.id);
       if (story) {
-        const card = new StoryCard({ story }).render();
+        const card = StoryCard({ story });
         item.appendChild(card);
 
-        const chapterList = new ChapterList({ story }).render();
+        const chapterList = ChapterList({ story });
         item.appendChild(chapterList);
       }
     }
