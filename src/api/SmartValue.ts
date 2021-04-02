@@ -13,6 +13,16 @@ export interface ValueSubscriberCallback<T> {
   (value: T): Promise<any> | any;
 }
 
+export function isSmartValue(value: unknown): value is SmartValue<unknown> {
+  if (value == null || typeof value !== "object") {
+    return false;
+  }
+
+  return ["get", "set", "subscribe", "unsubscribe", "dispose", "update"].every(
+    (key) => typeof value?.[key as keyof typeof value] === "function"
+  );
+}
+
 export interface SmartValue<T> {
   name: string;
 

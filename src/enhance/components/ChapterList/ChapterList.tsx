@@ -2,7 +2,6 @@ import render from "../../../jsx/render";
 import { useRef } from "../../../jsx";
 import { Story } from "../../../api";
 import CheckBox from "../CheckBox";
-import Label from "../Label";
 
 import "./ChapterList.css";
 
@@ -128,10 +127,7 @@ export default function ChapterList({ story }: ChapterListProps): HTMLElement {
                 <a href={`/s/${story.id}/${chapter.id}`}>{chapter.name}</a>
               </span>
               <span class="ffe-cl-words">
-                <b>
-                  <Label bind={chapter.words} />
-                </b>{" "}
-                words
+                <b>{chapter.words}</b> words
               </span>
             </li>
           ))}

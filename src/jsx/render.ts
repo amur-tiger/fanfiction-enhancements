@@ -1,5 +1,6 @@
 import Component, { ChildType, ComponentProps, ComponentType } from "./Component";
 import { isReference } from "./ref";
+import { isSmartValue } from "../api/SmartValue";
 
 export default function render<T extends ComponentProps>(
   tag: string | Component<T>,
@@ -36,6 +37,15 @@ export default function render<T extends ComponentProps>(
 
       if (Array.isArray(child)) {
         child.forEach(append);
+      } else if (isSmartValue(child)) {
+        const textElement = document.createTextNode("");
+        child.get().then((text) => {
+          textElement.textContent = typeof text === "number" ? text.toLocaleString("en") : text ?? null;
+        });
+        child.subscribe((text) => {
+          textElement.textContent = typeof text === "number" ? text.toLocaleString("en") : text ?? null;
+        });
+        (element as Element).appendChild(textElement);
       } else {
         (element as Element).appendChild(
           typeof child === "string" || typeof child === "number" || child.nodeType == null
