@@ -14,14 +14,13 @@ export default class StoryList implements Enhancer {
       return;
     }
 
-    const container = document.createElement("ul");
-    container.classList.add("ffe-story-list", "maxwidth");
-
     const cw = document.getElementById("content_wrapper");
     if (!cw) {
       return;
     }
 
+    const container = document.createElement("ul");
+    container.classList.add("ffe-story-list", "maxwidth");
     cw.parentElement?.insertBefore(container, null);
 
     const deferChapterList = [];
@@ -43,6 +42,18 @@ export default class StoryList implements Enhancer {
       deferChapterList.push([story, item]);
     }
 
-    cw.parentElement?.removeChild(cw);
+    cw.querySelectorAll(".z-list").forEach((e) => e.parentElement?.removeChild(e));
+
+    const pageNav = cw.querySelector("center:last-of-type");
+    if (pageNav) {
+      const footer = document.createElement("div");
+      footer.id = "content_wrapper_inner";
+      footer.classList.add("maxwidth");
+      footer.style.backgroundColor = "white";
+      footer.style.height = "35px";
+      footer.style.lineHeight = "35px";
+      footer.appendChild(pageNav);
+      cw.parentElement?.insertBefore(footer, null);
+    }
   }
 }
