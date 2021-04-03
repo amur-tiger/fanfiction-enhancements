@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.7+8.3f4ec98
+// @version      0.6.8+9.d0c6af7
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018, Arne 'TigeR' Linck
@@ -1008,12 +1008,12 @@
           if (!list) {
               return;
           }
-          const container = document.createElement("ul");
-          container.classList.add("ffe-story-list", "maxwidth");
           const cw = document.getElementById("content_wrapper");
           if (!cw) {
               return;
           }
+          const container = document.createElement("ul");
+          container.classList.add("ffe-story-list", "maxwidth");
           (_a = cw.parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(container, null);
           for (const followedStory of list) {
               const item = document.createElement("li");
@@ -1023,7 +1023,18 @@
               const card = StoryCard({ story });
               item.appendChild(card);
           }
-          (_b = cw.parentElement) === null || _b === void 0 ? void 0 : _b.removeChild(cw);
+          cw.querySelectorAll(".z-list").forEach((e) => { var _a; return (_a = e.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(e); });
+          const pageNav = cw.querySelector("center:last-of-type");
+          if (pageNav) {
+              const footer = document.createElement("div");
+              footer.id = "content_wrapper_inner";
+              footer.classList.add("maxwidth");
+              footer.style.backgroundColor = "white";
+              footer.style.height = "35px";
+              footer.style.lineHeight = "35px";
+              footer.appendChild(pageNav);
+              (_b = cw.parentElement) === null || _b === void 0 ? void 0 : _b.insertBefore(footer, null);
+          }
       }
   }
 
