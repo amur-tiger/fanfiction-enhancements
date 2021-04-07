@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.9+10.86a0bc2
+// @version      0.6.10+11.d908ea3
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2021, Arne 'TigeR' Linck
@@ -694,16 +694,6 @@
   };
 
   // src/utils.ts
-  function getCookie(name) {
-    const ca = document.cookie.split(";");
-    for (let i = 0; i < ca.length; i++) {
-      const c = ca[i].trimLeft();
-      if (c.indexOf(`${name}=`) === 0) {
-        return c.substring(name.length + 1, c.length);
-      }
-    }
-    return false;
-  }
   function parseGetParams(url) {
     try {
       const params = new URL(url).search.substr(1).split("&");
@@ -1982,18 +1972,6 @@
         throw new Error("Could not find text container element.");
       }
       this.fixUserSelect(textContainer);
-      if (!getCookie("xcookie2")) {
-        XCOOKIE.read_font = "Open Sans";
-        XCOOKIE.read_font_size = 1.2;
-        XCOOKIE.read_line_height = 2;
-        XCOOKIE.read_width = 75;
-        _fontastic_save();
-        const text = textContainer.firstElementChild;
-        text.style.fontFamily = XCOOKIE.read_font;
-        text.style.fontSize = `${XCOOKIE.read_font_size}em`;
-        text.style.lineHeight = `${XCOOKIE.read_line_height}`;
-        text.style.width = `${XCOOKIE.read_width}%`;
-      }
     }
     fixUserSelect(textContainer) {
       const handle = setInterval(() => {
