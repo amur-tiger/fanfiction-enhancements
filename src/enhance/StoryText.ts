@@ -1,9 +1,6 @@
-import { getCookie } from "../utils";
 import Enhancer from "./Enhancer";
 
 import "./StoryText.css";
-
-/* global XCOOKIE,_fontastic_save */
 
 export default class StoryText implements Enhancer {
   public async enhance(): Promise<any> {
@@ -13,23 +10,6 @@ export default class StoryText implements Enhancer {
     }
 
     this.fixUserSelect(textContainer);
-
-    if (!getCookie("xcookie2")) {
-      /* eslint-disable camelcase */
-      XCOOKIE.read_font = "Open Sans";
-      XCOOKIE.read_font_size = 1.2;
-      XCOOKIE.read_line_height = 2;
-      XCOOKIE.read_width = 75;
-      /* eslint-enable camelcase */
-
-      _fontastic_save();
-
-      const text = textContainer.firstElementChild as HTMLElement;
-      text.style.fontFamily = XCOOKIE.read_font;
-      text.style.fontSize = `${XCOOKIE.read_font_size}em`;
-      text.style.lineHeight = `${XCOOKIE.read_line_height}`;
-      text.style.width = `${XCOOKIE.read_width}%`;
-    }
   }
 
   private fixUserSelect(textContainer: HTMLElement) {

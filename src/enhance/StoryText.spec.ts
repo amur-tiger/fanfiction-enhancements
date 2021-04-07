@@ -1,4 +1,4 @@
-import { setCookie, timeout } from "../utils";
+import { timeout } from "../utils";
 import StoryText from "./StoryText";
 
 describe("Story Text", () => {
@@ -20,28 +20,5 @@ describe("Story Text", () => {
 
     await timeout(350);
     expect(fragment.style.userSelect).toBe("inherit");
-  });
-
-  it("should set a better default style", async () => {
-    document.body.innerHTML = `<div id="storytextp"><div id="storytext"></div></div>`;
-    const fragment = document.body.firstElementChild as HTMLDivElement;
-
-    const storyText = new StoryText();
-    await storyText.enhance();
-
-    expect((fragment.firstElementChild as HTMLElement).style.fontSize).toBe("1.2em");
-    expect(+(fragment.firstElementChild as HTMLElement).style.lineHeight).toBe(2);
-  });
-
-  it("should not set styles if styles were modified", async () => {
-    setCookie("xcookie2", "dummy");
-    document.body.innerHTML = `<div id="storytextp"><div id="storytext"></div></div>`;
-    const fragment = document.body.firstElementChild as HTMLDivElement;
-
-    const storyText = new StoryText();
-    await storyText.enhance();
-
-    expect((fragment.firstElementChild as HTMLElement).style.fontSize).toBe("");
-    expect((fragment.firstElementChild as HTMLElement).style.lineHeight).toBe("");
   });
 });
