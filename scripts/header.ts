@@ -12,21 +12,18 @@ const header = `// ==UserScript==
 // @version      ${version}
 // @description  ${pkg.description}
 // @author       ${pkg.author}
-// @copyright    2018, ${pkg.author}
+// @copyright    2018-${new Date().getFullYear()}, ${pkg.author}
 // @license      MIT, ${pkg.homepage}/blob/master/LICENSE
 // @homepageURL  ${pkg.homepage}
 // @supportURL   ${pkg.bugs.url}
 // @updateURL    https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
 // @downloadURL  https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
-// @require      https://unpkg.com/ffn-parser@${pkg.dependencies["ffn-parser"].replace(
-  /^[~^]/,
-  ""
-)}/lib/index.iife.min.js
 // @match        *://www.fanfiction.net/*
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM.deleteValue
 // @grant        GM.listValues
+// @grant        GM_addStyle
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
 // @connect      self
