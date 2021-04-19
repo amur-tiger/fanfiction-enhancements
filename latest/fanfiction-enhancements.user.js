@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.10+11.d908ea3
+// @version      0.6.11+12.e5f2621
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2021, Arne 'TigeR' Linck
@@ -674,7 +674,7 @@
     if (location.pathname.indexOf("/ffe-oauth2-return") === 0) {
       return 6;
     }
-    if (location.pathname.match(/^\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/.+$/i) || location.pathname.match(/^\/[^/]+-Crossovers\//i) || location.pathname.indexOf("/community/") === 0) {
+    if (location.pathname.match(/^\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/.+$/i) || location.pathname.match(/^\/[^/]+[-_]Crossovers\//i) || location.pathname.indexOf("/community/") === 0) {
       return 7;
     }
     return 0;
