@@ -27,6 +27,48 @@ describe("Environment", () => {
       expect(getPage(location)).toBe(Page.User);
     });
 
+    it("should match story list crossovers 1", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/Harry-Potter-Crossovers/224/0/?&srt=4&r=10",
+        origin: "https://www.fanfiction.net",
+        pathname: "/Harry-Potter-Crossovers/224/0/?&srt=4&r=10",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: (undefined as unknown) as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.StoryList);
+    });
+
+    it("should match story list crossovers 2", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/Harry-Potter_Crossovers/224/0/?&srt=4&r=10&p=2",
+        origin: "https://www.fanfiction.net",
+        pathname: "/Harry-Potter_Crossovers/224/0/?&srt=4&r=10&p=2",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: (undefined as unknown) as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.StoryList);
+    });
+
     it("should recognize the alerts page", () => {
       const location: Location = {
         hash: "",

@@ -36,7 +36,7 @@ export function getPage(location: Location): Page {
 
   if (
     location.pathname.match(/^\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/.+$/i) ||
-    location.pathname.match(/^\/[^/]+-Crossovers\//i) ||
+    location.pathname.match(/^\/[^/]+[-_]Crossovers\//i) ||
     location.pathname.indexOf("/community/") === 0
   ) {
     return Page.StoryList;
