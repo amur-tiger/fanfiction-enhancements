@@ -31,7 +31,7 @@ export default function render<T extends ComponentProps>(
 
   if (element instanceof Element) {
     const append = (child: ChildType) => {
-      if (child == null) {
+      if (child == null || typeof child === "boolean") {
         return;
       }
 
