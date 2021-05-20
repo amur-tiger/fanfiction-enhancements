@@ -23,6 +23,7 @@ const header = `// ==UserScript==
 // @grant        GM.setValue
 // @grant        GM.deleteValue
 // @grant        GM.listValues
+// @grant        GM.xmlHttpRequest
 // @grant        GM_addStyle
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
