@@ -1,9 +1,16 @@
 import Api from "./Api";
+import { RequestManager } from "./index";
 
 describe("Api", () => {
+  let requestManager: RequestManager;
+
+  beforeEach(() => {
+    requestManager = new RequestManager();
+  });
+
   describe("Alerts", () => {
     it("should add alert", async () => {
-      global.fetch = jest.fn(async (url, opts) => {
+      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/api/ajax_subs.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -13,14 +20,14 @@ describe("Api", () => {
         return { json: async () => ({}) } as Response;
       });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       await api.addStoryAlert(1);
 
-      expect.assertions(5);
+      expect(requestManager.fetch).toHaveBeenCalled();
     });
 
     it("should remove alert", async () => {
-      global.fetch = jest.fn(async (url, opts) => {
+      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/alert/story.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -30,10 +37,10 @@ describe("Api", () => {
         return { text: async () => ({}) } as Response;
       });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       await api.removeStoryAlert(1);
 
-      expect.assertions(5);
+      expect(requestManager.fetch).toHaveBeenCalled();
     });
 
     it("should retrieve multi-page alerts list", async () => {
@@ -79,21 +86,21 @@ describe("Api", () => {
     			</table>
     		</form>`;
 
-      global.fetch = jest
-        .fn()
-        .mockImplementationOnce((url) => {
+      jest
+        .spyOn(requestManager, "fetch")
+        .mockImplementationOnce(async (url) => {
           expect(url).toBe("/alert/story.php");
-          return { text: async () => page1 };
+          return { text: async () => page1 } as Response;
         })
-        .mockImplementationOnce((url) => {
+        .mockImplementationOnce(async (url) => {
           expect(url).toBe("/alert/story.php?p=2");
-          return { text: async () => page2 };
+          return { text: async () => page2 } as Response;
         });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       const list = await api.getStoryAlerts();
 
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(requestManager.fetch).toHaveBeenCalledTimes(2);
       expect(list.length).toBe(2);
 
       const item1 = list[0];
@@ -112,7 +119,7 @@ describe("Api", () => {
 
   describe("Favorites", () => {
     it("should add favorite", async () => {
-      global.fetch = jest.fn(async (url, opts) => {
+      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/api/ajax_subs.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -122,14 +129,14 @@ describe("Api", () => {
         return { json: async () => ({}) } as Response;
       });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       await api.addStoryFavorite(1);
 
-      expect.assertions(5);
+      expect(requestManager.fetch).toHaveBeenCalled();
     });
 
     it("should remove favorite", async () => {
-      global.fetch = jest.fn(async (url, opts) => {
+      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/favorites/story.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -139,10 +146,10 @@ describe("Api", () => {
         return { text: async () => ({}) } as Response;
       });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       await api.removeStoryFavorite(1);
 
-      expect.assertions(5);
+      expect(requestManager.fetch).toHaveBeenCalled();
     });
 
     it("should retrieve multi-page favorites list", async () => {
@@ -188,21 +195,21 @@ describe("Api", () => {
     			</table>
     		</form>`;
 
-      global.fetch = jest
-        .fn()
-        .mockImplementationOnce((url) => {
+      jest
+        .spyOn(requestManager, "fetch")
+        .mockImplementationOnce(async (url) => {
           expect(url).toBe("/favorites/story.php");
-          return { text: async () => page1 };
+          return { text: async () => page1 } as Response;
         })
-        .mockImplementationOnce((url) => {
+        .mockImplementationOnce(async (url) => {
           expect(url).toBe("/favorites/story.php?p=2");
-          return { text: async () => page2 };
+          return { text: async () => page2 } as Response;
         });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       const list = await api.getStoryFavorites();
 
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(requestManager.fetch).toHaveBeenCalledTimes(2);
       expect(list.length).toBe(2);
 
       const item1 = list[0];
@@ -246,12 +253,12 @@ describe("Api", () => {
     			<div id="storytext">Two words.</div>
     		</div>`;
 
-      global.fetch = jest.fn(async (url) => {
+      jest.spyOn(requestManager, "fetch").mockImplementation(async (url) => {
         expect(url).toBe("/s/123");
         return { text: async () => page } as Response;
       });
 
-      const api = new Api();
+      const api = new Api(requestManager);
       const story = await api.getStoryData(123);
 
       expect(story?.id).toBe(123);
