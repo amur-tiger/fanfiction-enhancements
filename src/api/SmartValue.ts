@@ -160,7 +160,13 @@ export class SmartValueLocal<T> extends SmartValueBase<T> {
       return undefined;
     }
 
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.warn("Malformed SmartValueLocal entry with key %s deleted", this.name);
+      GM.deleteValue(this.name);
+      return undefined;
+    }
   }
 
   protected async setCached(value: T): Promise<void> {
@@ -218,7 +224,13 @@ export class SmartValueRoaming<T> extends SmartValueBase<T> {
       return undefined;
     }
 
-    return JSON.parse(data as string);
+    try {
+      return JSON.parse(data as string);
+    } catch (e) {
+      console.warn("Malformed SmartValueRoaming entry with key %s deleted", this.name);
+      GM.deleteValue(this.name);
+      return undefined;
+    }
   }
 
   protected async setCached(value: T): Promise<void> {
