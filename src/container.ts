@@ -1,8 +1,10 @@
-import { Api, ValueContainer } from "./api";
+import { Api, RequestManager, ValueContainer } from "./api";
 import { ChapterList, FollowsList, MenuBar, StoryList, StoryProfile } from "./enhance";
 import { DropBox } from "./api/DropBox";
 
 export default class Container {
+  private requestManager?: RequestManager;
+
   private api?: Api;
 
   private valueManager?: ValueContainer;
@@ -19,9 +21,17 @@ export default class Container {
 
   private dropBox?: DropBox;
 
+  public getRequestManager(): RequestManager {
+    if (!this.requestManager) {
+      this.requestManager = new RequestManager();
+    }
+
+    return this.requestManager;
+  }
+
   public getApi(): Api {
     if (!this.api) {
-      this.api = new Api();
+      this.api = new Api(this.getRequestManager());
     }
 
     return this.api;

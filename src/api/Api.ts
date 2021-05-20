@@ -1,8 +1,11 @@
 import { Follow, parseFollows, parseStory, Story as StoryData } from "ffn-parser";
 import { environment } from "../util/environment";
 import { parseGetParams } from "../utils";
+import RequestManager from "./request-manager";
 
 export default class Api {
+  public constructor(private readonly requestManager: RequestManager) {}
+
   /**
    * Retrieves all story alerts that are set on FFN for the current user.
    */
@@ -104,11 +107,7 @@ export default class Api {
   }
 
   private async get(url: string): Promise<string> {
-    // eslint-disable-next-line no-console
-    console.debug("%c[Api] %cGET %c%s", "color: gray", "color: blue", "color: inherit", url);
-
-    const response = await fetch(url);
-
+    const response = await this.requestManager.fetch(url);
     return response.text();
   }
 
@@ -143,15 +142,12 @@ export default class Api {
   }
 
   private async post(url: string, data: Record<string, string | Blob>, expect: "json" | "html"): Promise<any> {
-    // eslint-disable-next-line no-console
-    console.debug("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
-
     const formData = new FormData();
     for (const [key, value] of Object.entries(data)) {
       formData.append(key, value);
     }
 
-    const response = await fetch(url, {
+    const response = await this.requestManager.fetch(url, {
       method: "POST",
       body: formData,
       referrer: url,
