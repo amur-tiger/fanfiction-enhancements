@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.6.12+14.5f2c22d
+// @version      0.6.13+15.4d14c00
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2021, Arne 'TigeR' Linck
@@ -712,6 +712,9 @@
 
   // src/api/Api.ts
   var Api = class {
+    constructor(requestManager) {
+      this.requestManager = requestManager;
+    }
     async getStoryAlerts() {
       const fragments = await this.getMultiPage("/alert/story.php");
       const result = [];
@@ -773,8 +776,7 @@
       }, "html");
     }
     async get(url) {
-      console.debug("%c[Api] %cGET %c%s", "color: gray", "color: blue", "color: inherit", url);
-      const response = await fetch(url);
+      const response = await this.requestManager.fetch(url);
       return response.text();
     }
     async getMultiPage(url) {
@@ -800,12 +802,11 @@
       return Promise.all(result);
     }
     async post(url, data, expect) {
-      console.debug("%c[Api] %cPOST %c%s", "color: gray", "color: blue", "color: inherit", url);
       const formData = new FormData();
       for (const [key, value] of Object.entries(data)) {
         formData.append(key, value);
       }
-      const response = await fetch(url, {
+      const response = await this.requestManager.fetch(url, {
         method: "POST",
         body: formData,
         referrer: url
@@ -846,6 +847,98 @@
     }
   };
   var Chapter_default = Chapter;
+
+  // src/api/request-manager/NextEvent.ts
+  var _NextEvent = class extends Event {
+    constructor(requestId) {
+      super(_NextEvent.type);
+      this.requestId = requestId;
+    }
+  };
+  var NextEvent = _NextEvent;
+  NextEvent.type = "next";
+  var NextEvent_default = NextEvent;
+
+  // src/api/request-manager/RequestManager.ts
+  var DownloadManager = class extends EventTarget {
+    constructor() {
+      super(...arguments);
+      this.maxParallel = 4;
+      this.running = 0;
+      this.waitUntil = 0;
+      this.requestCounter = 1;
+    }
+    async toGMRequest(request) {
+      const gmRequest = {
+        method: request.method,
+        url: request.url,
+        headers: {},
+        responseType: "blob",
+        data: await request.text()
+      };
+      gmRequest.headers.Referer = request.referrer;
+      request.headers.forEach((value, key) => {
+        gmRequest.headers[key] = value;
+      });
+      return gmRequest;
+    }
+    async toResponse(gmResponse) {
+      return new Response(gmResponse.response, {
+        status: gmResponse.status,
+        statusText: gmResponse.statusText,
+        headers: gmResponse.responseHeaders.split("\n").filter((line) => line).map((line) => {
+          const colon = line.indexOf(":");
+          return [line.substr(0, colon), line.substr(colon + 1).trim()];
+        })
+      });
+    }
+    canBegin() {
+      return Date.now() >= this.waitUntil && this.running < this.maxParallel;
+    }
+    async doFetch(request) {
+      const gmRequest = await this.toGMRequest(request);
+      const gmResponse = await GM.xmlHttpRequest(gmRequest);
+      const response = await this.toResponse(gmResponse);
+      console.debug("%c%s %c%s %c%d", "color: blue", request.method, "color: inherit", request.url, "color: blue", response.status);
+      return response;
+    }
+    async fetch(input, init) {
+      const requestId = this.requestCounter;
+      this.requestCounter += 1;
+      return new Promise((resolve, reject) => {
+        const handler = async () => {
+          if (!this.canBegin()) {
+            return;
+          }
+          this.running += 1;
+          this.removeEventListener(NextEvent_default.type, handler);
+          try {
+            const response = await this.doFetch(new Request(input, init));
+            if (response.status === 429) {
+              const retryAfter = response.headers.get("Retry-After");
+              const waitSeconds = (retryAfter && !Number.isNaN(+retryAfter) && +retryAfter || 30) + 1;
+              console.warn("Rate limited! Waiting %ss.", waitSeconds);
+              this.waitUntil = Date.now() + waitSeconds;
+              this.addEventListener(NextEvent_default.type, handler);
+              setTimeout(() => {
+                this.dispatchEvent(new NextEvent_default(0));
+              }, waitSeconds * 1e3);
+            } else {
+              resolve(response);
+            }
+          } catch (err) {
+            reject(err);
+          } finally {
+            this.running -= 1;
+            this.dispatchEvent(new NextEvent_default(requestId));
+          }
+        };
+        this.addEventListener(NextEvent_default.type, handler);
+        handler();
+      });
+    }
+  };
+  var RequestManager_default = DownloadManager;
 
   // src/api/Story.ts
   var Story = class {
@@ -956,7 +1049,13 @@
       if (!data) {
         return void 0;
       }
-      return JSON.parse(data);
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.warn("Malformed SmartValueLocal entry with key %s deleted", this.name);
+        GM.deleteValue(this.name);
+        return void 0;
+      }
     }
     async setCached(value) {
       const data = JSON.stringify(value);
@@ -1001,7 +1100,13 @@
       if (!data) {
         return void 0;
       }
-      return JSON.parse(data);
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.warn("Malformed SmartValueRoaming entry with key %s deleted", this.name);
+        GM.deleteValue(this.name);
+        return void 0;
+      }
     }
     async setCached(value) {
       await GM.setValue(this.name, JSON.stringify(value));
@@ -2132,9 +2237,15 @@
 
   // src/container.ts
   var Container = class {
+    getRequestManager() {
+      if (!this.requestManager) {
+        this.requestManager = new RequestManager_default();
+      }
+      return this.requestManager;
+    }
     getApi() {
       if (!this.api) {
-        this.api = new Api_default();
+        this.api = new Api_default(this.getRequestManager());
       }
       return this.api;
     }
