@@ -31,19 +31,18 @@
     "clean": "rimraf target"
   },
   "dependencies": {
-    "ffn-parser": "^0.0.5"
+    "ffn-parser": "^0.0.6"
   },
   "devDependencies": {
     "@types/greasemonkey": "^4.0.1",
     "@types/jest": "^26.0.22",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
-    "esbuild": "^0.11.4",
+    "esbuild": "^0.12.1",
     "eslint": "^7.22.0",
     "eslint-config-airbnb-typescript": "^12.3.1",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-prettier": "^3.3.1",
     "ignore-styles": "^5.0.1",
     "jest": "^26.6.3",
     "npm-run-all": "^4.1.5",

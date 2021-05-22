@@ -87,7 +87,9 @@ export class DropBox implements Synchronizer {
 
     let hasUpdate = false;
     await Promise.all(
-      (await GM.listValues()).map(async (key) => {
+      (
+        await GM.listValues()
+      ).map(async (key) => {
         if (CacheName.isTimestampKey(key)) {
           return;
         }

@@ -11,7 +11,7 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "import", "prettier"],
+  plugins: ["@typescript-eslint", "import"],
   globals: {
     GM: "readonly",
     GM_addValueChangeListener: "readonly",
@@ -26,13 +26,6 @@ module.exports = {
       },
     ],
     "class-methods-use-this": "off",
-    "prettier/prettier": [
-      "error",
-      {},
-      {
-        usePrettierrc: true,
-      },
-    ],
     "import/extensions": ["error", "never"],
     "import/no-cycle": ["warn"], // todo remove line to make this an error
     "import/no-extraneous-dependencies": ["error", { devDependencies: ["scripts/**.ts", "**/*.spec.ts"] }],
