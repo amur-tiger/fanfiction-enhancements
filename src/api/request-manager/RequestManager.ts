@@ -48,7 +48,7 @@ export default class DownloadManager extends EventTarget {
 
   private async doFetch(request: Request): Promise<Response> {
     const gmRequest = await this.toGMRequest(request);
-    const gmResponse = ((await GM.xmlHttpRequest(gmRequest)) as unknown) as GM.Response<unknown>;
+    const gmResponse = (await GM.xmlHttpRequest(gmRequest)) as unknown as GM.Response<unknown>;
     const response = await this.toResponse(gmResponse);
 
     console.debug(

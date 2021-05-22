@@ -86,7 +86,7 @@ describe("Chapter List", () => {
     document.body.innerHTML = fragmentHTML;
     environment.currentStoryId = 1;
 
-    const valueContainer = ({ getStory: createStory } as unknown) as ValueContainer;
+    const valueContainer = { getStory: createStory } as unknown as ValueContainer;
     const chapterList = new ChapterList(valueContainer);
 
     await chapterList.enhance();
@@ -114,7 +114,7 @@ describe("Chapter List", () => {
     document.body.innerHTML = fragmentHTML;
     environment.currentStoryId = 1;
 
-    const valueContainer = ({ getStory: createStory } as unknown) as ValueContainer;
+    const valueContainer = { getStory: createStory } as unknown as ValueContainer;
     const chapterList = new ChapterList(valueContainer);
 
     await chapterList.enhance();

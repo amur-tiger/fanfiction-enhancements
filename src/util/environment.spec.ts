@@ -17,7 +17,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -38,7 +38,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -59,7 +59,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -80,7 +80,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -101,7 +101,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -122,7 +122,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -143,7 +143,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -164,7 +164,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,
@@ -185,7 +185,7 @@ describe("Environment", () => {
         port: "",
         protocol: "https:",
         search: "",
-        ancestorOrigins: (undefined as unknown) as DOMStringList,
+        ancestorOrigins: undefined as unknown as DOMStringList,
 
         assign: noOp,
         reload: noOp,

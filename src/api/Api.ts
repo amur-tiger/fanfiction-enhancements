@@ -4,44 +4,60 @@ import { parseGetParams } from "../utils";
 import RequestManager from "./request-manager";
 
 export default class Api {
+  private alerts?: Promise<Follow[]>;
+
+  private favorites?: Promise<Follow[]>;
+
   public constructor(private readonly requestManager: RequestManager) {}
 
   /**
    * Retrieves all story alerts that are set on FFN for the current user.
    */
   public async getStoryAlerts(): Promise<Follow[]> {
-    const fragments = await this.getMultiPage("/alert/story.php");
-    const result: Follow[] = [];
+    if (this.alerts == null) {
+      this.alerts = (async () => {
+        const fragments = await this.getMultiPage("/alert/story.php");
+        const result: Follow[] = [];
 
-    await Promise.all(
-      fragments.map(async (fragment) => {
-        const follows = await parseFollows(fragment);
-        if (follows) {
-          result.push(...follows);
-        }
-      })
-    );
+        await Promise.all(
+          fragments.map(async (fragment) => {
+            const follows = await parseFollows(fragment);
+            if (follows) {
+              result.push(...follows);
+            }
+          })
+        );
 
-    return result;
+        return result;
+      })();
+    }
+
+    return this.alerts;
   }
 
   /**
    * Retrieves all favorites that are set on FFN for the current user.
    */
   public async getStoryFavorites(): Promise<Follow[]> {
-    const fragments = await this.getMultiPage("/favorites/story.php");
-    const result: Follow[] = [];
+    if (this.favorites == null) {
+      this.favorites = (async () => {
+        const fragments = await this.getMultiPage("/favorites/story.php");
+        const result: Follow[] = [];
 
-    await Promise.all(
-      fragments.map(async (fragment) => {
-        const follows = await parseFollows(fragment);
-        if (follows) {
-          result.push(...follows);
-        }
-      })
-    );
+        await Promise.all(
+          fragments.map(async (fragment) => {
+            const follows = await parseFollows(fragment);
+            if (follows) {
+              result.push(...follows);
+            }
+          })
+        );
 
-    return result;
+        return result;
+      })();
+    }
+
+    return this.favorites;
   }
 
   public async getStoryData(id: number): Promise<StoryData | undefined> {
