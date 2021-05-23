@@ -7,7 +7,7 @@ export default class Chapter {
 
   public readonly id: number;
 
-  public readonly name: string;
+  public readonly title: string;
 
   public readonly words: SmartValue<number>;
 
@@ -16,7 +16,7 @@ export default class Chapter {
   constructor(storyId: number, data: ChapterData, valueManager: ValueContainer) {
     this.storyId = storyId;
     this.id = data.id;
-    this.name = data.title;
+    this.title = data.title;
 
     this.words = valueManager.getWordCountValue(storyId, data.id);
     this.read = valueManager.getChapterReadValue(storyId, data.id);

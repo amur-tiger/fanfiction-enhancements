@@ -38,13 +38,13 @@ export default function StoryCard({ story }: StoryCardProps): Element {
 
         {story.characters &&
           story.characters.length > 0 &&
-          story.characters.map((character) =>
-            typeof character === "string" ? (
-              <span class="ffe-sc-tag ffe-sc-tag-character">{character}</span>
+          story.characters.map((pairing) =>
+            pairing.length === 1 ? (
+              <span class="ffe-sc-tag ffe-sc-tag-character">{pairing}</span>
             ) : (
               <span class="ffe-sc-tag ffe-sc-tag-ship">
-                {character.map((shipCharacter) => (
-                  <span class="ffe-sc-tag-character">{shipCharacter}</span>
+                {pairing.map((character) => (
+                  <span class="ffe-sc-tag-character">{character}</span>
                 ))}
               </span>
             )

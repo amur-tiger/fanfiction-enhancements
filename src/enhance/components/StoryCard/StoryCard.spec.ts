@@ -104,7 +104,7 @@ describe("StoryCard Component", () => {
       favorites: 1,
       language: "Elvish",
       genre: ["Adventure", "Fantasy"],
-      characters: [["Adam", "Eva"], "Steve"],
+      characters: [["Adam", "Eva"], ["Steve"]],
       reviews: 11,
     });
 

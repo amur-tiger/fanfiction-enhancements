@@ -62,7 +62,7 @@ describe("Chapter List", () => {
     return {
       storyId: 0,
       id,
-      name,
+      title: name,
       read: r,
       words: w,
     };
