@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.7.0+18.59fb9bc
+// @version      0.7.1+19.5ff8d8d
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2021, Arne 'TigeR' Linck
@@ -20,6 +20,7 @@
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
 // @connect      self
+// @connect      fanfiction.net
 // ==/UserScript==
 
 (() => {
