@@ -51,7 +51,7 @@ async function main() {
     await saveListSettingsEnhancer.enhance();
   }
 
-  if (environment.currentPageType === Page.UniverseList) {
+  if (environment.currentPageType === Page.UniverseList || environment.currentPageType === Page.CommunityList) {
     const saveListSettingsEnhancer = container.getSaveListSettings();
     await saveListSettingsEnhancer.enhance();
   }

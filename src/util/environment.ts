@@ -8,6 +8,7 @@ export const enum Page {
   OAuth2,
   StoryList,
   UniverseList,
+  CommunityList,
 }
 
 export function getPage(location: Location): Page {
@@ -48,6 +49,12 @@ export function getPage(location: Location): Page {
     location.pathname.match(/^\/crossovers\/(.*?)\/(\d+)\/?$/i)
   ) {
     return Page.UniverseList;
+  }
+
+  if (
+    location.pathname.match(/^\/communities\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv|general)\/([\w\d]+)/i)
+  ) {
+    return Page.CommunityList;
   }
 
   return Page.Other;
