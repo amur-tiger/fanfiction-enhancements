@@ -1,14 +1,17 @@
 import { parseStoryList } from "ffn-parser";
 import Enhancer from "./Enhancer";
-import { Story, ValueContainer } from "../api";
+import { RequestManager, Story, ValueContainer } from "../api";
 import { StoryCard } from "./components";
 
 import "./StoryList.css";
 
 export default class StoryList implements Enhancer {
-  public constructor(private readonly valueContainer: ValueContainer) {}
+  public constructor(
+    private readonly requestManager: RequestManager,
+    private readonly valueContainer: ValueContainer
+  ) {}
 
-  public async enhance(): Promise<any> {
+  public async enhance(): Promise<void> {
     const list = await parseStoryList(document);
     if (!list) {
       return;
@@ -36,7 +39,7 @@ export default class StoryList implements Enhancer {
         },
         this.valueContainer
       );
-      const card = StoryCard({ story });
+      const card = StoryCard({ requestManager: this.requestManager, story });
       item.appendChild(card);
 
       deferChapterList.push([story, item]);

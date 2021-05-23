@@ -22,6 +22,10 @@
 	float: right;
 }
 
+.ffe-sc-mark > * {
+	margin-right: 4px;
+}
+
 .ffe-sc-follow:hover,
 .ffe-sc-follow.ffe-active {
 	color: #60cf23;

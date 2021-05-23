@@ -44,7 +44,7 @@ describe("ChapterList Component", () => {
     return {
       storyId: 0,
       id: chapterId,
-      name: `Chapter ${chapterId}`,
+      title: `Chapter ${chapterId}`,
       read: r,
       words: w,
     };

@@ -31,7 +31,8 @@
     "clean": "rimraf target"
   },
   "dependencies": {
-    "ffn-parser": "^0.0.6"
+    "ffn-parser": "^0.0.6",
+    "jszip": "^3.6.0"
   },
   "devDependencies": {
     "@types/greasemonkey": "^4.0.1",

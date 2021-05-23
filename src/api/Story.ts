@@ -30,13 +30,13 @@ export default class Story {
 
   public readonly updated: Date | undefined;
 
-  public readonly rating: string;
+  public readonly rating: StoryData["rating"];
 
   public readonly words: number;
 
-  public readonly characters: (string | string[])[];
+  public readonly characters: string[][];
 
-  public readonly status: string;
+  public readonly status: StoryData["status"];
 
   public readonly universes: string[];
 

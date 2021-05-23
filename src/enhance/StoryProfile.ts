@@ -1,14 +1,14 @@
-import { environment } from "../util/environment";
+import { environment } from "../util";
 import Enhancer from "./Enhancer";
 import { StoryCard } from "./components";
-import { ValueContainer } from "../api";
+import { RequestManager, ValueContainer } from "../api";
 
 import "./StoryProfile.css";
 
 export default class StoryProfile implements Enhancer {
-  constructor(private readonly valueContainer: ValueContainer) {}
+  constructor(private readonly requestManager: RequestManager, private readonly valueContainer: ValueContainer) {}
 
-  public async enhance(): Promise<any> {
+  public async enhance(): Promise<void> {
     const profile = document.getElementById("profile_top");
     if (!profile || !environment.currentStoryId) {
       return;
@@ -19,7 +19,7 @@ export default class StoryProfile implements Enhancer {
       return;
     }
 
-    const card = StoryCard({ story });
+    const card = StoryCard({ requestManager: this.requestManager, story });
 
     // profile.parentElement.replaceChild(card, profile);
     profile.parentElement?.insertBefore(card, profile);
