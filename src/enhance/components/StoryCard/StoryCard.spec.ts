@@ -1,4 +1,4 @@
-import { Story } from "../../../api";
+import { RequestManager, Story } from "../../../api";
 import StoryCard from "./StoryCard";
 
 describe("StoryCard Component", () => {
@@ -14,10 +14,16 @@ describe("StoryCard Component", () => {
     } as Story;
   }
 
+  let requestManager: RequestManager;
+  beforeEach(() => {
+    requestManager = new RequestManager();
+    jest.spyOn(requestManager, "fetch").mockRejectedValue(new Error("not implemented"));
+  });
+
   it("should create a div element", () => {
     const story = createStory();
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     expect(element.tagName).toBe("DIV");
   });
@@ -25,7 +31,7 @@ describe("StoryCard Component", () => {
   it("should insert a rating", () => {
     const story = createStory();
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     expect(element.querySelector(".ffe-rating")).toBeDefined();
   });
@@ -36,7 +42,7 @@ describe("StoryCard Component", () => {
       title: "the title",
     });
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
     expect(title.tagName).toBe("A");
@@ -52,7 +58,7 @@ describe("StoryCard Component", () => {
       },
     });
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
     expect(author.tagName).toBe("A");
@@ -63,7 +69,7 @@ describe("StoryCard Component", () => {
   it("should insert buttons", () => {
     const story = createStory();
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
     const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
@@ -78,7 +84,7 @@ describe("StoryCard Component", () => {
       imageUrl: "/src/img.jpg",
     });
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const image = element.querySelector(".ffe-sc-image img") as HTMLImageElement;
     expect(image.tagName).toBe("IMG");
@@ -90,7 +96,7 @@ describe("StoryCard Component", () => {
       description: "this is a description",
     });
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const description = element.querySelector(".ffe-sc-description");
     expect(description?.tagName).toBe("DIV");
@@ -104,11 +110,11 @@ describe("StoryCard Component", () => {
       favorites: 1,
       language: "Elvish",
       genre: ["Adventure", "Fantasy"],
-      characters: [["Adam", "Eva"], "Steve"],
+      characters: [["Adam", "Eva"], ["Steve"]],
       reviews: 11,
     });
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
     expect(tags.length).toBe(8);
@@ -148,7 +154,7 @@ describe("StoryCard Component", () => {
       updated: new Date(2012, 11, 24),
     });
 
-    const element = StoryCard({ story });
+    const element = StoryCard({ requestManager, story });
 
     const footer = element.querySelector(".ffe-sc-footer");
     expect(footer?.childElementCount).toBe(4);

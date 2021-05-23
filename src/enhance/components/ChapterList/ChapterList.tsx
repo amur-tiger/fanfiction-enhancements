@@ -124,7 +124,7 @@ export default function ChapterList({ story }: ChapterListProps): HTMLElement {
             <li class="ffe-cl-chapter">
               <CheckBox bind={chapter.read} />
               <span class="ffe-cl-chapter-title">
-                <a href={`/s/${story.id}/${chapter.id}`}>{chapter.name}</a>
+                <a href={`/s/${story.id}/${chapter.id}`}>{chapter.title}</a>
               </span>
               <span class="ffe-cl-words">
                 <b>{chapter.words}</b> words

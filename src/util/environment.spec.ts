@@ -69,6 +69,111 @@ describe("Environment", () => {
       expect(getPage(location)).toBe(Page.StoryList);
     });
 
+    it("should recognize universe listing", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/book/",
+        origin: "https://www.fanfiction.net",
+        pathname: "/book/",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: undefined as unknown as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.UniverseList);
+    });
+
+    it("should recognize crossover universe listing 1", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/crossovers/anime/",
+        origin: "https://www.fanfiction.net",
+        pathname: "/crossovers/anime/",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: undefined as unknown as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.UniverseList);
+    });
+
+    it("should recognize crossover universe listing 2", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/crossovers/Naruto/1402/",
+        origin: "https://www.fanfiction.net",
+        pathname: "/crossovers/Naruto/1402/",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: undefined as unknown as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.UniverseList);
+    });
+
+    it("should recognize community listing", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/communities/general/0/",
+        origin: "https://www.fanfiction.net",
+        pathname: "/communities/general/0/",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: undefined as unknown as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.CommunityList);
+    });
+
+    it("should ignore community category listing", () => {
+      const location: Location = {
+        hash: "",
+        host: "www.fanfiction.net",
+        hostname: "www.fanfiction.net",
+        href: "https://www.fanfiction.net/communities/misc/",
+        origin: "https://www.fanfiction.net",
+        pathname: "/communities/misc/",
+        port: "",
+        protocol: "https:",
+        search: "",
+        ancestorOrigins: undefined as unknown as DOMStringList,
+
+        assign: noOp,
+        reload: noOp,
+        replace: noOp,
+      };
+
+      expect(getPage(location)).toBe(Page.Other);
+    });
+
     it("should recognize the alerts page", () => {
       const location: Location = {
         hash: "",
