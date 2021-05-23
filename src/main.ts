@@ -46,6 +46,14 @@ async function main() {
   if (environment.currentPageType === Page.StoryList) {
     const storyListEnhancer = container.getStoryListEnhancer();
     await storyListEnhancer.enhance();
+
+    const saveListSettingsEnhancer = container.getSaveListSettings();
+    await saveListSettingsEnhancer.enhance();
+  }
+
+  if (environment.currentPageType === Page.UniverseList || environment.currentPageType === Page.CommunityList) {
+    const saveListSettingsEnhancer = container.getSaveListSettings();
+    await saveListSettingsEnhancer.enhance();
   }
 
   if (environment.currentPageType === Page.Story) {

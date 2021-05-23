@@ -1,5 +1,5 @@
 import { Api, RequestManager, ValueContainer } from "./api";
-import { ChapterList, FollowsList, MenuBar, StoryList, StoryProfile } from "./enhance";
+import { ChapterList, FollowsList, MenuBar, SaveListSettings, StoryList, StoryProfile } from "./enhance";
 import { DropBox } from "./api/DropBox";
 
 export default class Container {
@@ -18,6 +18,8 @@ export default class Container {
   private storyProfile?: StoryProfile;
 
   private chapterList?: ChapterList;
+
+  private saveListSettings?: SaveListSettings;
 
   private dropBox?: DropBox;
 
@@ -83,6 +85,14 @@ export default class Container {
     }
 
     return this.chapterList;
+  }
+
+  public getSaveListSettings(): SaveListSettings {
+    if (!this.saveListSettings) {
+      this.saveListSettings = new SaveListSettings();
+    }
+
+    return this.saveListSettings;
   }
 
   public getDropBox(): DropBox {
