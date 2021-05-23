@@ -28,6 +28,7 @@ const header = `// ==UserScript==
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
 // @connect      self
+// @connect      fanfiction.net
 // ==/UserScript==
 `;
 
