@@ -1,15 +1,43 @@
 import render from "../../../jsx/render";
 import Button from "../Button";
 import Rating from "../Rating/Rating";
-import { Story } from "../../../api";
+import { RequestManager, Story } from "../../../api";
+import { useValueRef } from "../../../jsx";
+import { Epub } from "../../../util";
 
 import "./StoryCard.css";
 
 export interface StoryCardProps {
+  requestManager: RequestManager;
   story: Story;
 }
 
-export default function StoryCard({ story }: StoryCardProps): Element {
+export default function StoryCard({ requestManager, story }: StoryCardProps): Element {
+  const buttonRef = useValueRef<HTMLElement>();
+  const linkRef = useValueRef<HTMLAnchorElement>();
+  let isDownloading = false;
+
+  const handleDownloadClick = async () => {
+    if (isDownloading || !linkRef.current || !("chapters" in story)) {
+      return;
+    }
+
+    try {
+      isDownloading = true;
+      buttonRef.current?.classList.add("disabled");
+
+      const epub = new Epub(requestManager, story);
+      const blob = await epub.create();
+
+      linkRef.current.href = URL.createObjectURL(blob);
+      linkRef.current.download = epub.getFilename();
+      linkRef.current.click();
+    } finally {
+      isDownloading = false;
+      buttonRef.current?.classList.remove("disabled");
+    }
+  };
+
   return (
     <div class="ffe-sc">
       <div class="ffe-sc-header">
@@ -22,9 +50,16 @@ export default function StoryCard({ story }: StoryCardProps): Element {
           {story.author.name}
         </a>
 
-        <div class="ffe-sc-mark btn-group">
-          <Button class="ffe-sc-follow icon-bookmark-2" bind={story.alert} />
-          <Button class="ffe-sc-favorite icon-heart" bind={story.favorite} />
+        <div class="ffe-sc-mark">
+          <Button onClick={handleDownloadClick} ref={buttonRef}>
+            <span class="icon-arrow-down" />
+          </Button>
+          <a style="display: none" ref={linkRef} />
+
+          <div class="btn-group">
+            <Button class="ffe-sc-follow icon-bookmark-2" bind={story.alert} />
+            <Button class="ffe-sc-favorite icon-heart" bind={story.favorite} />
+          </div>
         </div>
       </div>
 

@@ -1,14 +1,17 @@
 import { parseFollows } from "ffn-parser";
 import { ChapterList, StoryCard } from "./components";
 import Enhancer from "./Enhancer";
-import { ValueContainer } from "../api";
+import { RequestManager, ValueContainer } from "../api";
 
 import "./FollowsList.css";
 
 export default class FollowsList implements Enhancer {
-  public constructor(private readonly valueContainer: ValueContainer) {}
+  public constructor(
+    private readonly requestManager: RequestManager,
+    private readonly valueContainer: ValueContainer
+  ) {}
 
-  public async enhance(): Promise<any> {
+  public async enhance(): Promise<void> {
     const list = await parseFollows(document);
     if (!list) {
       return;
@@ -33,7 +36,7 @@ export default class FollowsList implements Enhancer {
       // eslint-disable-next-line no-await-in-loop
       const story = await this.valueContainer.getStory(followedStory.id);
       if (story) {
-        const card = StoryCard({ story });
+        const card = StoryCard({ requestManager: this.requestManager, story });
         item.appendChild(card);
 
         const chapterList = ChapterList({ story });
