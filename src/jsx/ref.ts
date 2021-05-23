@@ -1,4 +1,4 @@
-interface Reference<T> {
+export interface Reference<T> {
   callback: (value: T) => void;
 }
 

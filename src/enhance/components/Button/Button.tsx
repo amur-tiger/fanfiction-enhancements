@@ -1,5 +1,6 @@
 import render from "../../../jsx/render";
 import { SmartValue } from "../../../api/SmartValue";
+import { Reference } from "../../../jsx";
 
 export interface ButtonProps {
   class?: string;
@@ -7,9 +8,10 @@ export interface ButtonProps {
   active?: boolean;
   onClick?: EventListenerOrEventListenerObject;
   bind?: SmartValue<boolean>;
+  ref?: Reference<HTMLElement>;
 }
 
-export default function Button({ class: className, text, active, onClick, bind }: ButtonProps): Element {
+export default function Button({ class: className, text, active, onClick, bind, ref }: ButtonProps): Element {
   const element: HTMLElement = <span class={`btn ${className}`}>{text}</span>;
 
   if (onClick) {
@@ -26,6 +28,10 @@ export default function Button({ class: className, text, active, onClick, bind }
     element.addEventListener("click", async () => {
       await bind?.set(!element.classList.contains("ffe-active"));
     });
+  }
+
+  if (ref) {
+    ref.callback(element);
   }
 
   return element;
