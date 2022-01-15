@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.7.1+19.5ff8d8d
+// @version      0.7.2+20.05cf6b1
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
-// @copyright    2018-2021, Arne 'TigeR' Linck
+// @copyright    2018-2022, Arne 'TigeR' Linck
 // @license      MIT, https://github.com/amur-tiger/fanfiction-enhancements/blob/master/LICENSE
 // @homepageURL  https://github.com/amur-tiger/fanfiction-enhancements
 // @supportURL   https://github.com/amur-tiger/fanfiction-enhancements/issues
