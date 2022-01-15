@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## 0.7.2
+
+* Updated dependencies
+
 ## 0.7.1
 
 * Fixed: Missing permission for downloading chapters for epub.
