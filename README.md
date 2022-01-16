@@ -41,7 +41,7 @@ This userscript overhauls FanFiction.net for a better reading experience. It fea
 
 ## Installation
 
-To execute this userscript, a userscript runner like [Tampermonkey](https://www.tampermonkey.net/) is needed.
+To execute this userscript, a userscript runner like [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/) is needed. Note that Greasemonkey may not work correctly as it hasn't been updated and does not implement all necessary functions.
 
 When you have installed the addon, use [this link](https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js) to open the userscript. The addon should recognize the script as a userscript and offer to install it for you. If a normal download window appears, then the userscript runner might not be installed correctly.
 
