@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.7.2+20.05cf6b1
+// @version      0.7.3+21.0d14cf0
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2022, Arne 'TigeR' Linck
@@ -3918,6 +3918,45 @@
     }
   };
 
+  // node_modules/clsx/dist/clsx.m.js
+  function toVal(mix) {
+    var k, y, str = "";
+    if (typeof mix === "string" || typeof mix === "number") {
+      str += mix;
+    } else if (typeof mix === "object") {
+      if (Array.isArray(mix)) {
+        for (k = 0; k < mix.length; k++) {
+          if (mix[k]) {
+            if (y = toVal(mix[k])) {
+              str && (str += " ");
+              str += y;
+            }
+          }
+        }
+      } else {
+        for (k in mix) {
+          if (mix[k]) {
+            str && (str += " ");
+            str += k;
+          }
+        }
+      }
+    }
+    return str;
+  }
+  function clsx_m_default() {
+    var i = 0, tmp, x, str = "";
+    while (i < arguments.length) {
+      if (tmp = arguments[i++]) {
+        if (x = toVal(tmp)) {
+          str && (str += " ");
+          str += x;
+        }
+      }
+    }
+    return str;
+  }
+
   // src/jsx/ref.ts
   function isReference(ref) {
     return typeof (ref == null ? void 0 : ref.callback) === "function";
@@ -3974,11 +4013,31 @@
     return element;
   }
 
+  // gm-css:src/enhance/components/Button/Button.css
+  GM_addStyle(`.btn > svg {
+  height: 19px;
+  vertical-align: text-bottom;
+  margin-top: -2px;
+  margin-bottom: -2px;
+  fill: currentColor;
+}
+`);
+
   // src/enhance/components/Button/Button.tsx
-  function Button({ class: className, text, active, onClick, bind, ref }) {
+  function Button({
+    class: className,
+    title: title2,
+    active,
+    onClick,
+    bind,
+    ref,
+    children
+  }) {
     const element = /* @__PURE__ */ render("span", {
-      class: `btn ${className}`
-    }, text);
+      role: "button",
+      class: clsx_m_default("btn", className),
+      title: title2
+    }, children);
     if (onClick) {
       element.addEventListener("click", onClick);
     }
@@ -4455,6 +4514,19 @@ ${content}
     }
   };
 
+  // svg:src/assets/bell.svg
+  var bell_default = (() => {
+    const parser = new DOMParser();
+    return () => {
+      const doc = parser.parseFromString(`<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+</svg>
+`, "image/svg+xml");
+      return doc.documentElement;
+    };
+  })();
+
   // gm-css:src/enhance/components/StoryCard/StoryCard.css
   GM_addStyle(`.ffe-sc-header {
 	border-bottom: 1px solid #ddd;
@@ -4628,6 +4700,7 @@ ${content}
       class: "ffe-sc-mark"
     }, /* @__PURE__ */ render(Button, {
       onClick: handleDownloadClick,
+      title: "Download as ePub",
       ref: buttonRef
     }, /* @__PURE__ */ render("span", {
       class: "icon-arrow-down"
@@ -4637,11 +4710,13 @@ ${content}
     }), /* @__PURE__ */ render("div", {
       class: "btn-group"
     }, /* @__PURE__ */ render(Button, {
-      class: "ffe-sc-follow icon-bookmark-2",
-      bind: story.alert
-    }), /* @__PURE__ */ render(Button, {
+      class: "ffe-sc-follow",
+      bind: story.alert,
+      title: "Toggle Story Alert"
+    }, /* @__PURE__ */ render(bell_default, null)), /* @__PURE__ */ render(Button, {
       class: "ffe-sc-favorite icon-heart",
-      bind: story.favorite
+      bind: story.favorite,
+      title: "Toggle Favorite"
     })))), /* @__PURE__ */ render("div", {
       class: "ffe-sc-tags"
     }, story.language && /* @__PURE__ */ render("span", {
@@ -4779,44 +4854,65 @@ ${content}
     }
   };
 
+  // svg:src/assets/dropbox.svg
+  var dropbox_default = (() => {
+    const parser = new DOMParser();
+    return () => {
+      const doc = parser.parseFromString(`<?xml version="1.0" encoding="UTF-8" ?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.4 39.5" width="16" height="16">
+    <style>.st0{fill:#fff}</style>
+    <path class="st0"
+          d="M10.6 1.7L0 8.5l10.6 6.7 10.6-6.7zm21.2 0L21.2 8.5l10.6 6.7 10.6-6.7zM0 22l10.6 6.8L21.2 22l-10.6-6.8zm31.8-6.8L21.2 22l10.6 6.8L42.4 22zM10.6 31l10.6 6.8L31.8 31l-10.6-6.7z"/>
+</svg>
+`, "image/svg+xml");
+      return doc.documentElement;
+    };
+  })();
+
   // gm-css:src/enhance/MenuBar.css
   GM_addStyle(`.ffe-mb-separator:before {
-	content: " | ";
+  content: " | ";
 }
 
 .ffe-mb-checked:before {
-	background: green;
-	border-radius: 50%;
-	bottom: 2px;
-	color: #fff;
-	content: "\u2713";
-	font-size: 9px;
-	height: 12px;
-	line-height: 12px;
-	position: absolute;
-	right: -2px;
-	width: 12px;
+  background: green;
+  border-radius: 50%;
+  bottom: 2px;
+  color: #fff;
+  content: "\u2713";
+  font-size: 9px;
+  height: 12px;
+  line-height: 12px;
+  position: absolute;
+  right: -2px;
+  width: 12px;
 }
 
 .ffe-mb-icon {
-	display: inline-block;
-	line-height: 2em;
-	margin-top: -.5em;
-	text-align: center;
-	width: 2em;
+  display: inline-block;
+  line-height: 2em;
+  margin-top: -.5em;
+  text-align: center;
+  width: 2em;
 }
 
 .ffe-mb-icon:hover {
-	border-bottom: 0;
-	color: orange !important;
+  border-bottom: 0;
+  color: orange !important;
+}
+
+.ffe-mb-bell svg {
+  fill: currentColor;
+  height: 19px;
+  transform: translateY(4px);
 }
 
 .ffe-mb-dropbox {
-	transform: translateY(3px);
+  transform: translateY(3px);
 }
 
 .ffe-mb-dropbox:hover .st0 {
-	fill: orange;
+  fill: orange;
 }
 `);
 
@@ -4836,9 +4932,10 @@ ${content}
         return;
       }
       const toAlerts = document.createElement("a");
-      toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "icon-bookmark-2");
+      toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "ffe-mb-bell");
       toAlerts.title = "Go to Story Alerts";
       toAlerts.href = "/alert/story.php";
+      toAlerts.appendChild(bell_default());
       const toFavorites = document.createElement("a");
       toFavorites.classList.add("ffe-mb-icon", "ffe-mb-favorites", "icon-heart");
       toFavorites.title = "Go to Story Favorites";
@@ -4847,7 +4944,7 @@ ${content}
       toDropBox.classList.add("ffe-mb-icon", "ffe-mb-dropbox");
       toDropBox.title = "Connect to DropBox";
       toDropBox.href = "#";
-      toDropBox.innerHTML = '<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.4 39.5" width="16" height="16"><style>.st0{fill:#fff}</style><path class="st0" d="M10.6 1.7L0 8.5l10.6 6.7 10.6-6.7zm21.2 0L21.2 8.5l10.6 6.7 10.6-6.7zM0 22l10.6 6.8L21.2 22l-10.6-6.8zm31.8-6.8L21.2 22l10.6 6.8L42.4 22zM10.6 31l10.6 6.8L31.8 31l-10.6-6.7z"/></svg>';
+      toDropBox.appendChild(dropbox_default());
       if (await this.dropBox.isAuthorized()) {
         toDropBox.classList.add("ffe-mb-checked");
       }
@@ -5107,12 +5204,55 @@ ${content}
 
   // src/enhance/StoryText.ts
   var StoryText = class {
+    constructor() {
+      this.GOOGLE_FONTS_WHITELIST = ["Open Sans", "PT Sans", "Roboto", "Ubuntu"];
+    }
     async enhance() {
+      this.fixFontLink();
       const textContainer = document.getElementById("storytextp");
       if (!textContainer) {
         throw new Error("Could not find text container element.");
       }
       this.fixUserSelect(textContainer);
+    }
+    fixFontLink() {
+      const replace = (link) => {
+        var _a;
+        if (!link) {
+          const links = Array.from(document.head.querySelectorAll("link"));
+          link = links.find((l) => l.href.includes("fonts.googleapis.com"));
+        }
+        if (!link) {
+          return false;
+        }
+        const href = new URL(link.href);
+        const search = new URLSearchParams(href.search);
+        const families = (_a = search.get("family")) == null ? void 0 : _a.split("|").filter((f) => this.GOOGLE_FONTS_WHITELIST.includes(f));
+        if (families) {
+          search.set("family", families.join("|"));
+        }
+        href.search = search.toString();
+        link.href = href.toString();
+        return true;
+      };
+      if (replace()) {
+        return;
+      }
+      const observer = new MutationObserver((list) => {
+        for (const record of list) {
+          if (record.type !== "childList") {
+            continue;
+          }
+          for (const node of Array.from(record.addedNodes)) {
+            if (!(node instanceof Element) || node.tagName !== "LINK") {
+              continue;
+            }
+            replace();
+            observer.disconnect();
+          }
+        }
+      });
+      observer.observe(document.head, { childList: true });
     }
     fixUserSelect(textContainer) {
       const handle = setInterval(() => {
