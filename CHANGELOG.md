@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## unreleased
+
+* Fixed: Selected fonts not loading ([#44](https://github.com/amur-tiger/fanfiction-enhancements/issues/44))
+
 ## 0.7.2
 
 * Updated dependencies
