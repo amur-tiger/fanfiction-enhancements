@@ -3,6 +3,7 @@
 ## unreleased
 
 * Fixed: Selected fonts not loading ([#44](https://github.com/amur-tiger/fanfiction-enhancements/issues/44))
+* New Feature: Tooltips for Download/Follow/Favorite buttons ([#58](https://github.com/amur-tiger/fanfiction-enhancements/issues/58))
 
 ## 0.7.2
 
