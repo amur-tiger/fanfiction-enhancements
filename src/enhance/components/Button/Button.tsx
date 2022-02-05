@@ -1,18 +1,34 @@
+import clsx from "clsx";
 import render from "../../../jsx/render";
+import { ChildType, Reference } from "../../../jsx";
 import { SmartValue } from "../../../api/SmartValue";
-import { Reference } from "../../../jsx";
+
+import "./Button.css";
 
 export interface ButtonProps {
   class?: string;
-  text?: string;
+  title?: string;
   active?: boolean;
   onClick?: EventListenerOrEventListenerObject;
   bind?: SmartValue<boolean>;
   ref?: Reference<HTMLElement>;
+  children?: ChildType;
 }
 
-export default function Button({ class: className, text, active, onClick, bind, ref }: ButtonProps): Element {
-  const element: HTMLElement = <span class={`btn ${className}`}>{text}</span>;
+export default function Button({
+  class: className,
+  title,
+  active,
+  onClick,
+  bind,
+  ref,
+  children,
+}: ButtonProps): Element {
+  const element: HTMLElement = (
+    <span role="button" class={clsx("btn", className)} title={title}>
+      {children}
+    </span>
+  );
 
   if (onClick) {
     element.addEventListener("click", onClick);

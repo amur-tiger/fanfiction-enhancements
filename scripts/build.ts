@@ -27,6 +27,36 @@ const gmCssLoader = (): Plugin => ({
   },
 });
 
+const svgLoader = (): Plugin => ({
+  name: "svgLoader",
+  setup(b) {
+    b.onResolve({ filter: /\.svg$/ }, (args) => {
+      if (args.resolveDir === "") return undefined;
+      return {
+        path: path.isAbsolute(args.path)
+          ? args.path
+          : path.relative(process.cwd(), path.join(args.resolveDir, args.path)),
+        namespace: "svg",
+      };
+    });
+
+    b.onLoad({ filter: /.*/, namespace: "svg" }, async (args) => {
+      const content = await fs.readFile(args.path);
+      return {
+        contents: `export default (() => {
+          const parser = new DOMParser();
+          return () => {
+            const doc = parser.parseFromString(\`${content.toString().replace(/`/g, "\\`")}\`, "image/svg+xml");
+            return doc.documentElement;
+          };
+        })();
+        `,
+        loader: "js",
+      };
+    });
+  },
+});
+
 fs.mkdir("target/latest", { recursive: true })
   .then(() =>
     Promise.all([
@@ -43,7 +73,7 @@ fs.mkdir("target/latest", { recursive: true })
         banner: {
           js: header,
         },
-        plugins: [gmCssLoader()],
+        plugins: [gmCssLoader(), svgLoader()],
         watch: process.argv.some((a) => a === "--watch") && {
           onRebuild(error, result) {
             if (!error) {
