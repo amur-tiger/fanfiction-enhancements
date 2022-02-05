@@ -1,6 +1,6 @@
 {
   "name": "fanfiction-enhancements",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "author": "Arne 'TigeR' Linck",
   "description": "FanFiction.net Enhancements",
   "license": "MIT",
@@ -31,6 +31,7 @@
     "clean": "rimraf target"
   },
   "dependencies": {
+    "clsx": "^1.1.1",
     "ffn-parser": "^0.0.6",
     "jszip": "^3.7.1"
   },
@@ -60,7 +61,8 @@
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
-      "^.+\\.(css|less)$": "<rootDir>/config/css-stub.ts"
+      "^.+\\.(css|less)$": "<rootDir>/config/css-stub.ts",
+      "^.+\\.(svg)$": "<rootDir>/config/svg-stub.ts"
     },
     "collectCoverageFrom": [
       "src/**/*.ts",

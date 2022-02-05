@@ -75,7 +75,7 @@ describe("StoryCard Component", () => {
     const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
     const fav = buttons.querySelector(".ffe-sc-favorite") as HTMLSpanElement;
 
-    expect(follow.className).toBe("btn ffe-sc-follow icon-bookmark-2");
+    expect(follow.className).toBe("btn ffe-sc-follow");
     expect(fav.className).toBe("btn ffe-sc-favorite icon-heart");
   });
 

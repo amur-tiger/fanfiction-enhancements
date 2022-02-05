@@ -4,6 +4,7 @@ import Rating from "../Rating/Rating";
 import { RequestManager, Story } from "../../../api";
 import { useValueRef } from "../../../jsx";
 import { Epub } from "../../../util";
+import BellIcon from "../../../assets/bell.svg";
 
 import "./StoryCard.css";
 
@@ -51,14 +52,16 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
         </a>
 
         <div class="ffe-sc-mark">
-          <Button onClick={handleDownloadClick} ref={buttonRef}>
+          <Button onClick={handleDownloadClick} title="Download as ePub" ref={buttonRef}>
             <span class="icon-arrow-down" />
           </Button>
           <a style="display: none" ref={linkRef} />
 
           <div class="btn-group">
-            <Button class="ffe-sc-follow icon-bookmark-2" bind={story.alert} />
-            <Button class="ffe-sc-favorite icon-heart" bind={story.favorite} />
+            <Button class="ffe-sc-follow" bind={story.alert} title="Toggle Story Alert">
+              <BellIcon />
+            </Button>
+            <Button class="ffe-sc-favorite icon-heart" bind={story.favorite} title="Toggle Favorite" />
           </div>
         </div>
       </div>
