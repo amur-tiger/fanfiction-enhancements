@@ -61,7 +61,8 @@
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
-      "^.+\\.(css|less)$": "<rootDir>/config/css-stub.ts"
+      "^.+\\.(css|less)$": "<rootDir>/config/css-stub.ts",
+      "^.+\\.(svg)$": "<rootDir>/config/svg-stub.ts"
     },
     "collectCoverageFrom": [
       "src/**/*.ts",

@@ -1,6 +1,8 @@
 import { environment } from "../util/environment";
 import { DropBox } from "../api/DropBox";
 import Enhancer from "./Enhancer";
+import BellIcon from "../assets/bell.svg";
+import DropboxIcon from "../assets/dropbox.svg";
 
 import "./MenuBar.css";
 
@@ -20,9 +22,10 @@ export default class MenuBar implements Enhancer {
     }
 
     const toAlerts = document.createElement("a");
-    toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "icon-bookmark-2");
+    toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "ffe-mb-bell");
     toAlerts.title = "Go to Story Alerts";
     toAlerts.href = "/alert/story.php";
+    toAlerts.appendChild(BellIcon());
 
     const toFavorites = document.createElement("a");
     toFavorites.classList.add("ffe-mb-icon", "ffe-mb-favorites", "icon-heart");
@@ -33,11 +36,7 @@ export default class MenuBar implements Enhancer {
     toDropBox.classList.add("ffe-mb-icon", "ffe-mb-dropbox");
     toDropBox.title = "Connect to DropBox";
     toDropBox.href = "#";
-    toDropBox.innerHTML =
-      '<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.4 39.5" ' +
-      'width="16" height="16"><style>.st0{fill:#fff}</style><path class="st0" ' +
-      'd="M10.6 1.7L0 8.5l10.6 6.7 10.6-6.7zm21.2 0L21.2 8.5l10.6 6.7 10.6-6.7zM0 22l10.6 6.8L21.2 ' +
-      '22l-10.6-6.8zm31.8-6.8L21.2 22l10.6 6.8L42.4 22zM10.6 31l10.6 6.8L31.8 31l-10.6-6.7z"/></svg>';
+    toDropBox.appendChild(DropboxIcon());
 
     if (await this.dropBox.isAuthorized()) {
       toDropBox.classList.add("ffe-mb-checked");
