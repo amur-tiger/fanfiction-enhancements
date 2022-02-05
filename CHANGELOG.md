@@ -1,6 +1,6 @@
 # FanFiction Enhancements
 
-## unreleased
+## 0.7.3
 
 * Fixed: Selected fonts not loading ([#44](https://github.com/amur-tiger/fanfiction-enhancements/issues/44))
 * Changed: Icon for alerts changed from bookmark to bell ([#59](https://github.com/amur-tiger/fanfiction-enhancements/issues/59))
