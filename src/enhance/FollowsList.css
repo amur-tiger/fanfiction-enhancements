@@ -8,15 +8,15 @@
 }
 
 .ffe-follows-item .ffe-sc {
-  border-left: 1px solid #aaa;
-  border-top: 1px solid #aaa;
+  border-left: 1px solid var(--ffe-divider-color);
+  border-top: 1px solid var(--ffe-divider-color);
   border-top-left-radius: 4px;
   padding-left: 0.5em;
   padding-top: 5px;
 }
 
 .ffe-follows-item .ffe-cl-container {
-  border-left: 1px solid #aaa;
+  border-left: 1px solid var(--ffe-divider-color);
   margin-bottom: 20px;
   padding: 10px 0 0 0;
 }

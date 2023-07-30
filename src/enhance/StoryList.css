@@ -8,8 +8,7 @@
 }
 
 .ffe-story-item .ffe-sc {
-  background-color: #fff;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--ffe-divider-color);
   padding: 5px 0.5em;
 }
 

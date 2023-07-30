@@ -21,6 +21,25 @@ export default class MenuBar implements Enhancer {
       return;
     }
 
+    document.documentElement.dataset.theme = XCOOKIE.read_theme;
+    document.querySelector(".lc > span:last-of-type")?.addEventListener("click", () => {
+      document.documentElement.dataset.theme = XCOOKIE.read_theme;
+    });
+
+    const toggleTheme = document.createElement("a");
+    toggleTheme.classList.add("ffe-mb-icon", "ffe-mb-theme", "icon-tl-contrast");
+    toggleTheme.title = "Toggle Light/Dark Theme";
+    toggleTheme.href = "#";
+    toggleTheme.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (XCOOKIE.read_theme === "light") {
+        _fontastic_change_theme("dark");
+      } else {
+        _fontastic_change_theme("light");
+      }
+      document.documentElement.dataset.theme = XCOOKIE.read_theme;
+    });
+
     const toAlerts = document.createElement("a");
     toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "ffe-mb-bell");
     toAlerts.title = "Go to Story Alerts";
@@ -48,12 +67,17 @@ export default class MenuBar implements Enhancer {
       toDropBox.classList.add("ffe-mb-checked");
     });
 
-    const separator = document.createElement("span");
-    separator.classList.add("ffe-mb-separator");
+    const separator1 = document.createElement("span");
+    separator1.classList.add("ffe-mb-separator");
 
+    const separator2 = document.createElement("span");
+    separator2.classList.add("ffe-mb-separator");
+
+    parent.insertBefore(toggleTheme, ref);
+    parent.insertBefore(separator2, ref);
     parent.insertBefore(toAlerts, ref);
     parent.insertBefore(toFavorites, ref);
     parent.insertBefore(toDropBox, ref);
-    parent.insertBefore(separator, ref);
+    parent.insertBefore(separator1, ref);
   }
 }

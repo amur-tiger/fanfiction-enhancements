@@ -5,6 +5,9 @@ import { oAuth2LandingPage } from "./api/DropBox";
 import { StoryText } from "./enhance";
 import { CacheName } from "./api/ValueContainer";
 
+import "./theme.css";
+import "./main.css";
+
 const container = new Container();
 
 async function main() {

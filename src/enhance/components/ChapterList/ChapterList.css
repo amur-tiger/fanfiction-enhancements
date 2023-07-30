@@ -4,21 +4,25 @@
 }
 
 .ffe-cl ol {
-  border-top: 1px solid #cdcdcd;
+  border-top: 1px solid var(--ffe-divider-color);
   list-style-type: none;
   margin: 0;
 }
 
 .ffe-cl-chapter {
-  background-color: #f6f7ee;
-  border-bottom: 1px solid #cdcdcd;
+  background-color: var(--ffe-panel-color);
+  border-bottom: 1px solid var(--ffe-divider-color);
   font-size: 1.1em;
   line-height: 2em;
   padding: 4px 20px;
 }
 
+.ffe-cl-chapter a {
+  color: var(--ffe-link-color);
+}
+
 .ffe-cl-words {
-  color: #555;
+  color: var(--ffe-on-panel-color);
   float: right;
   font-size: 0.9em;
 }
