@@ -1,3 +1,3 @@
 export default interface Enhancer {
-  enhance(): Promise<any>;
+  enhance(): Promise<void>;
 }

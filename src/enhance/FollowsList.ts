@@ -8,7 +8,7 @@ import "./FollowsList.css";
 export default class FollowsList implements Enhancer {
   public constructor(
     private readonly requestManager: RequestManager,
-    private readonly valueContainer: ValueContainer
+    private readonly valueContainer: ValueContainer,
   ) {}
 
   public async enhance(): Promise<void> {

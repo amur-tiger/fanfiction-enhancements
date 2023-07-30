@@ -70,9 +70,9 @@ describe("render", () => {
   it("should return custom component", () => {
     const props = Symbol("props");
     const ret = Symbol("return");
-    const component = jest.fn(() => ret as any);
+    const component = jest.fn(() => ret);
 
-    const result = render(component, props as any);
+    const result = render(component as never, props as never);
 
     expect(result).toBe(ret);
     expect(component).toHaveBeenCalledWith(props);

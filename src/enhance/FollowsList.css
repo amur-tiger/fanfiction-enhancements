@@ -1,22 +1,22 @@
 .ffe-follows-list {
-	list-style: none;
-	margin: 0;
+  list-style: none;
+  margin: 0;
 }
 
 .ffe-follows-item {
-	margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .ffe-follows-item .ffe-sc {
-	border-left: 1px solid #aaa;
-	border-top: 1px solid #aaa;
-	border-top-left-radius: 4px;
-	padding-left: .5em;
-	padding-top: 5px;
+  border-left: 1px solid var(--ffe-divider-color);
+  border-top: 1px solid var(--ffe-divider-color);
+  border-top-left-radius: 4px;
+  padding-left: 0.5em;
+  padding-top: 5px;
 }
 
 .ffe-follows-item .ffe-cl-container {
-	border-left: 1px solid #aaa;
-	margin-bottom: 20px;
-	padding: 10px 0 0 0;
+  border-left: 1px solid var(--ffe-divider-color);
+  margin-bottom: 20px;
+  padding: 10px 0 0 0;
 }

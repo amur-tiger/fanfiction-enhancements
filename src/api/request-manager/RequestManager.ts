@@ -17,7 +17,7 @@ export default class DownloadManager extends EventTarget {
 
       responseType: "blob",
       data: await request.text(),
-    };
+    } satisfies GM.Request;
 
     // Note "referer" vs "referrer", intentional because of a typo in the original spec
     gmRequest.headers.Referer = request.referrer;
@@ -37,8 +37,8 @@ export default class DownloadManager extends EventTarget {
         .filter((line) => line)
         .map((line) => {
           const colon = line.indexOf(":");
-          return [line.substr(0, colon), line.substr(colon + 1).trim()];
-        }),
+          return [line.substring(0, colon), line.substring(colon + 1).trim()];
+        }) as HeadersInit,
     });
   }
 
@@ -58,7 +58,7 @@ export default class DownloadManager extends EventTarget {
       "color: inherit",
       request.url,
       "color: blue",
-      response.status
+      response.status,
     );
 
     return response;

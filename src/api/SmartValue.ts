@@ -10,7 +10,7 @@ export interface ValueSetter<T> {
 }
 
 export interface ValueSubscriberCallback<T> {
-  (value: T): Promise<any> | any;
+  (value: T): Promise<unknown> | unknown;
 }
 
 export function isSmartValue(value: unknown): value is SmartValue<unknown> {
@@ -19,7 +19,7 @@ export function isSmartValue(value: unknown): value is SmartValue<unknown> {
   }
 
   return ["get", "set", "subscribe", "unsubscribe", "dispose", "update"].every(
-    (key) => typeof value?.[key as keyof typeof value] === "function"
+    (key) => typeof value?.[key as keyof typeof value] === "function",
   );
 }
 
@@ -70,14 +70,12 @@ export interface SmartValue<T> {
 }
 
 abstract class SmartValueBase<T> implements SmartValue<T> {
-  // todo: key should be of type "symbol"
-  // see https://github.com/Microsoft/TypeScript/issues/1863 and https://github.com/Microsoft/TypeScript/pull/26797
-  private subscribers: { [key: string]: ValueSubscriberCallback<T> } = {};
+  private subscribers: Record<symbol, ValueSubscriberCallback<T>> = {};
 
   protected constructor(
     public readonly name: string,
     protected readonly getter?: ValueGetter<T>,
-    protected readonly setter?: ValueSetter<T>
+    protected readonly setter?: ValueSetter<T>,
   ) {}
 
   public async get(): Promise<T | undefined> {
@@ -110,13 +108,13 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
 
   public subscribe(callback: ValueSubscriberCallback<T>): symbol {
     const key = Symbol("smart-value-key");
-    this.subscribers[key as any] = callback;
+    this.subscribers[key] = callback;
 
     return key;
   }
 
   public unsubscribe(key: symbol): void {
-    delete this.subscribers[key as any];
+    delete this.subscribers[key];
   }
 
   public dispose(): void {
@@ -134,8 +132,8 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
   protected async trigger(value: T): Promise<void> {
     await Promise.all(
       Object.getOwnPropertySymbols(this.subscribers)
-        .map((sym) => this.subscribers[sym as any](value))
-        .filter((promise) => promise && promise.then)
+        .map((sym) => this.subscribers[sym](value))
+        .filter((promise) => promise != null && typeof promise === "object" && "then" in promise),
     );
   }
 
@@ -149,7 +147,7 @@ export class SmartValueLocal<T> extends SmartValueBase<T> {
     public readonly name: string,
     private readonly storage: Storage,
     protected readonly getter?: ValueGetter<T>,
-    protected readonly setter?: ValueSetter<T>
+    protected readonly setter?: ValueSetter<T>,
   ) {
     super(name, getter, setter);
   }
@@ -183,7 +181,7 @@ export class SmartValueRoaming<T> extends SmartValueBase<T> {
     public readonly name: string,
     protected readonly getter?: ValueGetter<T>,
     protected readonly setter?: ValueSetter<T>,
-    private readonly synchronizer?: Synchronizer
+    private readonly synchronizer?: Synchronizer,
   ) {
     super(name, getter, setter);
 

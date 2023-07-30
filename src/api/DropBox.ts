@@ -10,7 +10,7 @@ const BEARER_TOKEN_KEY = "ffe-dropbox-token";
 const FFE_DATA_PATH = "/ffe.json";
 
 export interface SynchronizerUpdateCallback<T> {
-  (key: string, value: T): Promise<any> | any;
+  (key: string, value: T): Promise<unknown> | unknown;
 }
 
 export interface Synchronizer {
@@ -20,15 +20,13 @@ export interface Synchronizer {
 
   synchronize(): Promise<void>;
 
-  onValueUpdate(callback: SynchronizerUpdateCallback<any>): symbol;
+  onValueUpdate(callback: SynchronizerUpdateCallback<unknown>): symbol;
 
   removeValueUpdateCallback(key: symbol): void;
 }
 
 export class DropBox implements Synchronizer {
-  private valueUpdateCallbacks: {
-    [key: string]: SynchronizerUpdateCallback<any>;
-  } = {};
+  private valueUpdateCallbacks: Record<symbol, SynchronizerUpdateCallback<unknown>> = {};
 
   public async isAuthorized(): Promise<boolean> {
     return !!(await GM.getValue(BEARER_TOKEN_KEY));
@@ -36,7 +34,7 @@ export class DropBox implements Synchronizer {
 
   public async authorize(): Promise<void> {
     const token = (await new Promise((resolve, reject) => {
-      (unsafeWindow as any)[OAUTH2_CALLBACK as any] = (callbackToken: string) => {
+      (unsafeWindow as unknown as Record<string, unknown>)[OAUTH2_CALLBACK] = (callbackToken: string) => {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         clearInterval(handle);
         resolve(callbackToken);
@@ -44,10 +42,10 @@ export class DropBox implements Synchronizer {
 
       const popup = xwindow(
         `https://www.dropbox.com/oauth2/authorize?response_type=token&client_id=${encodeURIComponent(
-          CLIENT_ID
+          CLIENT_ID,
         )}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`,
         775,
-        550
+        550,
       );
 
       const handle = setInterval(() => {
@@ -78,18 +76,16 @@ export class DropBox implements Synchronizer {
         if (localTimestamp < remoteTimestamp) {
           await Promise.all(
             Object.getOwnPropertySymbols(this.valueUpdateCallbacks)
-              .map((sym) => this.valueUpdateCallbacks[sym as any](key, remoteData[key]))
-              .filter((promise) => promise && promise.then)
+              .map((sym) => this.valueUpdateCallbacks[sym](key, remoteData[key]))
+              .filter((promise) => promise != null && typeof promise === "object" && "then" in promise),
           );
         }
-      })
+      }),
     );
 
     let hasUpdate = false;
     await Promise.all(
-      (
-        await GM.listValues()
-      ).map(async (key) => {
+      (await GM.listValues()).map(async (key) => {
         if (CacheName.isTimestampKey(key)) {
           return;
         }
@@ -101,7 +97,7 @@ export class DropBox implements Synchronizer {
           remoteData[key] = JSON.parse((await GM.getValue(key)) as string);
           remoteData[`${key}+timestamp`] = localTimestamp;
         }
-      })
+      }),
     );
 
     if (hasUpdate) {
@@ -109,24 +105,24 @@ export class DropBox implements Synchronizer {
     }
   }
 
-  public onValueUpdate<T>(callback: SynchronizerUpdateCallback<T>): symbol {
+  public onValueUpdate(callback: SynchronizerUpdateCallback<unknown>): symbol {
     const key = Symbol("value-update-key");
-    this.valueUpdateCallbacks[key as any] = callback;
+    this.valueUpdateCallbacks[key] = callback;
 
     return key;
   }
 
   public removeValueUpdateCallback(key: symbol): void {
-    delete this.valueUpdateCallbacks[key as any];
+    delete this.valueUpdateCallbacks[key];
   }
 
-  private readFile(path: string): Promise<any> {
+  private readFile(path: string): Promise<string | undefined> {
     return this.content("/files/download", {
       path,
     });
   }
 
-  private saveFile(path: string, content: any): Promise<any> {
+  private saveFile(path: string, content: string): Promise<string | undefined> {
     return this.content(
       "/files/upload",
       {
@@ -134,11 +130,11 @@ export class DropBox implements Synchronizer {
         mode: "overwrite",
         mute: true,
       },
-      content
+      content,
     );
   }
 
-  private async content(url: string, params: any, body?: any): Promise<string | undefined> {
+  private async content(url: string, params: object, body?: string): Promise<string | undefined> {
     if (!(await this.isAuthorized())) {
       throw new Error("Not authorized with DropBox yet.");
     }
@@ -169,7 +165,7 @@ export class DropBox implements Synchronizer {
     return response.text();
   }
 
-  private async rpc(url: string, body?: any): Promise<any> {
+  private async rpc(url: string, body?: string): Promise<object> {
     if (!(await this.isAuthorized())) {
       throw new Error("Not authorized with Dropbox yet.");
     }

@@ -25,7 +25,7 @@ export default class Api {
             if (follows) {
               result.push(...follows);
             }
-          })
+          }),
         );
 
         return result;
@@ -50,7 +50,7 @@ export default class Api {
             if (follows) {
               result.push(...follows);
             }
-          })
+          }),
         );
 
         return result;
@@ -84,7 +84,7 @@ export default class Api {
         userid: `${environment.currentUserId}`,
         storyalert: "1",
       },
-      "json"
+      "json",
     );
   }
 
@@ -95,7 +95,7 @@ export default class Api {
         action: "remove-multi",
         "rids[]": `${id}`,
       },
-      "html"
+      "html",
     );
   }
 
@@ -107,7 +107,7 @@ export default class Api {
         userid: `${environment.currentUserId}`,
         favstory: "1",
       },
-      "json"
+      "json",
     );
   }
 
@@ -118,7 +118,7 @@ export default class Api {
         action: "remove-multi",
         "rids[]": `${id}`,
       },
-      "html"
+      "html",
     );
   }
 
@@ -150,14 +150,14 @@ export default class Api {
           nextTemplate.innerHTML = nextBody;
 
           return nextTemplate.content;
-        })
+        }),
       );
     }
 
     return Promise.all(result);
   }
 
-  private async post(url: string, data: Record<string, string | Blob>, expect: "json" | "html"): Promise<any> {
+  private async post(url: string, data: Record<string, string | Blob>, expect: "json" | "html"): Promise<unknown> {
     const formData = new FormData();
     for (const [key, value] of Object.entries(data)) {
       formData.append(key, value);
