@@ -6,7 +6,7 @@ import { ValueContainer } from "../api";
 export default class ChapterList implements Enhancer {
   public constructor(private readonly valueContainer: ValueContainer) {}
 
-  public async enhance(): Promise<any> {
+  public async enhance(): Promise<void> {
     const contentWrapper = document.getElementById("content_wrapper_inner");
     if (!contentWrapper || !environment.currentStoryId) {
       return;
@@ -23,7 +23,7 @@ export default class ChapterList implements Enhancer {
         (e) =>
           (!e.textContent && (e as HTMLDivElement).style.height === "5px") ||
           (e.firstElementChild && e.firstElementChild.nodeName === "SELECT") ||
-          (e.className === "lc-wrapper" && e.id !== "pre_story_links")
+          (e.className === "lc-wrapper" && e.id !== "pre_story_links"),
       )
       .forEach((e) => contentWrapper.removeChild(e));
     const storyText = document.getElementById("storytextp");

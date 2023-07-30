@@ -35,11 +35,11 @@ describe("ChapterList Component", () => {
     const r: SmartValue<boolean> = {
       get: () => Promise.resolve(read),
       subscribe: () => undefined,
-    } as any;
+    } as never;
     const w: SmartValue<number> = {
       get: () => Promise.resolve(1),
       subscribe: () => undefined,
-    } as any;
+    } as never;
 
     return {
       storyId: 0,
@@ -53,7 +53,7 @@ describe("ChapterList Component", () => {
   it("should hide read chapters", async () => {
     const story: Story = {
       chapters: [chapter(true), chapter(true), chapter(true), chapter(false), chapter(false)],
-    } as any;
+    } as never;
 
     const element = ChapterList({ story });
     await timeout(10);
@@ -88,7 +88,7 @@ describe("ChapterList Component", () => {
         chapter(false),
         chapter(false),
       ],
-    } as any;
+    } as never;
 
     const element = ChapterList({ story });
     await timeout(10);
@@ -140,7 +140,7 @@ describe("ChapterList Component", () => {
         chapter(false),
         chapter(false),
       ],
-    } as any;
+    } as never;
 
     const element = ChapterList({ story });
     await timeout(10);

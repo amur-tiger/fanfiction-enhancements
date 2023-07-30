@@ -1,129 +1,148 @@
+.ffe-sc {
+  background-color: var(--ffe-paper-color);
+}
+
 .ffe-sc-header {
-	border-bottom: 1px solid #ddd;
-	padding-bottom: 8px;
-	margin-bottom: 8px;
+  border-bottom: 1px solid var(--ffe-divider-color);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .ffe-sc-title {
-	color: #000 !important;
-	font-size: 1.8em;
+  color: var(--ffe-on-paper-color) !important;
+  font-size: 1.8em;
 }
 
 .ffe-sc-title:hover {
-	border-bottom: 0;
-	text-decoration: underline;
+  border-bottom: 0;
+  text-decoration: underline;
 }
 
 .ffe-sc-by {
-	padding: 0 .5em;
+  color: var(--ffe-on-paper-color);
+  padding: 0 0.5em;
+}
+
+.ffe-sc-author {
+  color: var(--ffe-link-color) !important;
 }
 
 .ffe-sc-mark {
-	float: right;
+  float: right;
 }
 
 .ffe-sc-mark > * {
-	margin-right: 4px;
+  margin-right: 4px;
 }
 
 .ffe-sc-follow:hover,
 .ffe-sc-follow.ffe-active {
-	color: #60cf23;
+  color: var(--ffe-alert-color);
 }
 
 .ffe-sc-favorite:hover,
 .ffe-sc-favorite.ffe-active {
-	color: #ffb400;
+  color: var(--ffe-favorite-color);
 }
 
 .ffe-sc-tags {
-	border-bottom: 1px solid #ddd;
-	display: flex;
-	flex-wrap: wrap;
-	line-height: 2em;
-	margin-bottom: 8px;
+  border-bottom: 1px solid var(--ffe-divider-color);
+  display: flex;
+  flex-wrap: wrap;
+  line-height: 2em;
+  margin-bottom: 8px;
 }
 
 .ffe-sc-tag {
-	border: 1px solid rgba(0, 0, 0, 0.15);
-	border-radius: 4px;
-	color: black;
-	line-height: 16px;
-	margin-bottom: 8px;
-	margin-right: 5px;
-	padding: 3px 8px;
+  border: 1px solid var(--ffe-weak-divider-color);
+  border-radius: 4px;
+  color: var(--ffe-on-paper-color);
+  line-height: 16px;
+  margin-bottom: 8px;
+  margin-right: 5px;
+  padding: 3px 8px;
+}
+
+.ffe-sc-tag a {
+  color: var(--ffe-link-color);
 }
 
 .ffe-sc-tag-language {
-	background-color: #a151bd;
-	color: white;
+  background-color: var(--ffe-language-tag-color);
+  color: var(--ffe-on-language-tag-color);
 }
 
 .ffe-sc-tag-universe {
-	background-color: #44b7b7;
-	color: white;
+  background-color: var(--ffe-universe-tag-color);
+  color: var(--ffe-on-universe-tag-color);
 }
 
 .ffe-sc-tag-genre {
-	background-color: #4f91d6;
-	color: white;
+  background-color: var(--ffe-genre-tag-color);
+  color: var(--ffe-on-genre-tag-color);
 }
 
 .ffe-sc-tag.ffe-sc-tag-character,
 .ffe-sc-tag.ffe-sc-tag-ship {
-	background-color: #23b974;
-	color: white;
+  background-color: var(--ffe-character-tag-color);
+  color: var(--ffe-on-character-tag-color);
 }
 
 .ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {
-	content: " + ";
+  content: " + ";
 }
 
 .ffe-sc-image {
-	float: left;
-	border: 1px solid #ddd;
-	border-radius: 3px;
-	padding: 3px;
-	margin-right: 8px;
-	margin-bottom: 8px;
+  float: left;
+  border: 1px solid var(--ffe-divider-color);
+  border-radius: 3px;
+  padding: 3px;
+  margin-right: 8px;
+  margin-bottom: 8px;
 }
 
 .ffe-sc-description {
-	color: #333;
-	font-family: "Open Sans", sans-serif;
-	font-size: 1.1em;
-	line-height: 1.4em;
+  color: var(--ffe-on-paper-color);
+  font-family: "Open Sans", sans-serif;
+  font-size: 1.1em;
+  line-height: 1.4em;
 }
 
 .ffe-sc-footer {
-	clear: left;
-	background: #f6f7ee;
-	border-bottom: 1px solid #cdcdcd;
-	border-top: 1px solid #cdcdcd;
-	color: #555;
-	font-size: .9em;
-	margin-left: -.5em;
-	margin-right: -.5em;
-	margin-top: 1em;
-	padding: 10px .5em;
+  clear: left;
+  background: var(--ffe-panel-color);
+  border-bottom: 1px solid var(--ffe-divider-color);
+  border-top: 1px solid var(--ffe-divider-color);
+  color: var(--ffe-on-panel-color);
+  font-size: 0.9em;
+  margin-left: -0.5em;
+  margin-right: -0.5em;
+  margin-top: 1em;
+  padding: 10px 0.5em;
 }
 
 .ffe-sc-footer-info {
-	background: #fff;
-	border: 1px solid rgba(0, 0, 0, 0.15);
-	border-radius: 4px;
-	line-height: 16px;
-	margin-top: -5px;
-	margin-right: 5px;
-	padding: 3px 8px;
-}
-
-.ffe-sc-footer-complete {
-	background: #63bd40;
-	color: #fff;
+  background: var(--ffe-paper-color);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  color: var(--ffe-on-paper-color);
+  line-height: 16px;
+  margin-top: -5px;
+  margin-right: 5px;
+  padding: 3px 8px;
 }
 
 .ffe-sc-footer-incomplete {
-	background: #f7a616;
-	color: #fff;
+  background: var(--ffe-incomplete-tag-color);
+  color: var(--ffe-on-incomplete-tag-color);
+}
+
+.ffe-sc-footer-complete {
+  background: var(--ffe-complete-tag-color);
+  color: var(--ffe-on-complete-tag-color);
+}
+
+.ffe-sc-footer-words {
+  color: var(--ffe-on-panel-color);
+  float: right;
 }

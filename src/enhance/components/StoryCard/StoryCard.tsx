@@ -85,7 +85,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
                   <span class="ffe-sc-tag-character">{character}</span>
                 ))}
               </span>
-            )
+            ),
           )}
 
         {story.chapters && story.chapters.length > 0 && (
@@ -113,7 +113,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
 
       <div class="ffe-sc-footer">
         {story.words && (
-          <div style="float: right;">
+          <div class="ffe-sc-footer-words">
             <b>{story.words.toLocaleString("en")}</b> words
           </div>
         )}

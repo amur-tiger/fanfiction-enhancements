@@ -1,31 +1,31 @@
 .ffe-rating {
-	background: gray;
-	padding: 3px 5px;
-	color: #fff !important;
-	border: 1px solid rgba(0, 0, 0, 0.2);
-	text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
-	border-radius: 4px;
-	margin-right: 5px;
-	vertical-align: 2px;
+  background: gray;
+  padding: 3px 5px;
+  color: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin-right: 5px;
+  vertical-align: 2px;
 }
 
 .ffe-rating:hover {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
 }
 
 .ffe-rating-k,
 .ffe-rating-kp {
-	background: #78ac40;
-	box-shadow: 0 1px 0 #90ce4d inset;
+  background: #78ac40;
+  box-shadow: 0 1px 0 #90ce4d inset;
 }
 
 .ffe-rating-t,
 .ffe-rating-m {
-	background: #ffb400;
-	box-shadow: 0 1px 0 #ffd800 inset;
+  background: #ffb400;
+  box-shadow: 0 1px 0 #ffd800 inset;
 }
 
 .ffe-rating-ma {
-	background: #c03d2f;
-	box-shadow: 0 1px 0 #e64938 inset;
+  background: #c03d2f;
+  box-shadow: 0 1px 0 #e64938 inset;
 }

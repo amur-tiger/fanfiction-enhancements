@@ -6,7 +6,10 @@ import { RequestManager, ValueContainer } from "../api";
 import "./StoryProfile.css";
 
 export default class StoryProfile implements Enhancer {
-  constructor(private readonly requestManager: RequestManager, private readonly valueContainer: ValueContainer) {}
+  constructor(
+    private readonly requestManager: RequestManager,
+    private readonly valueContainer: ValueContainer,
+  ) {}
 
   public async enhance(): Promise<void> {
     const profile = document.getElementById("profile_top");

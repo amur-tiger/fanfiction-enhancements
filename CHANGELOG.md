@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## 0.7.4
+
+* Feature: Dark mode support with additional toggle in menu bar ([#72](https://github.com/amur-tiger/fanfiction-enhancements/issues/72))
+
 ## 0.7.3
 
 * Fixed: Selected fonts not loading ([#44](https://github.com/amur-tiger/fanfiction-enhancements/issues/44))
