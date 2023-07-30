@@ -10,7 +10,10 @@ function escapeXml(text: string): string {
 }
 
 export default class Epub {
-  public constructor(private readonly requestManager: RequestManager, private readonly story: Story) {}
+  public constructor(
+    private readonly requestManager: RequestManager,
+    private readonly story: Story,
+  ) {}
 
   private async getContainerXml(): Promise<string> {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -50,7 +53,7 @@ export default class Epub {
     ${this.story.chapters
       .map(
         (chapter) =>
-          `<item id="chapter-${chapter.id}" href="chapter-${chapter.id}.xhtml" media-type="application/xhtml+xml" />`
+          `<item id="chapter-${chapter.id}" href="chapter-${chapter.id}.xhtml" media-type="application/xhtml+xml" />`,
       )
       .join("\n    ")}
   </manifest>
@@ -91,7 +94,7 @@ export default class Epub {
         <text>${escapeXml(chapter.title)}</text>
       </navLabel>
       <content src="chapter-${chapter.id}.xhtml" />
-    </navPoint>`
+    </navPoint>`,
       )
       .join("\n      ")}
   </navMap>
@@ -207,7 +210,7 @@ ${content}
     await Promise.all(
       this.story.chapters.map(async (chapter) => {
         zip.file(`chapter-${chapter.id}.xhtml`, await this.getChapterHtml(chapter));
-      })
+      }),
     );
 
     return zip.generateAsync({ type: "blob" });

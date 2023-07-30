@@ -53,11 +53,11 @@ describe("Chapter List", () => {
     const r: SmartValue<boolean> = {
       get: () => Promise.resolve(true),
       subscribe: () => undefined,
-    } as any;
+    } as never;
     const w: SmartValue<number> = {
       get: () => Promise.resolve(words),
       subscribe: () => undefined,
-    } as any;
+    } as never;
 
     return {
       storyId: 0,
@@ -71,9 +71,9 @@ describe("Chapter List", () => {
   function createStory(id: number, chapters?: Chapter[]): Story {
     const story: Story = {
       id,
-    } as any;
+    } as never;
 
-    (story as any).chapters = chapters ?? [
+    (story as { chapters?: Chapter[] }).chapters = chapters ?? [
       createChapter(0, "prologue", 1),
       createChapter(1, "chapter 1", 2),
       createChapter(2, "epilogue", 3),

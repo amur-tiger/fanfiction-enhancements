@@ -85,7 +85,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
                   <span class="ffe-sc-tag-character">{character}</span>
                 ))}
               </span>
-            )
+            ),
           )}
 
         {story.chapters && story.chapters.length > 0 && (

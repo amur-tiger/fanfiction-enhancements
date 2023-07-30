@@ -9,7 +9,7 @@ import "./MenuBar.css";
 export default class MenuBar implements Enhancer {
   constructor(private readonly dropBox: DropBox) {}
 
-  public async enhance(): Promise<any> {
+  public async enhance(): Promise<void> {
     if (!environment.currentUserName) {
       return;
     }

@@ -8,7 +8,7 @@ import "./StoryList.css";
 export default class StoryList implements Enhancer {
   public constructor(
     private readonly requestManager: RequestManager,
-    private readonly valueContainer: ValueContainer
+    private readonly valueContainer: ValueContainer,
   ) {}
 
   public async enhance(): Promise<void> {
@@ -37,7 +37,7 @@ export default class StoryList implements Enhancer {
           ...followedStory,
           chapters: [],
         },
-        this.valueContainer
+        this.valueContainer,
       );
       const card = StoryCard({ requestManager: this.requestManager, story });
       item.appendChild(card);

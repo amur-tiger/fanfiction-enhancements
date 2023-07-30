@@ -18,11 +18,11 @@ export default function render<T extends ComponentProps>(
           refCallbacks.push(value.callback);
         }
       } else if (typeof value === "function") {
-        (element as any)[name as any] = value;
+        (element as unknown as Record<string, unknown>)[name] = value;
       } else if (value === true) {
         element.setAttribute(name, name);
       } else if (value !== false && value != null) {
-        element.setAttribute(name, (value as any).toString());
+        element.setAttribute(name, value.toString());
       }
     }
   } else {
@@ -50,7 +50,7 @@ export default function render<T extends ComponentProps>(
         (element as Element).appendChild(
           typeof child === "string" || typeof child === "number" || child.nodeType == null
             ? document.createTextNode(child.toString())
-            : child
+            : child,
         );
       }
     };

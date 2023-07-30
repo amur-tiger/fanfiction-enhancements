@@ -1,8 +1,10 @@
-import { build, Plugin } from "esbuild";
-import fs from "fs/promises";
-import path from "path";
-import process from "process";
+import { build, type BuildOptions, context, type Plugin } from "esbuild";
+import * as fs from "fs/promises";
+import * as path from "path";
 import header from "./header";
+
+const watch = process.argv.some((a) => a === "--watch");
+const serve = process.argv.some((a) => a === "--serve");
 
 const gmCssLoader = (): Plugin => ({
   name: "gmCssLoader",
@@ -58,37 +60,38 @@ const svgLoader = (): Plugin => ({
 });
 
 fs.mkdir("target/latest", { recursive: true })
-  .then(() =>
-    Promise.all([
+  .then(() => {
+    const buildOptions: BuildOptions = {
+      entryPoints: ["src/main.ts"],
+      outfile: "target/latest/fanfiction-enhancements.user.js",
+      bundle: true,
+      format: "iife",
+      target: ["chrome89", "firefox87"],
+      banner: {
+        js: header,
+      },
+      plugins: [gmCssLoader(), svgLoader()],
+    };
+
+    return Promise.all([
       fs.copyFile("LICENSE", "target/LICENSE"),
       fs.copyFile("README.md", "target/README.md"),
       fs.writeFile("target/latest/fanfiction-enhancements.meta.js", header),
 
-      build({
-        entryPoints: ["src/main.ts"],
-        outfile: "target/latest/fanfiction-enhancements.user.js",
-        bundle: true,
-        format: "iife",
-        target: ["chrome89", "firefox87"],
-        banner: {
-          js: header,
-        },
-        plugins: [gmCssLoader(), svgLoader()],
-        watch: process.argv.some((a) => a === "--watch") && {
-          onRebuild(error, result) {
-            if (!error) {
-              // eslint-disable-next-line no-console
-              console.log("Build succeeded");
-              if (result && result.warnings.length > 0) {
-                // eslint-disable-next-line no-console
-                console.warn(result.warnings);
-              }
+      watch || serve
+        ? context(buildOptions).then((ctx) => {
+            if (watch) {
+              ctx.watch();
             }
-          },
-        },
-      }),
-    ])
-  )
+            if (serve) {
+              ctx.serve({
+                port: 4000,
+              });
+            }
+          })
+        : build(buildOptions),
+    ]);
+  })
   .catch((e) => {
     // eslint-disable-next-line no-console
     console.error(e);

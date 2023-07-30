@@ -35,7 +35,7 @@ async function main() {
         list.map(async (item) => {
           const value = valueContainer[getterName](item.id);
           await value.update(true);
-        })
+        }),
       );
     }
 
@@ -79,7 +79,7 @@ async function main() {
       if (environment.currentChapterId) {
         const wordCountValue = valueContainer.getWordCountValue(currentStory.id, environment.currentChapterId);
         await wordCountValue.update(
-          document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0
+          document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0,
         );
       }
 
@@ -101,7 +101,7 @@ async function main() {
             console.log(
               "Setting '%s' chapter '%s' to read",
               currentStory.title,
-              currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title
+              currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
             await readValue.set(true);
           }
@@ -121,9 +121,9 @@ async function migrate() {
 
   const readList = JSON.parse(readListStr as string);
   for (const [storyId, story] of Object.entries(readList)) {
-    for (const [chapterId, chapter] of Object.entries(story as any)) {
+    for (const [chapterId, chapter] of Object.entries(story as object)) {
       // eslint-disable-next-line no-await-in-loop
-      await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), chapter as any);
+      await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), chapter);
     }
   }
 

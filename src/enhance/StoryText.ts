@@ -9,7 +9,7 @@ export default class StoryText implements Enhancer {
    */
   private readonly GOOGLE_FONTS_WHITELIST = ["Open Sans", "PT Sans", "Roboto", "Ubuntu"];
 
-  public async enhance(): Promise<any> {
+  public async enhance(): Promise<void> {
     this.fixFontLink();
 
     const textContainer = document.getElementById("storytextp");
@@ -87,8 +87,7 @@ export default class StoryText implements Enhancer {
           isOk = false;
         }
 
-        // eslint-disable-next-line no-param-reassign
-        textContainer.style[rule as any] = "inherit";
+        (textContainer.style as unknown as Record<string, string>)[rule] = "inherit";
       }
 
       if (isOk) {
