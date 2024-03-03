@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import { Synchronizer } from "./DropBox";
 
 export interface ValueGetter<T> {

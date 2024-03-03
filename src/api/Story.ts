@@ -1,6 +1,6 @@
-import { Story as StoryData, User } from "ffn-parser";
+import type { Story as StoryData, User } from "ffn-parser";
 import Chapter from "./Chapter";
-import { SmartValue } from "./SmartValue";
+import type { SmartValue } from "./SmartValue";
 import ValueContainer from "./ValueContainer";
 
 export default class Story {

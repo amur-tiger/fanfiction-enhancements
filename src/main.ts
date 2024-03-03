@@ -12,7 +12,6 @@ const container = new Container();
 
 async function main() {
   if (environment.currentPageType === Page.OAuth2) {
-    // eslint-disable-next-line no-console
     console.log("OAuth 2 landing page - no enhancements will be applied");
     oAuth2LandingPage();
 
@@ -23,7 +22,6 @@ async function main() {
 
   const dropBox = container.getDropBox();
   if (await dropBox.isAuthorized()) {
-    // eslint-disable-next-line no-console
     dropBox.synchronize().catch(console.error);
   }
 
@@ -100,7 +98,6 @@ async function main() {
 
           if (amount / (max - 550) >= 1) {
             window.removeEventListener("scroll", markRead);
-            // eslint-disable-next-line no-console
             console.log(
               "Setting '%s' chapter '%s' to read",
               currentStory.title,
@@ -125,7 +122,6 @@ async function migrate() {
   const readList = JSON.parse(readListStr as string);
   for (const [storyId, story] of Object.entries(readList)) {
     for (const [chapterId, chapter] of Object.entries(story as object)) {
-      // eslint-disable-next-line no-await-in-loop
       await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), chapter);
     }
   }
@@ -134,5 +130,4 @@ async function migrate() {
   await GM.deleteValue("ffe-cache-alerts");
 }
 
-// eslint-disable-next-line no-console
 migrate().then(main).catch(console.error);

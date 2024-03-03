@@ -17,7 +17,6 @@ function hideLongChapterList(list: HTMLElement) {
     if (read === currentBlockIsRead) {
       // no change from previous chapter, continue
       currentBlockCount += 1;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -25,7 +24,6 @@ function hideLongChapterList(list: HTMLElement) {
       // didn't go over enough chapters to hide any
       currentBlockIsRead = read;
       currentBlockCount = 1;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -33,13 +31,11 @@ function hideLongChapterList(list: HTMLElement) {
     if (currentBlockIsRead) {
       // we can hide more chapters if they are already read
       elements.slice(i - currentBlockCount, i).forEach((element) => {
-        // eslint-disable-next-line no-param-reassign
         (element as HTMLElement).style.display = "none";
       });
     } else {
       // some unread chapters here, show a bit more of them
       elements.slice(i - currentBlockCount + 2, i - 2).forEach((element) => {
-        // eslint-disable-next-line no-param-reassign
         (element as HTMLElement).style.display = "none";
       });
       off = 2;
@@ -73,7 +69,6 @@ function hideLongChapterList(list: HTMLElement) {
   // the last visited block might be long enough to hide
   if (currentBlockCount > 6) {
     elements.slice(elements.length - currentBlockCount + 2, elements.length - 3).forEach((element) => {
-      // eslint-disable-next-line no-param-reassign
       (element as HTMLElement).style.display = "none";
     });
 

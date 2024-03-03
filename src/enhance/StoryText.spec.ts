@@ -1,11 +1,11 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { timeout } from "../utils";
 import StoryText from "./StoryText";
 
 describe("Story Text", () => {
   beforeEach(() => {
     (global as unknown as { XCOOKIE: unknown }).XCOOKIE = {};
-    // eslint-disable-next-line camelcase,no-underscore-dangle
-    (global as unknown as { _fontastic_save: () => void })._fontastic_save = jest.fn();
+    (global as unknown as { _fontastic_save: () => void })._fontastic_save = vi.fn();
   });
 
   it("should fix user-select", async () => {

@@ -35,7 +35,6 @@ export class DropBox implements Synchronizer {
   public async authorize(): Promise<void> {
     const token = (await new Promise((resolve, reject) => {
       (unsafeWindow as unknown as Record<string, unknown>)[OAUTH2_CALLBACK] = (callbackToken: string) => {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         clearInterval(handle);
         resolve(callbackToken);
       };

@@ -1,8 +1,7 @@
-// eslint-disable-next-line max-classes-per-file
-import { Follow, Story as StoryData } from "ffn-parser";
+import type { Follow, Story as StoryData } from "ffn-parser";
 import Api from "./Api";
-import { Synchronizer } from "./DropBox";
-import { SmartValue, SmartValueLocal, SmartValueRoaming } from "./SmartValue";
+import type { Synchronizer } from "./DropBox";
+import { type SmartValue, SmartValueLocal, SmartValueRoaming } from "./SmartValue";
 import Story from "./Story";
 
 export class CacheName {

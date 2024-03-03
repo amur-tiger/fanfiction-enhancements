@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import { timeout } from "../../../utils";
 import { Chapter, Story } from "../../../api";
 import { SmartValue } from "../../../api/SmartValue";
@@ -56,7 +57,7 @@ describe("ChapterList Component", () => {
     } as never;
 
     const element = ChapterList({ story });
-    await timeout(10);
+    await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
     isShowCommand(items[3]);
@@ -91,7 +92,7 @@ describe("ChapterList Component", () => {
     } as never;
 
     const element = ChapterList({ story });
-    await timeout(10);
+    await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
     isShowCommand(items[7]);
@@ -143,7 +144,7 @@ describe("ChapterList Component", () => {
     } as never;
 
     const element = ChapterList({ story });
-    await timeout(10);
+    await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
     isShowCommand(items[5]);

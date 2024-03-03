@@ -8,7 +8,6 @@ export function loadScript(url: string): Promise<Event> {
     const script = document.createElement("script");
     script.addEventListener("load", resolve);
     script.addEventListener("error", (err) => {
-      // eslint-disable-next-line no-console
       console.error("Failed to load script: %s", url);
       reject(err);
     });
@@ -123,7 +122,6 @@ export function parseGetParams(url: string): Record<string, string | boolean> {
 
     return result;
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error(e);
 
     return {};

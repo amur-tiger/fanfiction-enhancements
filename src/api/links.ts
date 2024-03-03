@@ -1,4 +1,4 @@
-import { Chapter, Follow, Story, User } from "ffn-parser";
+import type { Chapter, Follow, Story, User } from "ffn-parser";
 
 export enum SortOption {
   UpdateDate = 1,
