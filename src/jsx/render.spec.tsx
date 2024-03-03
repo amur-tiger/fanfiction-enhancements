@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "vitest";
 import render from "./render";
 import useRef from "./ref";
 
@@ -70,7 +71,7 @@ describe("render", () => {
   it("should return custom component", () => {
     const props = Symbol("props");
     const ret = Symbol("return");
-    const component = jest.fn(() => ret);
+    const component = vi.fn(() => ret);
 
     const result = render(component as never, props as never);
 
@@ -79,7 +80,7 @@ describe("render", () => {
   });
 
   it("should call references", () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const ref = useRef(cb);
 
     const result = render("div", { ref });

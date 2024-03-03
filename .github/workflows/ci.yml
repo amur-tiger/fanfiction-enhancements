@@ -16,15 +16,8 @@ jobs:
           fetch-depth: 0
       - name: Install Dependencies
         run: npm ci
-      - name: Run Linting
-        run: npm run lint
       - name: Run Tests
         run: npm run test
-#      - name: Run Sonar
-#        uses: SonarSource/sonarcloud-github-action@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
     name: Build

@@ -1,4 +1,4 @@
-import { Follow, parseFollows, parseStory, Story as StoryData } from "ffn-parser";
+import { type Follow, parseFollows, parseStory, type Story as StoryData } from "ffn-parser";
 import { environment } from "../util/environment";
 import { parseGetParams } from "../utils";
 import RequestManager from "./request-manager";
@@ -188,9 +188,7 @@ export default class Api {
     const msg = template.content.querySelector(".gui_success");
     if (msg) {
       return {
-        // eslint-disable-next-line camelcase
         payload_type: "html",
-        // eslint-disable-next-line camelcase
         payload_data: msg.innerHTML,
       };
     }

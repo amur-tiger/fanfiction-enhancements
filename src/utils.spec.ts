@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ptToEm, rgbToHex } from "./utils";
 
 describe("Utility Functions", () => {

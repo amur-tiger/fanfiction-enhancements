@@ -1,9 +1,10 @@
+import { describe, expect, it, vi } from "vitest";
 import { Chapter, Story, ValueContainer } from "../api";
 import ChapterList from "./ChapterList";
 import { SmartValue } from "../api/SmartValue";
 import { environment } from "../util/environment";
 
-jest.mock("../util/environment");
+vi.mock("../util/environment");
 
 describe("Chapter List", () => {
   const fragmentHTML = `<!--suppress HtmlUnknownTarget, HtmlRequiredAltAttribute, HtmlDeprecatedAttribute -->

@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import Api from "./Api";
 import { RequestManager } from "./index";
 
@@ -10,7 +11,7 @@ describe("Api", () => {
 
   describe("Alerts", () => {
     it("should add alert", async () => {
-      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/api/ajax_subs.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -27,7 +28,7 @@ describe("Api", () => {
     });
 
     it("should remove alert", async () => {
-      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/alert/story.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -86,8 +87,7 @@ describe("Api", () => {
     			</table>
     		</form>`;
 
-      jest
-        .spyOn(requestManager, "fetch")
+      vi.spyOn(requestManager, "fetch")
         .mockImplementationOnce(async (url) => {
           expect(url).toBe("/alert/story.php");
           return { text: async () => page1 } as Response;
@@ -119,7 +119,7 @@ describe("Api", () => {
 
   describe("Favorites", () => {
     it("should add favorite", async () => {
-      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/api/ajax_subs.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -136,7 +136,7 @@ describe("Api", () => {
     });
 
     it("should remove favorite", async () => {
-      jest.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
         expect(url).toBe("/favorites/story.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -195,8 +195,7 @@ describe("Api", () => {
     			</table>
     		</form>`;
 
-      jest
-        .spyOn(requestManager, "fetch")
+      vi.spyOn(requestManager, "fetch")
         .mockImplementationOnce(async (url) => {
           expect(url).toBe("/favorites/story.php");
           return { text: async () => page1 } as Response;
@@ -253,7 +252,7 @@ describe("Api", () => {
     			<div id="storytext">Two words.</div>
     		</div>`;
 
-      jest.spyOn(requestManager, "fetch").mockImplementation(async (url) => {
+      vi.spyOn(requestManager, "fetch").mockImplementation(async (url) => {
         expect(url).toBe("/s/123");
         return { text: async () => page } as Response;
       });

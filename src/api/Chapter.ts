@@ -1,5 +1,5 @@
-import { Chapter as ChapterData } from "ffn-parser";
-import { SmartValue } from "./SmartValue";
+import type { Chapter as ChapterData } from "ffn-parser";
+import type { SmartValue } from "./SmartValue";
 import ValueContainer from "./ValueContainer";
 
 export default class Chapter {
