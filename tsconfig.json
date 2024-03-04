@@ -16,7 +16,8 @@
     "typeRoots": [
       "node_modules/@types",
       "typings"
-    ]
+    ],
+    "verbatimModuleSyntax": true
   },
   "include": [
     "src"

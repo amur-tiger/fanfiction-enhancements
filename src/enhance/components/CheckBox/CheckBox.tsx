@@ -1,5 +1,5 @@
 import render from "../../../jsx/render";
-import { SmartValue } from "../../../api/SmartValue";
+import type { SmartValue } from "../../../api/SmartValue";
 
 import "./CheckBox.css";
 

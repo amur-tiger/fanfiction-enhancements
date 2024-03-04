@@ -1,4 +1,4 @@
-import { SmartValue } from "../api/SmartValue";
+import type { SmartValue } from "../api/SmartValue";
 
 export type ComponentProps = Record<string, unknown>;
 

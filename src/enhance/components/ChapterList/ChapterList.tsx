@@ -1,7 +1,7 @@
 import render from "../../../jsx/render";
-import { useRef } from "../../../jsx";
-import { Story } from "../../../api";
-import CheckBox from "../CheckBox";
+import useRef from "../../../jsx/ref";
+import type Story from "../../../api/Story";
+import CheckBox from "../CheckBox/CheckBox";
 
 import "./ChapterList.css";
 

@@ -25,7 +25,7 @@
     "format": "prettier --write \"src/**/*.{css,ts,tsx}\"",
     "test": "run-p test:*",
     "test:unit": "vitest run src",
-    "test:types": "tsc --noEmit",
+    "test:types": "tsc --project tsconfig.test.json --noEmit",
     "build": "vite-node scripts/build.ts",
     "watch": "vite-node scripts/build.ts --watch",
     "serve": "vite-node scripts/build.ts --serve",

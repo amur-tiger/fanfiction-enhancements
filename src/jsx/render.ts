@@ -1,4 +1,5 @@
-import Component, { ChildType, ComponentProps, ComponentType } from "./Component";
+import type Component from "./Component";
+import type { ChildType, ComponentProps, ComponentType } from "./Component";
 import { isReference } from "./ref";
 import { isSmartValue } from "../api/SmartValue";
 

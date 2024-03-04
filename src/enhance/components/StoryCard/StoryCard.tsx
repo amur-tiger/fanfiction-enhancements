@@ -1,9 +1,10 @@
 import render from "../../../jsx/render";
-import Button from "../Button";
+import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
-import { RequestManager, Story } from "../../../api";
-import { useValueRef } from "../../../jsx";
-import { Epub } from "../../../util";
+import type RequestManager from "../../../api/request-manager/RequestManager";
+import type Story from "../../../api/Story";
+import useValueRef from "../../../jsx/valueRef";
+import Epub from "../../../util/epub";
 import BellIcon from "../../../assets/bell.svg";
 
 import "./StoryCard.css";

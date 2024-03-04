@@ -1,7 +1,8 @@
 import clsx from "clsx";
 import render from "../../../jsx/render";
-import { ChildType, Reference } from "../../../jsx";
-import { SmartValue } from "../../../api/SmartValue";
+import type { Reference } from "../../../jsx/ref";
+import type { ChildType } from "../../../jsx/Component";
+import type { SmartValue } from "../../../api/SmartValue";
 
 import "./Button.css";
 

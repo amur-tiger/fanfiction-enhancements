@@ -1,7 +1,7 @@
 import { environment } from "../util/environment";
-import { ChapterList as ChapterListComponent } from "./components";
-import Enhancer from "./Enhancer";
-import { ValueContainer } from "../api";
+import ChapterListComponent from "./components/ChapterList/ChapterList";
+import type Enhancer from "./Enhancer";
+import ValueContainer from "../api/ValueContainer";
 
 export default class ChapterList implements Enhancer {
   public constructor(private readonly valueContainer: ValueContainer) {}

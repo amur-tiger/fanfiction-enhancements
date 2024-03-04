@@ -1,6 +1,6 @@
 import { environment } from "../util/environment";
 import { DropBox } from "../api/DropBox";
-import Enhancer from "./Enhancer";
+import type Enhancer from "./Enhancer";
 import BellIcon from "../assets/bell.svg";
 import DropboxIcon from "../assets/dropbox.svg";
 

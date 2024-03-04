@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RequestManager, Story } from "../../../api";
+import RequestManager from "../../../api/request-manager/RequestManager";
+import type Story from "../../../api/Story";
 import StoryCard from "./StoryCard";
 
 // todo find way to run with included SVG

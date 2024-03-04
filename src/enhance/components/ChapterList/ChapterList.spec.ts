@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { timeout } from "../../../utils";
-import { Chapter, Story } from "../../../api";
-import { SmartValue } from "../../../api/SmartValue";
+import type Chapter from "../../../api/Chapter";
+import type Story from "../../../api/Story";
+import type { SmartValue } from "../../../api/SmartValue";
 import ChapterList from "./ChapterList";
 
 describe("ChapterList Component", () => {

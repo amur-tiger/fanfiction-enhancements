@@ -1,7 +1,9 @@
 import { parseFollows } from "ffn-parser";
-import { ChapterList, StoryCard } from "./components";
-import Enhancer from "./Enhancer";
-import { RequestManager, ValueContainer } from "../api";
+import ChapterList from "./components/ChapterList/ChapterList";
+import StoryCard from "./components/StoryCard/StoryCard";
+import type Enhancer from "./Enhancer";
+import type RequestManager from "../api/request-manager/RequestManager";
+import type ValueContainer from "../api/ValueContainer";
 
 import "./FollowsList.css";
 

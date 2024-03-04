@@ -1,4 +1,4 @@
-import useRef, { Reference } from "./ref";
+import useRef, { type Reference } from "./ref";
 
 export interface ValueReference<T> extends Reference<T> {
   current?: T;

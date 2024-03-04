@@ -2,7 +2,7 @@ import { parseFollows, parseStory } from "ffn-parser";
 import Container from "./container";
 import { environment, Page } from "./util/environment";
 import { oAuth2LandingPage } from "./api/DropBox";
-import { StoryText } from "./enhance";
+import StoryText from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
 
 import "./theme.css";

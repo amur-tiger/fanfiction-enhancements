@@ -1,7 +1,8 @@
-import { environment } from "../util";
-import Enhancer from "./Enhancer";
-import { StoryCard } from "./components";
-import { RequestManager, ValueContainer } from "../api";
+import { environment } from "../util/environment";
+import type Enhancer from "./Enhancer";
+import StoryCard from "./components/StoryCard/StoryCard";
+import type RequestManager from "../api/request-manager/RequestManager";
+import type ValueContainer from "../api/ValueContainer";
 
 import "./StoryProfile.css";
 
