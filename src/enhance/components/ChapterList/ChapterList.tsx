@@ -1,8 +1,5 @@
-import render from "../../../jsx/render";
-import useRef from "../../../jsx/ref";
 import type Story from "../../../api/Story";
 import CheckBox from "../CheckBox/CheckBox";
-
 import "./ChapterList.css";
 
 function hideLongChapterList(list: HTMLElement) {
@@ -100,21 +97,11 @@ export interface ChapterListProps {
   story: Story;
 }
 
-export default function ChapterList({ story }: ChapterListProps): HTMLElement {
-  const ref = useRef((list: HTMLElement) => {
-    setTimeout(() => {
-      // The getter for the read status are asynchronous, so the read status is not set immediately. This is
-      // necessary for hideLongChapterList(), though, so it has to wait. Since the data is saved locally, this
-      // little timeout should be plenty. If there are problems, though, maybe the getter have to be primed and
-      // waited on.
-      hideLongChapterList(list);
-    }, 5);
-  });
-
-  return (
+export default function ChapterList({ story }: ChapterListProps) {
+  const element = (
     <div class="ffe-cl-container">
       <div class="ffe-cl">
-        <ol ref={ref}>
+        <ol>
           {story.chapters.map((chapter) => (
             <li class="ffe-cl-chapter">
               <CheckBox bind={chapter.read} />
@@ -130,4 +117,14 @@ export default function ChapterList({ story }: ChapterListProps): HTMLElement {
       </div>
     </div>
   );
+
+  setTimeout(() => {
+    // The getter for the read status are asynchronous, so the read status is not set immediately. This is
+    // necessary for hideLongChapterList(), though, so it has to wait. Since the data is saved locally, this
+    // little timeout should be plenty. If there are problems, though, maybe the getter have to be primed and
+    // waited on.
+    hideLongChapterList(element.querySelector("ol")!);
+  }, 5);
+
+  return element;
 }

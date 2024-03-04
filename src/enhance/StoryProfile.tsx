@@ -23,7 +23,7 @@ export default class StoryProfile implements Enhancer {
       return;
     }
 
-    const card = StoryCard({ requestManager: this.requestManager, story });
+    const card = <StoryCard requestManager={this.requestManager} story={story} />;
 
     // profile.parentElement.replaceChild(card, profile);
     profile.parentElement?.insertBefore(card, profile);

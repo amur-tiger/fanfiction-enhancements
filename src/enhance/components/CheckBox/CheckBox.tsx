@@ -1,4 +1,3 @@
-import render from "../../../jsx/render";
 import type { SmartValue } from "../../../api/SmartValue";
 
 import "./CheckBox.css";
@@ -7,25 +6,29 @@ export interface CheckBoxProps {
   bind: SmartValue<boolean>;
 }
 
-export default function CheckBox({ bind }: CheckBoxProps): Element {
+export default function CheckBox({ bind }: CheckBoxProps) {
   const id = `ffe-check-${parseInt(`${Math.random() * 100000000}`, 10)}`;
 
-  const element: HTMLElement = (
+  const element = (
     <span class="ffe-checkbox">
-      <input type="checkbox" id={id} />
+      <input
+        type="checkbox"
+        id={id}
+        onChange={(event: Event) => bind.set((event.target as HTMLInputElement)?.checked)}
+      />
       <label for={id} />
     </span>
   );
 
   const apply = (value: boolean | undefined) => {
-    (element.firstElementChild as HTMLInputElement).checked = value ?? false;
+    const ex = document.getElementById(id);
+    if (ex) {
+      (ex as HTMLInputElement).checked = value ?? false;
+    }
   };
 
   bind.subscribe(apply);
   bind.get().then(apply);
-  element.firstElementChild?.addEventListener("change", async () => {
-    await bind.set((element.firstElementChild as HTMLInputElement).checked);
-  });
 
   return element;
 }

@@ -32,7 +32,7 @@ export default class ChapterList implements Enhancer {
     }
 
     // add chapter list
-    const chapterList = ChapterListComponent({ story });
+    const chapterList = <ChapterListComponent story={story} />;
     contentWrapper.insertBefore(chapterList, document.getElementById("review_success"));
   }
 }

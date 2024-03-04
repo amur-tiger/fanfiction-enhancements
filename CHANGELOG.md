@@ -3,6 +3,7 @@
 ## unreleased
 
 * Update dependencies and tooling
+* Update JSX renderer
 
 ## 0.7.4
 

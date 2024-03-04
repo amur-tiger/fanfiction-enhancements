@@ -26,7 +26,7 @@ describe.skip("StoryCard Component", () => {
   it("should create a div element", () => {
     const story = createStory();
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     expect(element.tagName).toBe("DIV");
   });
@@ -34,7 +34,7 @@ describe.skip("StoryCard Component", () => {
   it("should insert a rating", () => {
     const story = createStory();
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     expect(element.querySelector(".ffe-rating")).toBeDefined();
   });
@@ -45,7 +45,7 @@ describe.skip("StoryCard Component", () => {
       title: "the title",
     });
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
     expect(title.tagName).toBe("A");
@@ -61,7 +61,7 @@ describe.skip("StoryCard Component", () => {
       },
     });
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
     expect(author.tagName).toBe("A");
@@ -72,7 +72,7 @@ describe.skip("StoryCard Component", () => {
   it("should insert buttons", () => {
     const story = createStory();
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
     const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
@@ -87,7 +87,7 @@ describe.skip("StoryCard Component", () => {
       imageUrl: "/src/img.jpg",
     });
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const image = element.querySelector(".ffe-sc-image img") as HTMLImageElement;
     expect(image.tagName).toBe("IMG");
@@ -99,7 +99,7 @@ describe.skip("StoryCard Component", () => {
       description: "this is a description",
     });
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const description = element.querySelector(".ffe-sc-description");
     expect(description?.tagName).toBe("DIV");
@@ -117,7 +117,7 @@ describe.skip("StoryCard Component", () => {
       reviews: 11,
     });
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
     expect(tags.length).toBe(8);
@@ -157,7 +157,7 @@ describe.skip("StoryCard Component", () => {
       updated: new Date(2012, 11, 24),
     });
 
-    const element = StoryCard({ requestManager, story });
+    const element = StoryCard({ requestManager, story }) as HTMLElement;
 
     const footer = element.querySelector(".ffe-sc-footer");
     expect(footer?.childElementCount).toBe(4);

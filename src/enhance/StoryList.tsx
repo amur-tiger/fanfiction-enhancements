@@ -41,7 +41,7 @@ export default class StoryList implements Enhancer {
         },
         this.valueContainer,
       );
-      const card = StoryCard({ requestManager: this.requestManager, story });
+      const card = <StoryCard requestManager={this.requestManager} story={story} />;
       item.appendChild(card);
 
       deferChapterList.push([story, item]);

@@ -37,10 +37,10 @@ export default class FollowsList implements Enhancer {
       // suppressed to keep sorting
       const story = await this.valueContainer.getStory(followedStory.id);
       if (story) {
-        const card = StoryCard({ requestManager: this.requestManager, story });
+        const card = <StoryCard requestManager={this.requestManager} story={story} />;
         item.appendChild(card);
 
-        const chapterList = ChapterList({ story });
+        const chapterList = <ChapterList story={story} />;
         item.appendChild(chapterList);
       }
     }
