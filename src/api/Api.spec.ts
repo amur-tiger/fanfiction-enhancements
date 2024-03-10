@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Api from "./Api";
-import { RequestManager } from "./index";
+import RequestManager from "./request-manager/RequestManager";
 
 describe("Api", () => {
   let requestManager: RequestManager;

@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { Chapter, Story, ValueContainer } from "../api";
+import type Chapter from "../api/Chapter";
+import type Story from "../api/Story";
+import type ValueContainer from "../api/ValueContainer";
 import ChapterList from "./ChapterList";
-import { SmartValue } from "../api/SmartValue";
+import type { SmartValue } from "../api/SmartValue";
 import { environment } from "../util/environment";
 
 vi.mock("../util/environment");

@@ -1,44 +1,43 @@
-import render from "../../../jsx/render";
-
+import clsx from "clsx";
 import "./Rating.css";
+
+const ratings: Record<string, { class: string; title: string } | undefined> = {
+  K: {
+    class: "ffe-rating-k",
+    title: "General Audience (5+)",
+  },
+  "K+": {
+    class: "ffe-rating-kp",
+    title: "Young Children (9+)",
+  },
+  T: {
+    class: "ffe-rating-t",
+    title: "Teens (13+)",
+  },
+  M: {
+    class: "ffe-rating-m",
+    title: "Teens (16+)",
+  },
+  MA: {
+    class: "ffe-rating-ma",
+    title: "Mature (18+)",
+  },
+};
 
 export interface RatingProps {
   rating: string;
 }
 
-export default function Rating({ rating }: RatingProps): HTMLAnchorElement {
-  const element = (
-    <a href="https://www.fictionratings.com/" class="ffe-rating" rel="noreferrer" target="rating">
-      {rating}
+export default function Rating({ rating }: RatingProps) {
+  return (
+    <a
+      href="https://www.fictionratings.com/"
+      class={clsx("ffe-rating", ratings[rating]?.class)}
+      title={ratings[rating]?.title ?? "No Rating Available"}
+      rel="noreferrer"
+      target="rating"
+    >
+      {rating in ratings ? rating : "?"}
     </a>
   );
-
-  switch (rating) {
-    case "K":
-      element.title = "General Audience (5+)";
-      element.classList.add("ffe-rating-k");
-      break;
-    case "K+":
-      element.title = "Young Children (9+)";
-      element.classList.add("ffe-rating-kp");
-      break;
-    case "T":
-      element.title = "Teens (13+)";
-      element.classList.add("ffe-rating-t");
-      break;
-    case "M":
-      element.title = "Teens (16+)";
-      element.classList.add("ffe-rating-m");
-      break;
-    case "MA":
-      element.title = "Mature (18+)";
-      element.classList.add("ffe-rating-ma");
-      break;
-    default:
-      element.textContent = "?";
-      element.title = "No Rating Available";
-      break;
-  }
-
-  return element;
 }

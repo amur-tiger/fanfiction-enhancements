@@ -1,5 +1,8 @@
 import JSZip from "jszip";
-import { Chapter, createChapterLink, RequestManager, Story } from "../api";
+import type Chapter from "../api/Chapter";
+import { createChapterLink } from "../api/links";
+import type RequestManager from "../api/request-manager/RequestManager";
+import type Story from "../api/Story";
 
 function escapeFile(text: string): string {
   return text.replace(/[<>:"/\\|?*]/g, "-");

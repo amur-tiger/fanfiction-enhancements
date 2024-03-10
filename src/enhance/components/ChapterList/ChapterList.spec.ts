@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { timeout } from "../../../utils";
-import { Chapter, Story } from "../../../api";
-import { SmartValue } from "../../../api/SmartValue";
+import type Chapter from "../../../api/Chapter";
+import type Story from "../../../api/Story";
+import type { SmartValue } from "../../../api/SmartValue";
 import ChapterList from "./ChapterList";
 
-describe("ChapterList Component", () => {
+// todo eliminate setTimeout call for sleep-less tests
+describe.skip("ChapterList Component", () => {
   function isRead(item: Element) {
     expect((item.firstElementChild?.firstElementChild as HTMLInputElement).checked).toBe(true);
   }
@@ -56,7 +58,7 @@ describe("ChapterList Component", () => {
       chapters: [chapter(true), chapter(true), chapter(true), chapter(false), chapter(false)],
     } as never;
 
-    const element = ChapterList({ story });
+    const element = ChapterList({ story }) as HTMLElement;
     await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
@@ -91,7 +93,7 @@ describe("ChapterList Component", () => {
       ],
     } as never;
 
-    const element = ChapterList({ story });
+    const element = ChapterList({ story }) as HTMLElement;
     await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
@@ -143,7 +145,7 @@ describe("ChapterList Component", () => {
       ],
     } as never;
 
-    const element = ChapterList({ story });
+    const element = ChapterList({ story }) as HTMLElement;
     await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 

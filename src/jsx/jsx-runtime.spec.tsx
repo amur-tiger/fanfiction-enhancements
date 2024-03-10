@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import render from "./render";
-import useRef from "./ref";
+import { jsx } from "./jsx-runtime";
 
 describe("render", () => {
   it("should render html tags", () => {
-    const result = render("div", { class: "container" });
+    const result = jsx("div", { class: "container" });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("className", "container");
@@ -12,7 +11,7 @@ describe("render", () => {
   });
 
   it("should attach children", () => {
-    const result = render("div", null, render("p", { align: "center" }));
+    const result = jsx("div", { children: jsx("p", { align: "center" }) });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 1);
@@ -21,7 +20,7 @@ describe("render", () => {
   });
 
   it("should render strings", () => {
-    const result = render("div", null, "text");
+    const result = jsx("div", { children: "text" });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 0);
@@ -29,7 +28,7 @@ describe("render", () => {
   });
 
   it("should render numbers", () => {
-    const result = render("div", null, 13);
+    const result = jsx("div", { children: 13 });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 0);
@@ -37,7 +36,7 @@ describe("render", () => {
   });
 
   it("should not render undefined", () => {
-    const result = render("div", null, undefined);
+    const result = jsx("div", { children: undefined });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 0);
@@ -45,7 +44,7 @@ describe("render", () => {
   });
 
   it("should not render null", () => {
-    const result = render("div", null, null);
+    const result = jsx("div", { children: null });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 0);
@@ -53,7 +52,7 @@ describe("render", () => {
   });
 
   it("should not render false", () => {
-    const result = render("div", null, false);
+    const result = jsx("div", { children: false });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 0);
@@ -61,7 +60,7 @@ describe("render", () => {
   });
 
   it("should not render true", () => {
-    const result = render("div", null, true);
+    const result = jsx("div", { children: true });
 
     expect(result).toBeInstanceOf(HTMLDivElement);
     expect(result).toHaveProperty("childElementCount", 0);
@@ -73,18 +72,9 @@ describe("render", () => {
     const ret = Symbol("return");
     const component = vi.fn(() => ret);
 
-    const result = render(component as never, props as never);
+    const result = jsx(component as never, props as never);
 
     expect(result).toBe(ret);
     expect(component).toHaveBeenCalledWith(props);
-  });
-
-  it("should call references", () => {
-    const cb = vi.fn();
-    const ref = useRef(cb);
-
-    const result = render("div", { ref });
-
-    expect(cb).toHaveBeenCalledWith(result);
   });
 });

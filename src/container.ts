@@ -1,6 +1,13 @@
-import { Api, RequestManager, ValueContainer } from "./api";
-import { ChapterList, FollowsList, MenuBar, SaveListSettings, StoryList, StoryProfile } from "./enhance";
 import { DropBox } from "./api/DropBox";
+import Api from "./api/Api";
+import RequestManager from "./api/request-manager/RequestManager";
+import ValueContainer from "./api/ValueContainer";
+import MenuBar from "./enhance/MenuBar";
+import FollowsList from "./enhance/FollowsList";
+import StoryList from "./enhance/StoryList";
+import StoryProfile from "./enhance/StoryProfile";
+import ChapterList from "./enhance/ChapterList";
+import SaveListSettings from "./enhance/SaveListSettings";
 
 export default class Container {
   private requestManager?: RequestManager;

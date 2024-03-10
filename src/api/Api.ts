@@ -1,7 +1,7 @@
 import { type Follow, parseFollows, parseStory, type Story as StoryData } from "ffn-parser";
 import { environment } from "../util/environment";
 import { parseGetParams } from "../utils";
-import RequestManager from "./request-manager";
+import RequestManager from "./request-manager/RequestManager";
 
 export default class Api {
   private alerts?: Promise<Follow[]>;

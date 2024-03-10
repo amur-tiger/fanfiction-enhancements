@@ -1,53 +1,32 @@
 import clsx from "clsx";
-import render from "../../../jsx/render";
-import { ChildType, Reference } from "../../../jsx";
-import { SmartValue } from "../../../api/SmartValue";
+import type { SmartValue } from "../../../api/SmartValue";
 
 import "./Button.css";
 
 export interface ButtonProps {
   class?: string;
   title?: string;
-  active?: boolean;
+  active?: SmartValue<boolean>;
+  disabled?: boolean;
   onClick?: EventListenerOrEventListenerObject;
-  bind?: SmartValue<boolean>;
-  ref?: Reference<HTMLElement>;
-  children?: ChildType;
+  children?: JSX.Children;
 }
 
-export default function Button({
-  class: className,
-  title,
-  active,
-  onClick,
-  bind,
-  ref,
-  children,
-}: ButtonProps): Element {
-  const element: HTMLElement = (
-    <span role="button" class={clsx("btn", className)} title={title}>
+export default function Button({ class: className, title, active, disabled, onClick, children }: ButtonProps) {
+  const id = `ffe-button-${parseInt(`${Math.random() * 100000000}`, 10)}`;
+
+  const element = (
+    <span role="button" id={id} class={clsx("btn", className)} title={title} onClick={onClick}>
       {children}
     </span>
   );
 
-  if (onClick) {
-    element.addEventListener("click", onClick);
-  }
-
   if (active) {
-    element.classList.add("ffe-active");
-  }
-
-  if (bind) {
-    bind.subscribe((act) => element.classList.toggle("ffe-active", act));
-    bind.get().then((act) => element.classList.toggle("ffe-active", act));
+    active.subscribe((act) => element.classList.toggle("ffe-active", act));
+    active.get().then((act) => element.classList.toggle("ffe-active", act));
     element.addEventListener("click", async () => {
-      await bind?.set(!element.classList.contains("ffe-active"));
+      await active.set(!element.classList.contains("ffe-active"));
     });
-  }
-
-  if (ref) {
-    ref.callback(element);
   }
 
   return element;

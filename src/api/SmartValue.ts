@@ -1,4 +1,4 @@
-import { Synchronizer } from "./DropBox";
+import type { Synchronizer } from "./DropBox";
 
 export interface ValueGetter<T> {
   (): Promise<T>;

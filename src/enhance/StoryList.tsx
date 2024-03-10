@@ -1,7 +1,9 @@
 import { parseStoryList } from "ffn-parser";
-import Enhancer from "./Enhancer";
-import { RequestManager, Story, ValueContainer } from "../api";
-import { StoryCard } from "./components";
+import type Enhancer from "./Enhancer";
+import RequestManager from "../api/request-manager/RequestManager";
+import Story from "../api/Story";
+import type ValueContainer from "../api/ValueContainer";
+import StoryCard from "./components/StoryCard/StoryCard";
 
 import "./StoryList.css";
 
@@ -39,7 +41,7 @@ export default class StoryList implements Enhancer {
         },
         this.valueContainer,
       );
-      const card = StoryCard({ requestManager: this.requestManager, story });
+      const card = <StoryCard requestManager={this.requestManager} story={story} />;
       item.appendChild(card);
 
       deferChapterList.push([story, item]);

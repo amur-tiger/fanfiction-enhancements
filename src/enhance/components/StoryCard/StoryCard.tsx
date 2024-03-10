@@ -1,45 +1,59 @@
-import render from "../../../jsx/render";
-import Button from "../Button";
+import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
-import { RequestManager, Story } from "../../../api";
-import { useValueRef } from "../../../jsx";
-import { Epub } from "../../../util";
+import type RequestManager from "../../../api/request-manager/RequestManager";
+import type Story from "../../../api/Story";
+import Epub from "../../../util/epub";
 import BellIcon from "../../../assets/bell.svg";
 
 import "./StoryCard.css";
+
+import { SmartValueLocal } from "../../../api/SmartValue";
 
 export interface StoryCardProps {
   requestManager: RequestManager;
   story: Story;
 }
 
-export default function StoryCard({ requestManager, story }: StoryCardProps): Element {
-  const buttonRef = useValueRef<HTMLElement>();
-  const linkRef = useValueRef<HTMLAnchorElement>();
+const Counter = new SmartValueLocal<number>("test", localStorage);
+
+const CInc = () => {
+  Counter.get().then(async (value) => {
+    console.log((value ?? 0) + 1);
+    await Counter.set((value ?? 0) + 1);
+    setTimeout(CInc, 5000);
+  });
+};
+
+// CInc();
+
+export default function StoryCard({ requestManager, story }: StoryCardProps) {
   let isDownloading = false;
 
   const handleDownloadClick = async () => {
-    if (isDownloading || !linkRef.current || !("chapters" in story)) {
+    const button = element.querySelector(".ffe-download-button");
+    const link = element.querySelector(".ffe-download-link") as HTMLAnchorElement | null;
+
+    if (isDownloading || !link || !("chapters" in story)) {
       return;
     }
 
     try {
       isDownloading = true;
-      buttonRef.current?.classList.add("disabled");
+      button?.classList.add("disabled");
 
       const epub = new Epub(requestManager, story);
       const blob = await epub.create();
 
-      linkRef.current.href = URL.createObjectURL(blob);
-      linkRef.current.download = epub.getFilename();
-      linkRef.current.click();
+      link.href = URL.createObjectURL(blob);
+      link.download = epub.getFilename();
+      link.click();
     } finally {
       isDownloading = false;
-      buttonRef.current?.classList.remove("disabled");
+      button?.classList.remove("disabled");
     }
   };
 
-  return (
+  const element = (
     <div class="ffe-sc">
       <div class="ffe-sc-header">
         <Rating rating={story.rating} />
@@ -52,16 +66,16 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
         </a>
 
         <div class="ffe-sc-mark">
-          <Button onClick={handleDownloadClick} title="Download as ePub" ref={buttonRef}>
+          <Button onClick={handleDownloadClick} title="Download as ePub" class="ffe-download-button">
             <span class="icon-arrow-down" />
           </Button>
-          <a style="display: none" ref={linkRef} />
+          <a style="display: none" class="ffe-download-link" />
 
           <div class="btn-group">
-            <Button class="ffe-sc-follow" bind={story.alert} title="Toggle Story Alert">
+            <Button class="ffe-sc-follow" active={story.alert} title="Toggle Story Alert">
               <BellIcon />
             </Button>
-            <Button class="ffe-sc-favorite icon-heart" bind={story.favorite} title="Toggle Favorite" />
+            <Button class="ffe-sc-favorite icon-heart" active={story.favorite} title="Toggle Favorite" />
           </div>
         </div>
       </div>
@@ -92,15 +106,17 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
           <span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters:&nbsp;{story.chapters.length}</span>
         )}
 
-        {story.reviews && (
+        {story.reviews != null && (
           <span class="ffe-sc-tag ffe-sc-tag-reviews">
             <a href={`/r/${story.id}/`}>Reviews:&nbsp;{story.reviews}</a>
           </span>
         )}
 
-        {story.favorites && <span class="ffe-sc-tag ffe-sc-tag-favorites">Favorites:&nbsp;{story.favorites}</span>}
+        {story.favorites != null && (
+          <span class="ffe-sc-tag ffe-sc-tag-favorites">Favorites:&nbsp;{story.favorites}</span>
+        )}
 
-        {story.follows && <span class="ffe-sc-tag ffe-sc-tag-follows">Follows:&nbsp;{story.follows}</span>}
+        {story.follows != null && <span class="ffe-sc-tag ffe-sc-tag-follows">Follows:&nbsp;{story.follows}</span>}
       </div>
 
       {story.imageUrl && (
@@ -112,9 +128,9 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
       <div class="ffe-sc-description">{story.description}</div>
 
       <div class="ffe-sc-footer">
-        {story.words && (
+        {story.words != null && (
           <div class="ffe-sc-footer-words">
-            <b>{story.words.toLocaleString("en")}</b> words
+            <strong>{story.words.toLocaleString("en")}</strong> words
           </div>
         )}
 
@@ -126,18 +142,20 @@ export default function StoryCard({ requestManager, story }: StoryCardProps): El
 
         {story.published && (
           <span class="ffe-sc-footer-info">
-            <b>Published:&nbsp;</b>
+            <strong>Published:&nbsp;</strong>
             <time datetime={story.published.toISOString()}>{story.published.toLocaleDateString("en")}</time>
           </span>
         )}
 
         {story.updated && (
           <span class="ffe-sc-footer-info">
-            <b>Updated:&nbsp;</b>
+            <strong>Updated:&nbsp;</strong>
             <time datetime={story.updated.toISOString()}>{story.updated.toLocaleDateString("en")}</time>
           </span>
         )}
       </div>
     </div>
   );
+
+  return element;
 }

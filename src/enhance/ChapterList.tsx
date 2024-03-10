@@ -1,7 +1,7 @@
 import { environment } from "../util/environment";
-import { ChapterList as ChapterListComponent } from "./components";
-import Enhancer from "./Enhancer";
-import { ValueContainer } from "../api";
+import ChapterListComponent from "./components/ChapterList/ChapterList";
+import type Enhancer from "./Enhancer";
+import ValueContainer from "../api/ValueContainer";
 
 export default class ChapterList implements Enhancer {
   public constructor(private readonly valueContainer: ValueContainer) {}
@@ -32,7 +32,7 @@ export default class ChapterList implements Enhancer {
     }
 
     // add chapter list
-    const chapterList = ChapterListComponent({ story });
+    const chapterList = <ChapterListComponent story={story} />;
     contentWrapper.insertBefore(chapterList, document.getElementById("review_success"));
   }
 }
