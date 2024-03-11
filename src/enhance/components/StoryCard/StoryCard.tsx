@@ -1,45 +1,31 @@
+import clsx from "clsx";
+import { createSignal } from "../../../signal/signal";
 import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
 import type RequestManager from "../../../api/request-manager/RequestManager";
 import type Story from "../../../api/Story";
 import Epub from "../../../util/epub";
 import BellIcon from "../../../assets/bell.svg";
-
 import "./StoryCard.css";
-
-import { SmartValueLocal } from "../../../api/SmartValue";
 
 export interface StoryCardProps {
   requestManager: RequestManager;
   story: Story;
 }
 
-const Counter = new SmartValueLocal<number>("test", localStorage);
-
-const CInc = () => {
-  Counter.get().then(async (value) => {
-    console.log((value ?? 0) + 1);
-    await Counter.set((value ?? 0) + 1);
-    setTimeout(CInc, 5000);
-  });
-};
-
-// CInc();
+const isDownloading = createSignal(false);
 
 export default function StoryCard({ requestManager, story }: StoryCardProps) {
-  let isDownloading = false;
-
   const handleDownloadClick = async () => {
     const button = element.querySelector(".ffe-download-button");
     const link = element.querySelector(".ffe-download-link") as HTMLAnchorElement | null;
 
-    if (isDownloading || !link || !("chapters" in story)) {
+    if (isDownloading() || !link || !("chapters" in story)) {
       return;
     }
 
     try {
-      isDownloading = true;
-      button?.classList.add("disabled");
+      isDownloading(true);
 
       const epub = new Epub(requestManager, story);
       const blob = await epub.create();
@@ -48,8 +34,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
       link.download = epub.getFilename();
       link.click();
     } finally {
-      isDownloading = false;
-      button?.classList.remove("disabled");
+      isDownloading(false);
     }
   };
 
@@ -66,16 +51,29 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
         </a>
 
         <div class="ffe-sc-mark">
-          <Button onClick={handleDownloadClick} title="Download as ePub" class="ffe-download-button">
+          <Button
+            onClick={handleDownloadClick}
+            title="Download as ePub"
+            class="ffe-download-button"
+            disabled={isDownloading()}
+          >
             <span class="icon-arrow-down" />
           </Button>
           <a style="display: none" class="ffe-download-link" />
 
           <div class="btn-group">
-            <Button class="ffe-sc-follow" active={story.alert} title="Toggle Story Alert">
+            <Button
+              class={clsx("ffe-sc-follow", { "ffe-active": story.alert() })}
+              title="Toggle Story Alert"
+              onClick={() => story.alert((prev) => !prev)}
+            >
               <BellIcon />
             </Button>
-            <Button class="ffe-sc-favorite icon-heart" active={story.favorite} title="Toggle Favorite" />
+            <Button
+              class={clsx("ffe-sc-favorite icon-heart", { "ffe-active": story.favorite() })}
+              title="Toggle Favorite"
+              onClick={() => story.favorite((prev) => !prev)}
+            />
           </div>
         </div>
       </div>

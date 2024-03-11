@@ -1,4 +1,5 @@
 import type { Synchronizer } from "./DropBox";
+import { createSignal, type Signal } from "../signal/signal";
 
 export interface ValueGetter<T> {
   (): Promise<T>;
@@ -24,6 +25,7 @@ export function isSmartValue(value: unknown): value is SmartValue<unknown> {
 
 export interface SmartValue<T> {
   name: string;
+  readonly signal: Signal<T | undefined>;
 
   /**
    * Retrieves the value from cache. If the value is not in the cache and a getter is present, it
@@ -70,12 +72,36 @@ export interface SmartValue<T> {
 
 abstract class SmartValueBase<T> implements SmartValue<T> {
   private subscribers: Record<symbol, ValueSubscriberCallback<T>> = {};
+  private isLocalChange = false;
+  public _signal: Signal<T | undefined> | undefined;
 
   protected constructor(
     public readonly name: string,
     protected readonly getter?: ValueGetter<T>,
     protected readonly setter?: ValueSetter<T>,
   ) {}
+
+  public get signal() {
+    if (!this._signal) {
+      this._signal = createSignal<T | undefined>(undefined, (value, oldValue) => {
+        if (!this.isLocalChange) {
+          this.isLocalChange = true;
+          this.set(value!)
+            .catch(() => this._signal!(oldValue))
+            .finally(() => (this.isLocalChange = false));
+        }
+      });
+      this.get().then((value) => {
+        try {
+          this.isLocalChange = true;
+          this._signal!(value);
+        } finally {
+          this.isLocalChange = false;
+        }
+      });
+    }
+    return this._signal;
+  }
 
   public async get(): Promise<T | undefined> {
     let value = await this.getCached();
@@ -129,6 +155,15 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
   }
 
   protected async trigger(value: T): Promise<void> {
+    if (!this.isLocalChange) {
+      try {
+        this.isLocalChange = true;
+        this.signal(value);
+      } finally {
+        this.isLocalChange = false;
+      }
+    }
+
     await Promise.all(
       Object.getOwnPropertySymbols(this.subscribers)
         .map((sym) => this.subscribers[sym](value))
@@ -141,7 +176,7 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
   protected abstract setCached(value: T): Promise<void>;
 }
 
-export class SmartValueLocal<T> extends SmartValueBase<T> {
+export class SmartValueLS<T> extends SmartValueBase<T> {
   constructor(
     public readonly name: string,
     private readonly storage: Storage,
@@ -173,7 +208,8 @@ export class SmartValueLocal<T> extends SmartValueBase<T> {
   }
 }
 
-export class SmartValueRoaming<T> extends SmartValueBase<T> {
+/** @deprecated */
+export class SmartValueGM<T> extends SmartValueBase<T> {
   private token: number | undefined = undefined;
 
   constructor(

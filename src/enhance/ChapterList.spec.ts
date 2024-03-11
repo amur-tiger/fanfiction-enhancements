@@ -5,6 +5,7 @@ import type ValueContainer from "../api/ValueContainer";
 import ChapterList from "./ChapterList";
 import type { SmartValue } from "../api/SmartValue";
 import { environment } from "../util/environment";
+import { createSignal } from "../signal/signal";
 
 vi.mock("../util/environment");
 
@@ -53,21 +54,12 @@ describe("Chapter List", () => {
 		</div>`;
 
   function createChapter(id: number, name: string, words: number): Chapter {
-    const r: SmartValue<boolean> = {
-      get: () => Promise.resolve(true),
-      subscribe: () => undefined,
-    } as never;
-    const w: SmartValue<number> = {
-      get: () => Promise.resolve(words),
-      subscribe: () => undefined,
-    } as never;
-
     return {
       storyId: 0,
       id,
       title: name,
-      read: r,
-      words: w,
+      read: createSignal(true as boolean | undefined),
+      words: createSignal(words as number | undefined),
     };
   }
 
