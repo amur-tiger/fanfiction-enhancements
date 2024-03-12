@@ -32,7 +32,6 @@ export function jsx(tag: string | JSX.Component | undefined, props: JSX.Componen
     throw new Error("Fragment is not supported");
   }
 
-  // todo would be nice to put elements into a context as well, but that requires a custom babel transform
   const element = document.createElement(tag);
   applyAttributes(element, attributes);
 

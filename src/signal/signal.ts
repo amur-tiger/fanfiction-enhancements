@@ -52,11 +52,20 @@ export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) =>
 
         onChange?.(currentValue as T, oldValue as T);
 
-        // clone because re-render will register new contexts
-        const clone = [...contexts];
+        // filter out child contexts of parent contexts that will be updated anyway
+        const relevant: RenderContext[] = contexts.filter((context) => {
+          let parent = context.parent;
+          while (parent) {
+            if (contexts.includes(parent)) {
+              return false;
+            }
+            parent = parent.parent;
+          }
+          return true;
+        });
         contexts = [];
 
-        for (const c of clone) {
+        for (const c of relevant) {
           c.rerender();
         }
       }

@@ -2,6 +2,7 @@ import { build, type BuildOptions, context } from "esbuild";
 import fs from "node:fs/promises";
 import gmCssLoader from "./gm-css-loader";
 import svgLoader from "./svg-loader";
+import jsxTransform from "./jsx-transform";
 import header from "./header";
 
 const watch = process.argv.some((a) => a === "--watch");
@@ -21,7 +22,7 @@ const buildOptions: BuildOptions = {
   banner: {
     js: header,
   },
-  plugins: [gmCssLoader(), svgLoader()],
+  plugins: [jsxTransform(), gmCssLoader(), svgLoader()],
 };
 
 if (watch || serve) {

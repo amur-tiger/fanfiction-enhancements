@@ -13,11 +13,10 @@ export interface StoryCardProps {
   story: Story;
 }
 
-const isDownloading = createSignal(false);
-
 export default function StoryCard({ requestManager, story }: StoryCardProps) {
+  const isDownloading = createSignal(false);
+
   const handleDownloadClick = async () => {
-    const button = element.querySelector(".ffe-download-button");
     const link = element.querySelector(".ffe-download-link") as HTMLAnchorElement | null;
 
     if (isDownloading() || !link || !("chapters" in story)) {

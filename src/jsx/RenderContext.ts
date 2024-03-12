@@ -27,14 +27,20 @@ export default class RenderContext {
     return new RenderContext(parent);
   }
 
+  private _parent: RenderContext | undefined;
   private children: RenderContext[] = [];
   private disposeFn: (() => void)[] = [];
   private element: JSX.Element | undefined;
 
   public constructor(parent?: RenderContext) {
+    this._parent = parent;
     if (parent != null) {
       parent.children.push(this);
     }
+  }
+
+  public get parent() {
+    return this._parent;
   }
 
   /**
@@ -54,7 +60,6 @@ export default class RenderContext {
     this.rerender = function (this: RenderContext) {
       this.dispose();
       const next = doRender();
-      // Diff this instead of a full replace for performance later
       this.element!.replaceWith(next);
       this.element = next;
     };
@@ -88,6 +93,7 @@ export default class RenderContext {
     }
     for (const child of this.children) {
       child.dispose();
+      child._parent = undefined;
     }
     this.disposeFn = [];
     this.children = [];
