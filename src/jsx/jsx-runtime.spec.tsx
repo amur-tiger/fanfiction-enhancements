@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { createSignal } from "../signal/signal";
 import { jsx } from "./jsx-runtime";
 
 describe("render", () => {
@@ -67,12 +68,14 @@ describe("render", () => {
     expect(result).toHaveProperty("textContent", "");
   });
 
-  it("should return custom component", () => {
-    const props = Symbol("props");
+  it("should run custom component", () => {
+    const props = {
+      key: Symbol("props"),
+    };
     const ret = Symbol("return");
     const component = vi.fn(() => ret);
 
-    const result = jsx(component as never, props as never);
+    const result = jsx(component as never, props);
 
     expect(result).toBe(ret);
     expect(component).toHaveBeenCalledWith(props);

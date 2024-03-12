@@ -1,6 +1,10 @@
 import type Story from "../../../api/Story";
 import CheckBox from "../CheckBox/CheckBox";
 import "./ChapterList.css";
+import { createSignal } from "../../../signal/signal";
+import ChapterListEntry from "./ChapterListEntry";
+
+const isExtended = createSignal(false);
 
 function hideLongChapterList(list: HTMLElement) {
   const elements = Array.from(list.children);
@@ -71,23 +75,13 @@ function hideLongChapterList(list: HTMLElement) {
 
     const showLinkContainer = (
       <li class="ffe-cl-chapter ffe-cl-collapsed">
-        <a
-          style="cursor: pointer;"
-          onclick={() => {
-            for (let j = 0; j < list.children.length; j++) {
-              const element = list.children.item(j) as HTMLElement;
-              if (element.classList.contains("ffe-cl-collapsed")) {
-                element.style.display = "none";
-              } else {
-                element.style.display = "block";
-              }
-            }
-          }}
-        >
-          Show {currentBlockCount - 5} hidden chapters
-        </a>
+        <a style="cursor: pointer;">Show {currentBlockCount - 5} hidden chapters</a>
       </li>
     );
+
+    showLinkContainer.querySelector("a")!.addEventListener("click", () => {
+      isExtended(true);
+    });
 
     elements[0].parentElement?.insertBefore(showLinkContainer, elements[elements.length - 3]);
   }
@@ -103,28 +97,22 @@ export default function ChapterList({ story }: ChapterListProps) {
       <div class="ffe-cl">
         <ol>
           {story.chapters.map((chapter) => (
-            <li class="ffe-cl-chapter">
-              <CheckBox bind={chapter.read} />
-              <span class="ffe-cl-chapter-title">
-                <a href={`/s/${story.id}/${chapter.id}`}>{chapter.title}</a>
-              </span>
-              <span class="ffe-cl-words">
-                <b>{chapter.words}</b> words
-              </span>
-            </li>
+            <ChapterListEntry storyId={story.id} chapter={chapter} />
           ))}
         </ol>
       </div>
     </div>
   );
 
-  setTimeout(() => {
-    // The getter for the read status are asynchronous, so the read status is not set immediately. This is
-    // necessary for hideLongChapterList(), though, so it has to wait. Since the data is saved locally, this
-    // little timeout should be plenty. If there are problems, though, maybe the getter have to be primed and
-    // waited on.
-    hideLongChapterList(element.querySelector("ol")!);
-  }, 5);
+  if (!isExtended()) {
+    setTimeout(() => {
+      // The getter for the read status are asynchronous, so the read status is not set immediately. This is
+      // necessary for hideLongChapterList(), though, so it has to wait. Since the data is saved locally, this
+      // little timeout should be plenty. If there are problems, though, maybe the getter have to be primed and
+      // waited on.
+      hideLongChapterList(element.querySelector("ol")!);
+    }, 5);
+  }
 
   return element;
 }

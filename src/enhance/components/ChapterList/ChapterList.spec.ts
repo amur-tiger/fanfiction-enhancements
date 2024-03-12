@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { createSignal } from "../../../signal/signal";
 import { timeout } from "../../../utils";
 import type Chapter from "../../../api/Chapter";
 import type Story from "../../../api/Story";
-import type { SmartValue } from "../../../api/SmartValue";
 import ChapterList from "./ChapterList";
 
 // todo eliminate setTimeout call for sleep-less tests
@@ -35,21 +35,12 @@ describe.skip("ChapterList Component", () => {
 
   function chapter(read: boolean): Chapter {
     chapterId += 1;
-    const r: SmartValue<boolean> = {
-      get: () => Promise.resolve(read),
-      subscribe: () => undefined,
-    } as never;
-    const w: SmartValue<number> = {
-      get: () => Promise.resolve(1),
-      subscribe: () => undefined,
-    } as never;
-
     return {
       storyId: 0,
       id: chapterId,
       title: `Chapter ${chapterId}`,
-      read: r,
-      words: w,
+      read: createSignal(read as boolean | undefined),
+      words: createSignal(1 as number | undefined),
     };
   }
 

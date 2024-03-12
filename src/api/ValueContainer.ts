@@ -1,7 +1,7 @@
 import type { Follow, Story as StoryData } from "ffn-parser";
 import Api from "./Api";
 import type { Synchronizer } from "./DropBox";
-import { type SmartValue, SmartValueLocal, SmartValueRoaming } from "./SmartValue";
+import { type SmartValue, SmartValueLS } from "./SmartValue";
 import Story from "./Story";
 
 export class CacheName {
@@ -50,8 +50,9 @@ export class CacheName {
   }
 }
 
+/** @deprecated */
 export default class ValueContainer {
-  private readonly instances: Record<string, SmartValue<unknown>> = {};
+  private readonly instances: Record<string, SmartValue<any>> = {};
 
   constructor(
     private readonly storage: Storage,
@@ -96,7 +97,7 @@ export default class ValueContainer {
   public getStoryValue(id: number): SmartValue<StoryData> {
     const key = CacheName.story(id);
     if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLocal(key, this.storage, () => this.api.getStoryData(id));
+      this.instances[key] = new SmartValueLS(key, this.storage, () => this.api.getStoryData(id));
     }
 
     return this.instances[key] as SmartValue<StoryData>;
@@ -105,7 +106,7 @@ export default class ValueContainer {
   public getAlertValue(id: number): SmartValue<boolean> {
     const key = CacheName.storyAlert(id);
     if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLocal<boolean>(
+      this.instances[key] = new SmartValueLS<boolean>(
         key,
         this.storage,
         async () => {
@@ -130,7 +131,7 @@ export default class ValueContainer {
   public getFavoriteValue(id: number): SmartValue<boolean> {
     const key = CacheName.storyFavorite(id);
     if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLocal<boolean>(
+      this.instances[key] = new SmartValueLS<boolean>(
         key,
         this.storage,
         async () => {
@@ -155,21 +156,12 @@ export default class ValueContainer {
   public getWordCountValue(storyId: number, chapterId: number): SmartValue<number> {
     const key = CacheName.wordCount(storyId, chapterId);
     if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLocal<number>(key, this.storage, () =>
+      this.instances[key] = new SmartValueLS<number>(key, this.storage, () =>
         this.api.getChapterWordCount(storyId, chapterId),
       );
     }
 
     return this.instances[key] as SmartValue<number>;
-  }
-
-  public getChapterReadValue(storyId: number, chapterId: number): SmartValue<boolean> {
-    const key = CacheName.chapterRead(storyId, chapterId);
-    if (!this.instances[key]) {
-      this.instances[key] = new SmartValueRoaming<boolean>(key, undefined, undefined, this.synchronizer);
-    }
-
-    return this.instances[key] as SmartValue<boolean>;
   }
 
   private async followedStoryDiff(

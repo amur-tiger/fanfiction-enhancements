@@ -2,6 +2,7 @@ import type { Story as StoryData, User } from "ffn-parser";
 import Chapter from "./Chapter";
 import type { SmartValue } from "./SmartValue";
 import ValueContainer from "./ValueContainer";
+import type { Signal } from "../signal/signal";
 
 export default class Story {
   public readonly id: number;
@@ -42,9 +43,9 @@ export default class Story {
 
   public readonly author: User;
 
-  public readonly alert: SmartValue<boolean>;
+  public readonly alert: Signal<boolean | undefined>;
 
-  public readonly favorite: SmartValue<boolean>;
+  public readonly favorite: Signal<boolean | undefined>;
 
   constructor(data: StoryData, valueManager: ValueContainer) {
     this.id = data.id;
@@ -70,17 +71,7 @@ export default class Story {
       id: data.author.id,
       name: data.author.name,
     };
-    this.alert = valueManager.getAlertValue(data.id);
-    this.favorite = valueManager.getFavoriteValue(data.id);
-  }
-
-  public async isRead(): Promise<boolean> {
-    const read = await Promise.all(this.chapters.map((chapter) => chapter.read.get()));
-
-    return read.every((r) => r);
-  }
-
-  public async setRead(read: boolean): Promise<void> {
-    await Promise.all(this.chapters.map((chapter) => chapter.read.set(read)));
+    this.alert = valueManager.getAlertValue(data.id).signal;
+    this.favorite = valueManager.getFavoriteValue(data.id).signal;
   }
 }
