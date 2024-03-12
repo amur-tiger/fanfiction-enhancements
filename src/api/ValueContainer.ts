@@ -1,7 +1,7 @@
 import type { Follow, Story as StoryData } from "ffn-parser";
 import Api from "./Api";
 import type { Synchronizer } from "./DropBox";
-import { type SmartValue, SmartValueLS, SmartValueGM } from "./SmartValue";
+import { type SmartValue, SmartValueLS } from "./SmartValue";
 import Story from "./Story";
 
 export class CacheName {
@@ -162,16 +162,6 @@ export default class ValueContainer {
     }
 
     return this.instances[key] as SmartValue<number>;
-  }
-
-  /** @deprecated */
-  public getChapterReadValue(storyId: number, chapterId: number): SmartValue<boolean> {
-    const key = CacheName.chapterRead(storyId, chapterId);
-    if (!this.instances[key]) {
-      this.instances[key] = new SmartValueGM<boolean>(key, undefined, undefined, this.synchronizer);
-    }
-
-    return this.instances[key] as SmartValue<boolean>;
   }
 
   private async followedStoryDiff(

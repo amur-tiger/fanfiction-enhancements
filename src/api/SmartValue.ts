@@ -1,4 +1,3 @@
-import type { Synchronizer } from "./DropBox";
 import { createSignal, type Signal } from "../signal/signal";
 
 export interface ValueGetter<T> {
@@ -70,13 +69,14 @@ export interface SmartValue<T> {
   update(value: T): Promise<void>;
 }
 
-abstract class SmartValueBase<T> implements SmartValue<T> {
+export class SmartValueLS<T> implements SmartValue<T> {
   private subscribers: Record<symbol, ValueSubscriberCallback<T>> = {};
   private isLocalChange = false;
   public _signal: Signal<T | undefined> | undefined;
 
-  protected constructor(
+  public constructor(
     public readonly name: string,
+    private readonly storage: Storage,
     protected readonly getter?: ValueGetter<T>,
     protected readonly setter?: ValueSetter<T>,
   ) {}
@@ -171,21 +171,6 @@ abstract class SmartValueBase<T> implements SmartValue<T> {
     );
   }
 
-  protected abstract getCached(): Promise<T | undefined>;
-
-  protected abstract setCached(value: T): Promise<void>;
-}
-
-export class SmartValueLS<T> extends SmartValueBase<T> {
-  constructor(
-    public readonly name: string,
-    private readonly storage: Storage,
-    protected readonly getter?: ValueGetter<T>,
-    protected readonly setter?: ValueSetter<T>,
-  ) {
-    super(name, getter, setter);
-  }
-
   protected async getCached(): Promise<T | undefined> {
     const data = this.storage.getItem(this.name);
     if (!data) {
@@ -205,69 +190,5 @@ export class SmartValueLS<T> extends SmartValueBase<T> {
     const data = JSON.stringify(value);
     this.storage.setItem(this.name, data);
     this.storage.setItem(`${this.name}+timestamp`, `${new Date().getTime()}`);
-  }
-}
-
-/** @deprecated */
-export class SmartValueGM<T> extends SmartValueBase<T> {
-  private token: number | undefined = undefined;
-
-  constructor(
-    public readonly name: string,
-    protected readonly getter?: ValueGetter<T>,
-    protected readonly setter?: ValueSetter<T>,
-    private readonly synchronizer?: Synchronizer,
-  ) {
-    super(name, getter, setter);
-
-    if (typeof GM_addValueChangeListener !== "undefined") {
-      this.token = GM_addValueChangeListener(name, async (k, o, value, remote) => {
-        if (remote) {
-          await this.trigger(JSON.parse(value as string));
-        }
-      });
-    }
-  }
-
-  public async set(value: T): Promise<void> {
-    await super.set(value);
-
-    if (this.synchronizer) {
-      await this.synchronizer.synchronize();
-    }
-  }
-
-  public dispose(): void {
-    super.dispose();
-
-    if (!this.token) {
-      return;
-    }
-
-    if (typeof GM_removeValueChangeListener !== "undefined") {
-      GM_removeValueChangeListener(this.token);
-    }
-
-    this.token = undefined;
-  }
-
-  protected async getCached(): Promise<T | undefined> {
-    const data = await GM.getValue(this.name);
-    if (!data) {
-      return undefined;
-    }
-
-    try {
-      return JSON.parse(data as string);
-    } catch (e) {
-      console.warn("Malformed SmartValueRoaming entry with key %s deleted", this.name);
-      GM.deleteValue(this.name);
-      return undefined;
-    }
-  }
-
-  protected async setCached(value: T): Promise<void> {
-    await GM.setValue(this.name, JSON.stringify(value));
-    await GM.setValue(`${this.name}+timestamp`, new Date().getTime());
   }
 }

@@ -7,6 +7,7 @@ import { CacheName } from "./api/ValueContainer";
 
 import "./theme.css";
 import "./main.css";
+import { createGmSignal } from "./signal/gm-signal";
 
 const container = new Container();
 
@@ -91,7 +92,7 @@ async function main() {
       await storyTextEnhancer.enhance();
 
       if (environment.currentChapterId) {
-        const readValue = valueContainer.getChapterReadValue(currentStory.id, environment.currentChapterId);
+        const readValue = createGmSignal(CacheName.chapterRead(currentStory.id, environment.currentChapterId));
         const markRead = async () => {
           const amount = document.documentElement.scrollTop;
           const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -103,7 +104,7 @@ async function main() {
               currentStory.title,
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
-            await readValue.set(true);
+            readValue(true);
           }
         };
 

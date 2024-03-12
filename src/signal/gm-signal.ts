@@ -6,7 +6,6 @@ export function createGmSignal<T>(name: string): Signal<T | undefined> {
 
   const signal = createSignal<T | undefined>(undefined, (value) => {
     if (!isLocalChange) {
-      console.log("%s change to %o", name, value);
       try {
         isLocalChange = true;
         if (value == null) {
@@ -33,7 +32,12 @@ export function createGmSignal<T>(name: string): Signal<T | undefined> {
 
   const token = GM_addValueChangeListener(name, (name, oldValue, newValue) => {
     if (!isLocalChange) {
-      signal(JSON.parse(newValue as string));
+      try {
+        isLocalChange = true;
+        signal(JSON.parse(newValue as string));
+      } finally {
+        isLocalChange = false;
+      }
     }
   });
 
