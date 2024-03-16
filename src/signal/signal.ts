@@ -1,4 +1,4 @@
-import RenderContext from "@jsx/RenderContext";
+import { type Context, getContext } from "@jsx/context";
 
 export type SignalType<T> = T extends Signal<infer U> ? U : never;
 
@@ -27,7 +27,7 @@ export function createSignal<T>(): Signal<T | undefined>;
 export function createSignal<T>(value: T, onChange?: (value: T, oldValue: T) => void): Signal<T>;
 
 export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) => void): Signal<T> {
-  let contexts: RenderContext[] = [];
+  let contexts: Context[] = [];
   let currentValue = value;
 
   // @ts-ignore
@@ -35,7 +35,7 @@ export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) =>
     function (...args: unknown[]) {
       if (args.length === 0) {
         // Returns the current value. Registers the current render context, if any.
-        const context = RenderContext.findCurrent();
+        const context = getContext();
         if (context && !contexts.includes(context)) {
           contexts.push(context);
         }
@@ -53,7 +53,7 @@ export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) =>
         onChange?.(currentValue as T, oldValue as T);
 
         // filter out child contexts of parent contexts that will be updated anyway
-        const relevant: RenderContext[] = contexts.filter((context) => {
+        const relevant: Context[] = contexts.filter((context) => {
           let parent = context.parent;
           while (parent) {
             if (contexts.includes(parent)) {
@@ -66,7 +66,7 @@ export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) =>
         contexts = [];
 
         for (const c of relevant) {
-          c.rerender();
+          c.render();
         }
       }
     },

@@ -1,4 +1,4 @@
-import RenderContext from "@jsx/RenderContext";
+import { getContext } from "@jsx/context";
 import { createSignal, type Signal } from "./signal";
 
 export default function createStorageSignal(key: string): Signal<string | null> {
@@ -24,10 +24,7 @@ export default function createStorageSignal(key: string): Signal<string | null> 
   };
   window.addEventListener("storage", storageHandler);
 
-  const context = RenderContext.findCurrent();
-  if (context) {
-    context.onDispose(() => window.removeEventListener("storage", storageHandler));
-  }
+  getContext()?.onDispose(() => window.removeEventListener("storage", storageHandler));
 
   return signal;
 }

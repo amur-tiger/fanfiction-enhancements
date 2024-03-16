@@ -1,4 +1,4 @@
-import RenderContext from "@jsx/RenderContext";
+import context, { getContext } from "./context";
 
 type DomElement = Element;
 
@@ -24,8 +24,7 @@ export function jsx(tag: string | JSX.Component | undefined, props: JSX.Componen
   const { children, ...attributes } = props;
 
   if (typeof tag === "function") {
-    const context = RenderContext.create();
-    return context.render(() => tag(props));
+    return context(() => tag(props));
   }
 
   if (tag == null) {
@@ -61,7 +60,7 @@ function applyAttributes(element: HTMLElement, attributes: Record<string, unknow
       if (value != null) {
         const type = key.substring(2).toLowerCase();
         element.addEventListener(type, value as never);
-        RenderContext.getCurrent().onDispose(() => element.removeEventListener(type, value as never));
+        getContext()?.onDispose(() => element.removeEventListener(type, value as never));
       }
     } else if (typeof value === "boolean") {
       if (value) {

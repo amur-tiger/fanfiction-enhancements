@@ -1,4 +1,4 @@
-import RenderContext from "@jsx/RenderContext";
+import { getContext } from "@jsx/context";
 import { type Signal, createSignal } from "./signal";
 
 export function createGmSignal<T>(name: string): Signal<T | undefined> {
@@ -41,10 +41,7 @@ export function createGmSignal<T>(name: string): Signal<T | undefined> {
     }
   });
 
-  const context = RenderContext.findCurrent();
-  if (context) {
-    context.onDispose(() => GM_removeValueChangeListener(token));
-  }
+  getContext()?.onDispose(() => () => GM_removeValueChangeListener(token));
 
   return signal;
 }
