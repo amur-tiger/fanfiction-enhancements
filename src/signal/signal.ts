@@ -1,4 +1,4 @@
-import { type Context, getContext } from "@jsx/context";
+import { type Context, getContext } from "./context";
 
 export type SignalType<T> = T extends Signal<infer U> ? U : never;
 
@@ -67,7 +67,7 @@ export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) =>
         contexts = [];
 
         for (const c of relevant) {
-          c.render();
+          c.run();
         }
       }
     },

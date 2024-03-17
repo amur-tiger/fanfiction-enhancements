@@ -1,4 +1,5 @@
-import context, { onDispose } from "./context";
+import render from "./render";
+import { onDispose } from "../signal/context";
 
 declare global {
   namespace JSX {
@@ -25,7 +26,7 @@ export function jsx(tag: string | JSX.Component | undefined, props: JSX.Componen
   const { children, ...attributes } = props;
 
   if (typeof tag === "function") {
-    return context(() => tag(props));
+    return render(() => tag(props));
   }
 
   if (tag == null) {

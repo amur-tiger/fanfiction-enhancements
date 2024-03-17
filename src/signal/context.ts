@@ -13,21 +13,21 @@ export interface Context {
   dispose(): void;
 
   /**
-   * Re-renders the context and replaces the current element.
+   * Re-runs the context.
    */
-  render(): void;
+  run(): void;
 }
 
 const stack: Context[] = [];
 
 /**
  *
- * @param render
+ * @param callback
+ * @param onChange
  */
-export default function context<T extends ChildNode>(render: () => T): T {
+export default function context<T>(callback: () => T, onChange?: (next: T) => void): T {
   const children: Context[] = [];
   const disposeFns: (() => void)[] = [];
-  let element: T;
 
   const dispose = () => {
     disposeFns.splice(0).forEach((fn) => fn());
@@ -41,26 +41,23 @@ export default function context<T extends ChildNode>(render: () => T): T {
     parent: getContext(),
     onDispose: (disposeFn) => disposeFns.push(disposeFn),
     dispose,
-    render: () => {
+    run: () => {
       dispose();
-      const next = doRender();
-      element.replaceWith(next);
-      element = next;
+      const next = run();
+      onChange?.(next);
     },
   };
 
-  const doRender = () => {
+  const run = () => {
     try {
       stack.push(current);
-      return render();
+      return callback();
     } finally {
       stack.pop();
     }
   };
 
-  element = doRender();
-
-  return element;
+  return run();
 }
 
 export function getContext(): Context | undefined {

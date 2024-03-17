@@ -91,7 +91,7 @@ function babelTransform(): PluginObj {
             path.node.body.push(
               importDeclaration(
                 [importDefaultSpecifier(identifier(contextVariableName))],
-                stringLiteral("@jsx/context"),
+                stringLiteral("@jsx/render"),
               ),
             );
           }
@@ -117,7 +117,7 @@ function babelTransform(): PluginObj {
               p.stop();
               hasCall = true;
               if (!contextVariableName) {
-                contextVariableName = path.scope.generateUid("context");
+                contextVariableName = path.scope.generateUid("render");
               }
             },
           });
@@ -137,5 +137,5 @@ function isJsxCall(node: CallExpression) {
 }
 
 function isRenderContextCall(node: CallExpression) {
-  return isIdentifier(node.callee, { name: "context" }) && node.arguments.length === 1;
+  return isIdentifier(node.callee, { name: "render" }) && node.arguments.length === 1;
 }
