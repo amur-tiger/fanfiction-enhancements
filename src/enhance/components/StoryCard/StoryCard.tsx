@@ -2,18 +2,16 @@ import clsx from "clsx";
 import { createSignal } from "../../../signal/signal";
 import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
-import type RequestManager from "../../../api/request-manager/RequestManager";
 import type Story from "../../../api/Story";
 import Epub from "../../../util/epub";
 import BellIcon from "../../../assets/bell.svg";
 import "./StoryCard.css";
 
 export interface StoryCardProps {
-  requestManager: RequestManager;
   story: Story;
 }
 
-export default function StoryCard({ requestManager, story }: StoryCardProps) {
+export default function StoryCard({ story }: StoryCardProps) {
   const isDownloading = createSignal(false);
 
   const handleDownloadClick = async () => {
@@ -26,7 +24,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
     try {
       isDownloading.set(true);
 
-      const epub = new Epub(requestManager, story);
+      const epub = new Epub(story);
       const blob = await epub.create();
 
       link.href = URL.createObjectURL(blob);

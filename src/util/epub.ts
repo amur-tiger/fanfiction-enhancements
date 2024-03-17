@@ -1,8 +1,9 @@
 import JSZip from "jszip";
 import type Chapter from "../api/Chapter";
 import { createChapterLink } from "../api/links";
-import type RequestManager from "../api/request-manager/RequestManager";
 import type Story from "../api/Story";
+import throttledFetch from "../api/throttled-fetch";
+import { Priority } from "../api/priority";
 
 function escapeFile(text: string): string {
   return text.replace(/[<>:"/\\|?*]/g, "-");
@@ -13,10 +14,7 @@ function escapeXml(text: string): string {
 }
 
 export default class Epub {
-  public constructor(
-    private readonly requestManager: RequestManager,
-    private readonly story: Story,
-  ) {}
+  public constructor(private readonly story: Story) {}
 
   private async getContainerXml(): Promise<string> {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -154,7 +152,7 @@ export default class Epub {
 
   public async getChapterHtml(chapter: Chapter): Promise<string> {
     const link = createChapterLink(this.story, chapter);
-    const response = await this.requestManager.fetch(link);
+    const response = await throttledFetch(link, undefined, Priority.EpubChapter);
     if (!response.ok) {
       throw new Error(response.statusText);
     }
@@ -203,7 +201,7 @@ ${content}
     const coverUrl = this.story.imageOriginalUrl ?? this.story.imageUrl;
     if (coverUrl) {
       zip.file("cover.xhtml", await this.getCoverHtml());
-      const cover = await this.requestManager.fetch(`//www.fanfiction.net${coverUrl}`);
+      const cover = await throttledFetch(`//www.fanfiction.net${coverUrl}`, undefined, Priority.EpubChapter);
       if (!cover.ok) {
         throw new Error(cover.statusText);
       }

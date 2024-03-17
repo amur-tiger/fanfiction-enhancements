@@ -2,16 +2,12 @@ import { parseFollows } from "ffn-parser";
 import ChapterList from "./components/ChapterList/ChapterList";
 import StoryCard from "./components/StoryCard/StoryCard";
 import type Enhancer from "./Enhancer";
-import type RequestManager from "../api/request-manager/RequestManager";
 import type ValueContainer from "../api/ValueContainer";
 
 import "./FollowsList.css";
 
 export default class FollowsList implements Enhancer {
-  public constructor(
-    private readonly requestManager: RequestManager,
-    private readonly valueContainer: ValueContainer,
-  ) {}
+  public constructor(private readonly valueContainer: ValueContainer) {}
 
   public async enhance(): Promise<void> {
     const list = await parseFollows(document);
@@ -37,7 +33,7 @@ export default class FollowsList implements Enhancer {
       // suppressed to keep sorting
       const story = await this.valueContainer.getStory(followedStory.id);
       if (story) {
-        const card = <StoryCard requestManager={this.requestManager} story={story} />;
+        const card = <StoryCard story={story} />;
         item.appendChild(card);
 
         const chapterList = <ChapterList story={story} />;

@@ -1,6 +1,5 @@
 import { DropBox } from "./api/DropBox";
 import Api from "./api/Api";
-import RequestManager from "./api/request-manager/RequestManager";
 import ValueContainer from "./api/ValueContainer";
 import MenuBar from "./enhance/MenuBar";
 import FollowsList from "./enhance/FollowsList";
@@ -10,8 +9,6 @@ import ChapterList from "./enhance/ChapterList";
 import SaveListSettings from "./enhance/SaveListSettings";
 
 export default class Container {
-  private requestManager?: RequestManager;
-
   private api?: Api;
 
   private valueManager?: ValueContainer;
@@ -30,17 +27,9 @@ export default class Container {
 
   private dropBox?: DropBox;
 
-  public getRequestManager(): RequestManager {
-    if (!this.requestManager) {
-      this.requestManager = new RequestManager();
-    }
-
-    return this.requestManager;
-  }
-
   public getApi(): Api {
     if (!this.api) {
-      this.api = new Api(this.getRequestManager());
+      this.api = new Api();
     }
 
     return this.api;
@@ -64,7 +53,7 @@ export default class Container {
 
   public getFollowsList(): FollowsList {
     if (!this.followsList) {
-      this.followsList = new FollowsList(this.getRequestManager(), this.getValueContainer());
+      this.followsList = new FollowsList(this.getValueContainer());
     }
 
     return this.followsList;
@@ -72,7 +61,7 @@ export default class Container {
 
   public getStoryListEnhancer(): StoryList {
     if (!this.storyList) {
-      this.storyList = new StoryList(this.getRequestManager(), this.getValueContainer());
+      this.storyList = new StoryList(this.getValueContainer());
     }
 
     return this.storyList;
@@ -80,7 +69,7 @@ export default class Container {
 
   public getStoryProfile(): StoryProfile {
     if (!this.storyProfile) {
-      this.storyProfile = new StoryProfile(this.getRequestManager(), this.getValueContainer());
+      this.storyProfile = new StoryProfile(this.getValueContainer());
     }
 
     return this.storyProfile;

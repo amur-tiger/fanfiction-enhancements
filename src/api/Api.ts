@@ -1,14 +1,13 @@
 import { type Follow, parseFollows, parseStory, type Story as StoryData } from "ffn-parser";
 import { environment } from "../util/environment";
 import { parseGetParams } from "../utils";
-import RequestManager from "./request-manager/RequestManager";
+import throttledFetch from "./throttled-fetch";
+import { Priority } from "./priority";
 
 export default class Api {
   private alerts?: Promise<Follow[]>;
 
   private favorites?: Promise<Follow[]>;
-
-  public constructor(private readonly requestManager: RequestManager) {}
 
   /**
    * Retrieves all story alerts that are set on FFN for the current user.
@@ -61,7 +60,7 @@ export default class Api {
   }
 
   public async getStoryData(id: number): Promise<StoryData | undefined> {
-    const body = await this.get(`/s/${id}`);
+    const body = await this.get(`/s/${id}`, Priority.StoryData);
     const template = document.createElement("template");
     template.innerHTML = body;
 
@@ -69,7 +68,7 @@ export default class Api {
   }
 
   public async getChapterWordCount(storyId: number, chapterId: number): Promise<number> {
-    const body = await this.get(`/s/${storyId}/${chapterId}`);
+    const body = await this.get(`/s/${storyId}/${chapterId}`, Priority.WordCount);
     const template = document.createElement("template");
     template.innerHTML = body;
 
@@ -122,13 +121,13 @@ export default class Api {
     );
   }
 
-  private async get(url: string): Promise<string> {
-    const response = await this.requestManager.fetch(url);
+  private async get(url: string, priority: number): Promise<string> {
+    const response = await throttledFetch(url, undefined, priority);
     return response.text();
   }
 
   private async getMultiPage(url: string): Promise<DocumentFragment[]> {
-    const body = await this.get(url);
+    const body = await this.get(url, Priority.MultiPage);
     const template = document.createElement("template");
     template.innerHTML = body;
 
@@ -145,7 +144,7 @@ export default class Api {
     const result = [Promise.resolve(template.content)];
     for (let i = 2; i <= max; i++) {
       result.push(
-        this.get(`${url}?p=${i}`).then((nextBody) => {
+        this.get(`${url}?p=${i}`, Priority.MultiPage).then((nextBody) => {
           const nextTemplate = document.createElement("template");
           nextTemplate.innerHTML = nextBody;
 
@@ -163,11 +162,15 @@ export default class Api {
       formData.append(key, value);
     }
 
-    const response = await this.requestManager.fetch(url, {
-      method: "POST",
-      body: formData,
-      referrer: url,
-    });
+    const response = await throttledFetch(
+      url,
+      {
+        method: "POST",
+        body: formData,
+        referrer: url,
+      },
+      1,
+    );
 
     if (expect === "json") {
       const json = await response.json();
