@@ -29,26 +29,28 @@ function hiddenChapterMapper(story: Story, onShow: () => void) {
       return null;
     }
 
-    if (idx === chapters.length - 4) {
-      let count = 0;
-      for (let i = idx; i >= 0; i--) {
-        if (chapters[i].read()) {
-          break;
+    if (idx > 1) {
+      if (idx === chapters.length - 4) {
+        let count = 0;
+        for (let i = idx; i >= 0; i--) {
+          if (chapters[i].read()) {
+            break;
+          }
+          count += 1;
         }
-        count += 1;
+
+        return (
+          <li class="ffe-cl-chapter ffe-cl-collapsed">
+            <a onclick={onShow}>
+              Show {count - 2} hidden chapter{count !== 3 && "s"}
+            </a>
+          </li>
+        );
       }
 
-      return (
-        <li class="ffe-cl-chapter ffe-cl-collapsed">
-          <a onclick={onShow}>
-            Show {count - 2} hidden chapter{count !== 3 && "s"}
-          </a>
-        </li>
-      );
-    }
-
-    if (idx > 1 && idx < chapters.length - 3 && !chapters[idx - 1].read() && !chapters[idx - 2].read()) {
-      return null;
+      if (idx < chapters.length - 3 && !chapters[idx - 1].read() && !chapters[idx - 2].read()) {
+        return null;
+      }
     }
 
     return <ChapterListEntry storyId={story.id} chapter={chapter} />;
