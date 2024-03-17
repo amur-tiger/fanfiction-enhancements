@@ -24,7 +24,7 @@ const stack: Context[] = [];
  *
  * @param render
  */
-export default function context<T extends Element>(render: () => T): T {
+export default function context<T extends ChildNode>(render: () => T): T {
   const children: Context[] = [];
   const disposeFns: (() => void)[] = [];
   let element: T;
@@ -65,4 +65,10 @@ export default function context<T extends Element>(render: () => T): T {
 
 export function getContext(): Context | undefined {
   return stack[stack.length - 1];
+}
+
+export function onDispose(dispose: () => void) {
+  if (stack.length > 0) {
+    stack[stack.length - 1].onDispose(dispose);
+  }
 }

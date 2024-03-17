@@ -17,7 +17,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
   const isDownloading = createSignal(false);
 
   const handleDownloadClick = async () => {
-    const link = element.querySelector(".ffe-download-link") as HTMLAnchorElement | null;
+    const link = (element as HTMLElement).querySelector(".ffe-download-link") as HTMLAnchorElement | null;
 
     if (isDownloading() || !link || !("chapters" in story)) {
       return;

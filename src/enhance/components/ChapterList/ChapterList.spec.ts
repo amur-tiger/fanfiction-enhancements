@@ -6,6 +6,7 @@ import type Story from "../../../api/Story";
 import ChapterList from "./ChapterList";
 
 // todo eliminate setTimeout call for sleep-less tests
+// todo update for new hidden chapters rendering
 describe.skip("ChapterList Component", () => {
   function isRead(item: Element) {
     expect((item.firstElementChild?.firstElementChild as HTMLInputElement).checked).toBe(true);

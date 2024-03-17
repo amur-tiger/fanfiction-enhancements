@@ -29,4 +29,8 @@
 
 .ffe-cl-collapsed {
   text-align: center;
+
+  a {
+    cursor: pointer;
+  }
 }

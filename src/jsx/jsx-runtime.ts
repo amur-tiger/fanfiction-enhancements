@@ -1,6 +1,4 @@
-import context, { getContext } from "./context";
-
-type DomElement = Element;
+import context, { onDispose } from "./context";
 
 declare global {
   namespace JSX {
@@ -12,13 +10,16 @@ declare global {
       (props: P): Element;
     }
 
-    export type Element = DomElement;
+    export type Element = ChildNode;
 
     export type Node = Element | string | number | boolean | null | undefined;
 
     export type Children = Node | Children[];
   }
 }
+
+export function jsx<K extends keyof HTMLElementTagNameMap>(tag: K, props: JSX.ComponentProps): HTMLElementTagNameMap[K];
+export function jsx(tag: string | JSX.Component | undefined, props: JSX.ComponentProps): JSX.Element;
 
 export function jsx(tag: string | JSX.Component | undefined, props: JSX.ComponentProps): JSX.Element {
   const { children, ...attributes } = props;
@@ -60,7 +61,7 @@ function applyAttributes(element: HTMLElement, attributes: Record<string, unknow
       if (value != null) {
         const type = key.substring(2).toLowerCase();
         element.addEventListener(type, value as never);
-        getContext()?.onDispose(() => element.removeEventListener(type, value as never));
+        onDispose(() => element.removeEventListener(type, value as never));
       }
     } else if (typeof value === "boolean") {
       if (value) {

@@ -24,7 +24,8 @@ export interface Signal<T> {
 const marker = Symbol("signal");
 
 export function createSignal<T>(): Signal<T | undefined>;
-export function createSignal<T>(value: T, onChange?: (value: T, oldValue: T) => void): Signal<T>;
+export function createSignal<T>(value: T): Signal<T>;
+export function createSignal<T>(value: T, onChange: (value: T, oldValue: T) => void): Signal<T>;
 
 export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) => void): Signal<T> {
   let contexts: Context[] = [];

@@ -114,12 +114,10 @@ function babelTransform(): PluginObj {
                 return;
               }
 
-              if (p.node.arguments.length === 0) {
-                p.stop();
-                hasCall = true;
-                if (!contextVariableName) {
-                  contextVariableName = path.scope.generateUid("context");
-                }
+              p.stop();
+              hasCall = true;
+              if (!contextVariableName) {
+                contextVariableName = path.scope.generateUid("context");
               }
             },
           });
