@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import RenderContext from "../jsx/RenderContext";
+import context, { getContext } from "./context";
 import { createSignal, isSignal } from "./signal";
 
 describe(createSignal, () => {
@@ -23,15 +23,22 @@ describe(createSignal, () => {
     expect(data()).toBe(11);
   });
 
-  it("should rerender render context on change", () => {
-    const context = new RenderContext();
+  it("should re-run context on change", () => {
+    const fn = vi.fn();
     const data = createSignal(6);
-    context.render(() => data() as never);
-    vi.spyOn(context, "rerender").mockReturnValue();
+
+    context(() => {
+      const ctx = getContext();
+      expect(ctx).toBeDefined();
+
+      vi.spyOn(ctx!, "run").mockImplementation(fn);
+
+      return data() as never;
+    });
 
     data(3);
 
-    expect(context.rerender).toHaveBeenCalled();
+    expect(fn).toHaveBeenCalled();
   });
 });
 

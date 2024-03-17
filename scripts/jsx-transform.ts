@@ -11,9 +11,7 @@ import {
   importDefaultSpecifier,
   isArrowFunctionExpression,
   isIdentifier,
-  isMemberExpression,
   isObjectExpression,
-  memberExpression,
   stringLiteral,
 } from "@babel/types";
 // @ts-ignore
@@ -72,7 +70,7 @@ export default function jsxTransform(): Plugin {
 }
 
 function babelTransform(): PluginObj {
-  let hasCalls = false;
+  let contextVariableName = "";
 
   return {
     name: "jsxTransform",
@@ -89,11 +87,11 @@ function babelTransform(): PluginObj {
     visitor: {
       Program: {
         exit(path) {
-          if (hasCalls) {
+          if (contextVariableName) {
             path.node.body.push(
               importDeclaration(
-                [importDefaultSpecifier(identifier("RenderContext"))],
-                stringLiteral("@jsx/RenderContext"),
+                [importDefaultSpecifier(identifier(contextVariableName))],
+                stringLiteral("@jsx/render"),
               ),
             );
           }
@@ -116,24 +114,16 @@ function babelTransform(): PluginObj {
                 return;
               }
 
-              if (p.node.arguments.length === 0) {
-                p.stop();
-                hasCall = true;
-                hasCalls = true;
+              p.stop();
+              hasCall = true;
+              if (!contextVariableName) {
+                contextVariableName = path.scope.generateUid("render");
               }
             },
           });
 
           if (hasCall && !isArrowFunctionExpression(path.parent)) {
-            path.replaceWith(
-              callExpression(
-                memberExpression(
-                  callExpression(memberExpression(identifier("RenderContext"), identifier("create")), []),
-                  identifier("render"),
-                ),
-                [arrowFunctionExpression([], path.node)],
-              ),
-            );
+            path.replaceWith(callExpression(identifier(contextVariableName), [arrowFunctionExpression([], path.node)]));
             path.skip();
           }
         }
@@ -147,9 +137,5 @@ function isJsxCall(node: CallExpression) {
 }
 
 function isRenderContextCall(node: CallExpression) {
-  return (
-    isMemberExpression(node.callee) &&
-    isIdentifier(node.callee.object, { name: "RenderContext" }) &&
-    isIdentifier(node.callee.property, { name: "create" })
-  );
+  return isIdentifier(node.callee, { name: "render" }) && node.arguments.length === 1;
 }

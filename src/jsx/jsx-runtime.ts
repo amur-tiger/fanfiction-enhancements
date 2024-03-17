@@ -1,6 +1,5 @@
-import RenderContext from "@jsx/RenderContext";
-
-type DomElement = Element;
+import render from "./render";
+import { onDispose } from "../signal/context";
 
 declare global {
   namespace JSX {
@@ -12,7 +11,7 @@ declare global {
       (props: P): Element;
     }
 
-    export type Element = DomElement;
+    export type Element = ChildNode;
 
     export type Node = Element | string | number | boolean | null | undefined;
 
@@ -20,12 +19,14 @@ declare global {
   }
 }
 
+export function jsx<K extends keyof HTMLElementTagNameMap>(tag: K, props: JSX.ComponentProps): HTMLElementTagNameMap[K];
+export function jsx(tag: string | JSX.Component | undefined, props: JSX.ComponentProps): JSX.Element;
+
 export function jsx(tag: string | JSX.Component | undefined, props: JSX.ComponentProps): JSX.Element {
   const { children, ...attributes } = props;
 
   if (typeof tag === "function") {
-    const context = RenderContext.create();
-    return context.render(() => tag(props));
+    return render(() => tag(props));
   }
 
   if (tag == null) {
@@ -61,7 +62,7 @@ function applyAttributes(element: HTMLElement, attributes: Record<string, unknow
       if (value != null) {
         const type = key.substring(2).toLowerCase();
         element.addEventListener(type, value as never);
-        RenderContext.getCurrent().onDispose(() => element.removeEventListener(type, value as never));
+        onDispose(() => element.removeEventListener(type, value as never));
       }
     } else if (typeof value === "boolean") {
       if (value) {
