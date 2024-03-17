@@ -1,4 +1,5 @@
 import NextEvent from "./NextEvent";
+import gmFetch from "../gm-fetch";
 
 export default class DownloadManager extends EventTarget {
   public maxParallel = 4;
@@ -9,47 +10,12 @@ export default class DownloadManager extends EventTarget {
 
   private requestCounter = 1;
 
-  private async toGMRequest(request: Request): Promise<GM.Request> {
-    const gmRequest = {
-      method: request.method as GM.Request["method"],
-      url: request.url,
-      headers: {} as { [header: string]: string },
-
-      responseType: "blob",
-      data: await request.text(),
-    } satisfies GM.Request;
-
-    // Note "referer" vs "referrer", intentional because of a typo in the original spec
-    gmRequest.headers.Referer = request.referrer;
-    request.headers.forEach((value, key) => {
-      gmRequest.headers[key] = value;
-    });
-
-    return gmRequest;
-  }
-
-  private async toResponse(gmResponse: GM.Response<unknown>): Promise<Response> {
-    return new Response(gmResponse.response, {
-      status: gmResponse.status,
-      statusText: gmResponse.statusText,
-      headers: gmResponse.responseHeaders
-        .split("\n")
-        .filter((line) => line)
-        .map((line) => {
-          const colon = line.indexOf(":");
-          return [line.substring(0, colon), line.substring(colon + 1).trim()];
-        }) as HeadersInit,
-    });
-  }
-
   private canBegin(): boolean {
     return Date.now() >= this.waitUntil && this.running < this.maxParallel;
   }
 
   private async doFetch(request: Request): Promise<Response> {
-    const gmRequest = await this.toGMRequest(request);
-    const gmResponse = (await GM.xmlHttpRequest(gmRequest)) as unknown as GM.Response<unknown>;
-    const response = await this.toResponse(gmResponse);
+    const response = await gmFetch(request);
 
     console.debug(
       "%c%s %c%s %c%d",
