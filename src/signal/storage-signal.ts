@@ -17,7 +17,7 @@ export default function createStorageSignal(key: string): Signal<string | null> 
 
   const storageHandler = (event: StorageEvent) => {
     if (event.key === key) {
-      locked(() => signal(event.newValue));
+      locked(() => signal.set(event.newValue));
     }
   };
 

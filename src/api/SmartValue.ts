@@ -87,14 +87,14 @@ export class SmartValueLS<T> implements SmartValue<T> {
         if (!this.isLocalChange) {
           this.isLocalChange = true;
           this.set(value!)
-            .catch(() => this._signal!(oldValue))
+            .catch(() => this._signal!.set(oldValue))
             .finally(() => (this.isLocalChange = false));
         }
       });
       this.get().then((value) => {
         try {
           this.isLocalChange = true;
-          this._signal!(value);
+          this._signal!.set(value);
         } finally {
           this.isLocalChange = false;
         }
@@ -158,7 +158,7 @@ export class SmartValueLS<T> implements SmartValue<T> {
     if (!this.isLocalChange) {
       try {
         this.isLocalChange = true;
-        this.signal(value);
+        this.signal.set(value);
       } finally {
         this.isLocalChange = false;
       }

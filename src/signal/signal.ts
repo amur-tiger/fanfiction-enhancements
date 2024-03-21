@@ -12,13 +12,18 @@ export interface Signal<T> {
    * Sets a new value.
    * @param value
    */
-  (value: T): void;
+  set(value: T): void;
 
   /**
    * Sets a new value.
    * @param callback
    */
-  (callback: (previous: T) => T): void;
+  set(callback: (previous: T) => T): void;
+
+  /**
+   * Retrieves the current value without triggering re-renders.
+   */
+  peek(): T;
 }
 
 const marker = Symbol("signal");
@@ -29,29 +34,30 @@ export function createSignal<T>(value: T, onChange: (value: T, oldValue: T) => v
 
 export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) => void): Signal<T> {
   let contexts: Context[] = [];
-  let currentValue = value;
+  let currentValue = value as T;
 
   // @ts-ignore
   return Object.assign(
-    function (...args: unknown[]) {
-      if (args.length === 0) {
-        // Returns the current value. Registers the current render context, if any.
-        const context = getContext();
-        if (context && !contexts.includes(context)) {
-          contexts.push(context);
-        }
-        return currentValue;
-      } else {
+    function () {
+      // Returns the current value. Registers the current render context, if any.
+      const context = getContext();
+      if (context && !contexts.includes(context)) {
+        contexts.push(context);
+      }
+      return currentValue;
+    },
+    {
+      [marker]: true,
+
+      set: (valueOrCallback: T | ((previous: T) => T)) => {
         // Updates the current value. Re-renders any relevant render contexts.
         const oldValue = currentValue;
-        const [arg] = args;
-        if (typeof arg === "function") {
-          currentValue = arg(currentValue);
+        if (typeof valueOrCallback === "function") {
+          currentValue = (valueOrCallback as Function)(currentValue);
         } else {
-          currentValue = arg as T;
+          currentValue = valueOrCallback;
         }
-
-        onChange?.(currentValue as T, oldValue as T);
+        onChange?.(currentValue, oldValue);
 
         // filter out child contexts of parent contexts that will be updated anyway
         const relevant: Context[] = contexts.filter((context) => {
@@ -69,10 +75,9 @@ export function createSignal<T>(value?: T, onChange?: (value: T, oldValue: T) =>
         for (const c of relevant) {
           c.run();
         }
-      }
-    },
-    {
-      [marker]: true,
+      },
+
+      peek: () => currentValue,
     },
   );
 }

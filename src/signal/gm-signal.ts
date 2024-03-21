@@ -17,10 +17,10 @@ export function createGmSignal<T>(name: string): Signal<T | undefined> {
     }),
   );
 
-  GM.getValue(name).then((value) => locked(() => signal(value ? JSON.parse(value as string) : value)));
+  GM.getValue(name).then((value) => locked(() => signal.set(value ? JSON.parse(value as string) : value)));
 
   const token = GM_addValueChangeListener(name, (name, oldValue, newValue) =>
-    locked(() => signal(JSON.parse(newValue as string))),
+    locked(() => signal.set(JSON.parse(newValue as string))),
   );
   onDispose(() => () => GM_removeValueChangeListener(token));
 

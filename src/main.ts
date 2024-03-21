@@ -104,7 +104,7 @@ async function main() {
               currentStory.title,
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
-            readValue(true);
+            readValue.set(true);
           }
         };
 

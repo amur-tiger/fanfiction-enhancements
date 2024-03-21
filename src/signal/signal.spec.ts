@@ -11,14 +11,14 @@ describe(createSignal, () => {
 
   it("should set the value directly", () => {
     const data = createSignal(7);
-    data(13);
+    data.set(13);
 
     expect(data()).toBe(13);
   });
 
   it("should set the value via function", () => {
     const data = createSignal(7);
-    data((prev) => prev + 4);
+    data.set((prev) => prev + 4);
 
     expect(data()).toBe(11);
   });
@@ -36,7 +36,7 @@ describe(createSignal, () => {
       return data() as never;
     });
 
-    data(3);
+    data.set(3);
 
     expect(fn).toHaveBeenCalled();
   });
