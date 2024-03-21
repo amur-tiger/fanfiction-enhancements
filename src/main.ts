@@ -4,10 +4,10 @@ import { environment, Page } from "./util/environment";
 import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
+import createGmSignal from "./signal/gm-signal";
 
 import "./theme.css";
 import "./main.css";
-import { createGmSignal } from "./signal/gm-signal";
 
 const container = new Container();
 
@@ -104,7 +104,7 @@ async function main() {
               currentStory.title,
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
-            readValue(true);
+            readValue.set(true);
           }
         };
 

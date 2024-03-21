@@ -24,7 +24,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
     }
 
     try {
-      isDownloading(true);
+      isDownloading.set(true);
 
       const epub = new Epub(requestManager, story);
       const blob = await epub.create();
@@ -33,7 +33,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
       link.download = epub.getFilename();
       link.click();
     } finally {
-      isDownloading(false);
+      isDownloading.set(false);
     }
   };
 
@@ -64,14 +64,14 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
             <Button
               class={clsx("ffe-sc-follow", { "ffe-active": story.alert() })}
               title="Toggle Story Alert"
-              onClick={() => story.alert((prev) => !prev)}
+              onClick={() => story.alert.set((prev) => !prev)}
             >
               <BellIcon />
             </Button>
             <Button
               class={clsx("ffe-sc-favorite icon-heart", { "ffe-active": story.favorite() })}
               title="Toggle Favorite"
-              onClick={() => story.favorite((prev) => !prev)}
+              onClick={() => story.favorite.set((prev) => !prev)}
             />
           </div>
         </div>

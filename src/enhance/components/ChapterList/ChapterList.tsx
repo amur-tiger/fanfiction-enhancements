@@ -68,7 +68,7 @@ export default function ChapterList({ story }: ChapterListProps) {
         <ol>
           {isExtended()
             ? story.chapters.map((chapter) => <ChapterListEntry storyId={story.id} chapter={chapter} />)
-            : story.chapters.flatMap(hiddenChapterMapper(story, () => isExtended(true)))}
+            : story.chapters.flatMap(hiddenChapterMapper(story, () => isExtended.set(true)))}
         </ol>
       </div>
     </div>

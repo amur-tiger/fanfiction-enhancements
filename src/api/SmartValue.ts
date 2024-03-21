@@ -83,21 +83,13 @@ export class SmartValueLS<T> implements SmartValue<T> {
 
   public get signal() {
     if (!this._signal) {
-      this._signal = createSignal<T | undefined>(undefined, (value, oldValue) => {
-        if (!this.isLocalChange) {
-          this.isLocalChange = true;
-          this.set(value!)
-            .catch(() => this._signal!(oldValue))
-            .finally(() => (this.isLocalChange = false));
-        }
-      });
-      this.get().then((value) => {
-        try {
-          this.isLocalChange = true;
-          this._signal!(value);
-        } finally {
-          this.isLocalChange = false;
-        }
+      this._signal = createSignal<T | undefined>(this.get(), {
+        saveChange: (value) => {
+          if (!this.isLocalChange) {
+            this.isLocalChange = true;
+            this.set(value!).finally(() => (this.isLocalChange = false));
+          }
+        },
       });
     }
     return this._signal;
@@ -158,7 +150,7 @@ export class SmartValueLS<T> implements SmartValue<T> {
     if (!this.isLocalChange) {
       try {
         this.isLocalChange = true;
-        this.signal(value);
+        this.signal.set(value);
       } finally {
         this.isLocalChange = false;
       }
@@ -181,7 +173,7 @@ export class SmartValueLS<T> implements SmartValue<T> {
       return JSON.parse(data);
     } catch (e) {
       console.warn("Malformed SmartValueLocal entry with key %s deleted", this.name);
-      GM.deleteValue(this.name);
+      this.storage.removeItem(this.name);
       return undefined;
     }
   }
