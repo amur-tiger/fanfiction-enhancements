@@ -29,10 +29,7 @@ export default function createStorageSignal<T>(key: string): Signal<T | undefine
       },
 
       handleExternalChange({ set }) {
-        console.log("setting up external change handler for %s", key);
         const storageHandler = (event: StorageEvent) => {
-          console.log("storage change event for %s to %o", event.key, event.newValue);
-
           if (event.key !== key) {
             return;
           }
@@ -50,10 +47,7 @@ export default function createStorageSignal<T>(key: string): Signal<T | undefine
         };
 
         window.addEventListener("storage", storageHandler);
-        return () => {
-          console.log("tearing down external change handler for %s", key);
-          window.removeEventListener("storage", storageHandler);
-        };
+        return () => window.removeEventListener("storage", storageHandler);
       },
     },
   );
