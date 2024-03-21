@@ -1,7 +1,7 @@
 import type { Chapter as ChapterData } from "ffn-parser";
 import ValueContainer, { CacheName } from "./ValueContainer";
 import type { Signal } from "../signal/signal";
-import { createGmSignal } from "../signal/gm-signal";
+import createGmSignal from "../signal/gm-signal";
 
 export default class Chapter {
   public readonly storyId: number;

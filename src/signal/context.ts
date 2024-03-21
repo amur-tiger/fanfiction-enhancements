@@ -19,6 +19,8 @@ export interface Context {
 }
 
 const stack: Context[] = [];
+const queue = new Map<Context, () => void>();
+let isQueued = false;
 
 /**
  *
@@ -42,9 +44,12 @@ export default function context<T>(callback: () => T, onChange?: (next: T) => vo
     onDispose: (disposeFn) => disposeFns.push(disposeFn),
     dispose,
     run: () => {
-      dispose();
-      const next = run();
-      onChange?.(next);
+      queue.set(current, () => {
+        dispose();
+        const next = run();
+        onChange?.(next);
+      });
+      runQueue();
     },
   };
 
@@ -67,5 +72,16 @@ export function getContext(): Context | undefined {
 export function onDispose(dispose: () => void) {
   if (stack.length > 0) {
     stack[stack.length - 1].onDispose(dispose);
+  }
+}
+
+function runQueue() {
+  if (!isQueued) {
+    isQueued = true;
+    queueMicrotask(() => {
+      queue.forEach((fn) => fn());
+      queue.clear();
+      isQueued = false;
+    });
   }
 }
