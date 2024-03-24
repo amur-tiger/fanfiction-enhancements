@@ -1,7 +1,6 @@
 import type { Chapter as ChapterData } from "ffn-parser";
-import { CacheName } from "./ValueContainer";
 import type { Signal } from "../signal/signal";
-import createGmSignal from "../signal/gm-signal";
+import getChapterRead from "./chapter-read";
 
 export default class Chapter {
   public readonly storyId: number;
@@ -17,6 +16,6 @@ export default class Chapter {
     this.id = data.id;
     this.title = data.title;
 
-    this.read = createGmSignal(CacheName.chapterRead(storyId, data.id));
+    this.read = getChapterRead(storyId, data.id);
   }
 }

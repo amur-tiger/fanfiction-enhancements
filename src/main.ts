@@ -4,7 +4,7 @@ import { environment, Page } from "./util/environment";
 import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
-import createGmSignal from "./signal/gm-signal";
+import getChapterRead from "./api/chapter-read";
 import getWordCount from "./api/word-count";
 
 import "./theme.css";
@@ -94,7 +94,7 @@ async function main() {
       await storyTextEnhancer.enhance();
 
       if (environment.currentChapterId) {
-        const readValue = createGmSignal(CacheName.chapterRead(currentStory.id, environment.currentChapterId));
+        const isRead = getChapterRead(currentStory.id, environment.currentChapterId);
         const markRead = async () => {
           const amount = document.documentElement.scrollTop;
           const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -106,7 +106,7 @@ async function main() {
               currentStory.title,
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
-            readValue.set(true);
+            isRead.set(true);
           }
         };
 
