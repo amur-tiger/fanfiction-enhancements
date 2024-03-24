@@ -41,7 +41,6 @@ describe.skip("ChapterList Component", () => {
       id: chapterId,
       title: `Chapter ${chapterId}`,
       read: createSignal(read as boolean | undefined),
-      words: createSignal(1 as number | undefined),
     };
   }
 

@@ -153,17 +153,6 @@ export default class ValueContainer {
     return this.instances[key] as SmartValue<boolean>;
   }
 
-  public getWordCountValue(storyId: number, chapterId: number): SmartValue<number> {
-    const key = CacheName.wordCount(storyId, chapterId);
-    if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLS<number>(key, this.storage, () =>
-        this.api.getChapterWordCount(storyId, chapterId),
-      );
-    }
-
-    return this.instances[key] as SmartValue<number>;
-  }
-
   private async followedStoryDiff(
     matchFn: (key: string) => boolean,
     updated: Follow[],

@@ -1,4 +1,4 @@
-import { createSignal, type Signal } from "../signal/signal";
+import { createSignal, type Signal, type SignalEx } from "../signal/signal";
 
 export interface ValueGetter<T> {
   (): Promise<T>;
@@ -71,8 +71,7 @@ export interface SmartValue<T> {
 
 export class SmartValueLS<T> implements SmartValue<T> {
   private subscribers: Record<symbol, ValueSubscriberCallback<T>> = {};
-  private isLocalChange = false;
-  public _signal: Signal<T | undefined> | undefined;
+  public _signal: SignalEx<T | undefined> | undefined;
 
   public constructor(
     public readonly name: string,
@@ -84,11 +83,8 @@ export class SmartValueLS<T> implements SmartValue<T> {
   public get signal() {
     if (!this._signal) {
       this._signal = createSignal<T | undefined>(this.get(), {
-        saveChange: (value) => {
-          if (!this.isLocalChange) {
-            this.isLocalChange = true;
-            this.set(value!).finally(() => (this.isLocalChange = false));
-          }
+        onChange: (value) => {
+          void this.set(value!);
         },
       });
     }
@@ -147,15 +143,7 @@ export class SmartValueLS<T> implements SmartValue<T> {
   }
 
   protected async trigger(value: T): Promise<void> {
-    if (!this.isLocalChange) {
-      try {
-        this.isLocalChange = true;
-        this.signal.set(value);
-      } finally {
-        this.isLocalChange = false;
-      }
-    }
-
+    this.signal.set(value, { silent: true });
     await Promise.all(
       Object.getOwnPropertySymbols(this.subscribers)
         .map((sym) => this.subscribers[sym](value))

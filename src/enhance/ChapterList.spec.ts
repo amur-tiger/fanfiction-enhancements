@@ -3,7 +3,6 @@ import type Chapter from "../api/Chapter";
 import type Story from "../api/Story";
 import type ValueContainer from "../api/ValueContainer";
 import ChapterList from "./ChapterList";
-import type { SmartValue } from "../api/SmartValue";
 import { environment } from "../util/environment";
 import { createSignal } from "../signal/signal";
 
@@ -59,7 +58,6 @@ describe("Chapter List", () => {
       id,
       title: name,
       read: createSignal(true as boolean | undefined),
-      words: createSignal(words as number | undefined),
     };
   }
 

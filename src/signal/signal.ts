@@ -1,4 +1,4 @@
-import { type Context, getContext, onDispose } from "./context";
+import { type Context, getContext } from "./context";
 
 export interface Signal<T> {
   /**
@@ -24,15 +24,20 @@ export interface Signal<T> {
   peek(): T;
 }
 
+export interface SignalEx<T> extends Signal<T> {
+  set(value: T, options?: { silent?: boolean }): void;
+
+  set(callback: (previous: T) => T, options?: { silent?: boolean }): void;
+}
+
 export type SignalType<T> = T extends Signal<infer U> ? U : never;
 
 type SignalInit<T> = SyncSignalInit<T> | AsyncSignalInit<T>;
 type SyncSignalInit<T> = T | (() => T);
-type AsyncSignalInit<T> = PromiseLike<T> | (() => PromiseLike<T>);
+type AsyncSignalInit<T> = PromiseLike<T>;
 
 interface SignalOptions<T> {
-  saveChange?: (value: T) => void;
-  handleExternalChange?: (context: { set(value: T): void }) => void | (() => void);
+  onChange?: (value: T) => void;
 }
 
 const marker = Symbol("signal");
@@ -44,8 +49,6 @@ export function createSignal<T>(value: AsyncSignalInit<T>, options?: SignalOptio
 export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T>): Signal<T> {
   const contexts: Context[] = [];
   let currentValue: T;
-  let isInternalChange = false;
-  let hasListener = false;
 
   // Handler to notify contexts of changes to this signal value.
   const notifyContexts = () => {
@@ -60,7 +63,6 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
       return true;
     });
     contexts.splice(0);
-    hasListener = false;
     relevant.forEach((c) => c.run());
   };
 
@@ -87,33 +89,19 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
   // @ts-ignore
   return Object.assign(
     function () {
-      if (!hasListener && options?.handleExternalChange != null) {
-        const cleanup = options.handleExternalChange({
-          set(next: T) {
-            if (!isInternalChange) {
-              currentValue = next;
-              notifyContexts();
-            }
-          },
-        });
-        if (typeof cleanup === "function") {
-          onDispose(cleanup);
-        }
-      }
-
       // Returns the current value. Registers the current render context, if any.
       const context = getContext();
       if (context && !contexts.includes(context)) {
         contexts.push(context);
       }
-
-      hasListener = true;
       return currentValue;
     },
     {
       [marker]: true,
 
-      set: (valueOrCallback: T | ((previous: T) => T)) => {
+      set: (valueOrCallback: T | ((previous: T) => T), opt?: { silent?: boolean }) => {
+        const silent = opt?.silent;
+
         // Updates the current value. Re-renders any relevant render contexts.
         if (typeof valueOrCallback === "function") {
           currentValue = (valueOrCallback as Function)(currentValue);
@@ -121,13 +109,9 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
           currentValue = valueOrCallback;
         }
 
-        isInternalChange = true;
-        try {
-          options?.saveChange?.(currentValue);
-        } finally {
-          isInternalChange = false;
+        if (!silent) {
+          options?.onChange?.(currentValue);
         }
-
         notifyContexts();
       },
 

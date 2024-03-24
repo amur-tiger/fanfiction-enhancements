@@ -51,7 +51,7 @@ export default class Story {
     this.id = data.id;
     this.title = data.title;
     this.description = data.description;
-    this.chapters = data.chapters ? data.chapters.map((chapter) => new Chapter(data.id, chapter, valueManager)) : [];
+    this.chapters = data.chapters ? data.chapters.map((chapter) => new Chapter(data.id, chapter)) : [];
     this.imageUrl = data.imageUrl;
     this.imageOriginalUrl = data.imageUrl;
     this.favorites = data.favorites;

@@ -5,6 +5,7 @@ import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
 import createGmSignal from "./signal/gm-signal";
+import getWordCount from "./api/word-count";
 
 import "./theme.css";
 import "./main.css";
@@ -79,10 +80,11 @@ async function main() {
       await storyValue.update(currentStory);
 
       if (environment.currentChapterId) {
-        const wordCountValue = valueContainer.getWordCountValue(currentStory.id, environment.currentChapterId);
-        await wordCountValue.update(
-          document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0,
-        );
+        const wordCount = getWordCount(currentStory.id, environment.currentChapterId);
+        wordCount.set({
+          count: document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0,
+          isEstimate: false,
+        });
       }
 
       const storyProfileEnhancer = container.getStoryProfile();

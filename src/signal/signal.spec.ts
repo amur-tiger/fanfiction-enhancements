@@ -26,18 +26,24 @@ describe(createSignal, () => {
       const data = createSignal(Promise.resolve("hello"));
 
       expect(data()).toBeUndefined();
-      await vi.waitFor(() => {
-        expect(data()).toBe("hello");
-      });
+      await vi.waitFor(
+        () => {
+          expect(data()).toBe("hello");
+        },
+        { interval: 1 },
+      );
     });
 
     it("should take the value from an async init function", async () => {
       const data = createSignal(async () => "hello");
 
       expect(data()).toBeUndefined();
-      await vi.waitFor(() => {
-        expect(data()).toBe("hello");
-      });
+      await vi.waitFor(
+        () => {
+          expect(data()).toBe("hello");
+        },
+        { interval: 1 },
+      );
     });
 
     it("should update context for init promise", async () => {
@@ -48,9 +54,12 @@ describe(createSignal, () => {
         data();
       }, fn);
 
-      await vi.waitFor(() => {
-        expect(fn).toHaveBeenCalled();
-      });
+      await vi.waitFor(
+        () => {
+          expect(fn).toHaveBeenCalled();
+        },
+        { interval: 1 },
+      );
     });
 
     it("should update context for async function init", async () => {
@@ -61,9 +70,12 @@ describe(createSignal, () => {
         data();
       }, fn);
 
-      await vi.waitFor(() => {
-        expect(fn).toHaveBeenCalled();
-      });
+      await vi.waitFor(
+        () => {
+          expect(fn).toHaveBeenCalled();
+        },
+        { interval: 1 },
+      );
     });
   });
 
@@ -120,9 +132,12 @@ describe(createSignal, () => {
 
       data.set(3);
 
-      await vi.waitFor(() => {
-        expect(fn).toHaveBeenCalledOnce();
-      });
+      await vi.waitFor(
+        () => {
+          expect(fn).toHaveBeenCalledOnce();
+        },
+        { interval: 1 },
+      );
     });
 
     it("should not run parent context", async () => {
@@ -138,10 +153,13 @@ describe(createSignal, () => {
 
       data.set(3);
 
-      await vi.waitFor(() => {
-        expect(innerFn).toHaveBeenCalledOnce();
-        expect(outerFn).not.toHaveBeenCalled();
-      });
+      await vi.waitFor(
+        () => {
+          expect(innerFn).toHaveBeenCalledOnce();
+          expect(outerFn).not.toHaveBeenCalled();
+        },
+        { interval: 1 },
+      );
     });
 
     it("should not run child context if parent is called", async () => {
@@ -158,18 +176,21 @@ describe(createSignal, () => {
 
       data.set(3);
 
-      await vi.waitFor(() => {
-        expect(innerFn).not.toHaveBeenCalled();
-        expect(outerFn).toHaveBeenCalledOnce();
-      });
+      await vi.waitFor(
+        () => {
+          expect(innerFn).not.toHaveBeenCalled();
+          expect(outerFn).toHaveBeenCalledOnce();
+        },
+        { interval: 1 },
+      );
     });
   });
 
-  describe("saveChange", () => {
-    it("should call save handler on change", () => {
+  describe("onChange", () => {
+    it("should call change handler on change", () => {
       const fn = vi.fn();
       const data = createSignal<number>(9, {
-        saveChange: fn,
+        onChange: fn,
       });
 
       data.set(28);
@@ -177,98 +198,18 @@ describe(createSignal, () => {
       expect(fn).toHaveBeenCalledWith(28);
     });
 
-    it("should not call save handler for async init", async () => {
+    it("should not call change handler for async init", async () => {
       const fn = vi.fn();
       const data = createSignal(Promise.resolve(9), {
-        saveChange: fn,
+        onChange: fn,
       });
 
-      await vi.waitFor(() => {
-        expect(data()).toBe(9);
-      });
-      expect(fn).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("handleExternalChange", () => {
-    it("should not register external change handler if value is not read", () => {
-      const fn = vi.fn();
-      createSignal(9, {
-        handleExternalChange: fn,
-      });
-
-      expect(fn).not.toHaveBeenCalled();
-    });
-
-    it("should only register external change handler once", () => {
-      const fn = vi.fn();
-      const data = createSignal(9, {
-        handleExternalChange: fn,
-      });
-
-      context(() => {
-        context(() => {
-          data();
-          data();
-        });
-        data();
-      });
-
-      expect(fn).toHaveBeenCalledOnce();
-    });
-
-    it("should update the value", () => {
-      let setter;
-      const data = createSignal(9, {
-        handleExternalChange({ set }) {
-          setter = set;
+      await vi.waitFor(
+        () => {
+          expect(data()).toBe(9);
         },
-      });
-
-      data();
-
-      expect(setter).toBeDefined();
-      setter!(28);
-
-      expect(data()).toBe(28);
-    });
-
-    it("should run the context", async () => {
-      const fn = vi.fn();
-      let setter;
-      const data = createSignal(9, {
-        handleExternalChange({ set }) {
-          setter = set;
-        },
-      });
-
-      context(() => {
-        data();
-      }, fn);
-
-      expect(setter).toBeDefined();
-      setter!(28);
-
-      await vi.waitFor(() => {
-        expect(fn).toHaveBeenCalled();
-      });
-    });
-
-    it("should not call the save handler if updated via external change handler", () => {
-      const fn = vi.fn();
-      let setter;
-      const data = createSignal(9, {
-        saveChange: fn,
-        handleExternalChange({ set }) {
-          setter = set;
-        },
-      });
-
-      data();
-
-      expect(setter).toBeDefined();
-      setter!(28);
-
+        { interval: 1 },
+      );
       expect(fn).not.toHaveBeenCalled();
     });
   });
