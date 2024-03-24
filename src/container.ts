@@ -61,7 +61,7 @@ export default class Container {
 
   public getStoryListEnhancer(): StoryList {
     if (!this.storyList) {
-      this.storyList = new StoryList(this.getValueContainer());
+      this.storyList = new StoryList();
     }
 
     return this.storyList;

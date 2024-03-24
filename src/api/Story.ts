@@ -1,8 +1,7 @@
 import type { Story as StoryData, User } from "ffn-parser";
 import Chapter from "./Chapter";
-import type { SmartValue } from "./SmartValue";
-import ValueContainer from "./ValueContainer";
 import type { Signal } from "../signal/signal";
+import { getStoryAlert, getStoryFavorite } from "./follows";
 
 export default class Story {
   public readonly id: number;
@@ -47,7 +46,7 @@ export default class Story {
 
   public readonly favorite: Signal<boolean | undefined>;
 
-  constructor(data: StoryData, valueManager: ValueContainer) {
+  constructor(data: StoryData) {
     this.id = data.id;
     this.title = data.title;
     this.description = data.description;
@@ -71,7 +70,7 @@ export default class Story {
       id: data.author.id,
       name: data.author.name,
     };
-    this.alert = valueManager.getAlertValue(data.id).signal;
-    this.favorite = valueManager.getFavoriteValue(data.id).signal;
+    this.alert = getStoryAlert(data.id);
+    this.favorite = getStoryFavorite(data.id);
   }
 }

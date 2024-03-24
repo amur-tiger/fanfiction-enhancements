@@ -161,3 +161,5 @@ export function tryParse<T = unknown>(text: string | null | undefined, fallback?
     return fallback;
   }
 }
+
+export type WithTimestamp<T> = T & { timestamp: number };

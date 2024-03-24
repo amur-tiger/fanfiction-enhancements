@@ -1,6 +1,6 @@
 import { createSignal, type Signal, type SignalEx } from "../signal/signal";
 import effect from "../signal/effect";
-import { tryParse } from "../utils";
+import { tryParse, type WithTimestamp } from "../utils";
 import { CacheName } from "./ValueContainer";
 import { environment, Page } from "../util/environment";
 
@@ -9,7 +9,7 @@ export interface WordCount {
   isEstimate: boolean;
 }
 
-type WordCountCache = Record<number, (WordCount & { timestamp: number }) | undefined>;
+type WordCountCache = Record<number, WithTimestamp<WordCount> | undefined>;
 
 function getWordCountCache(storyId: number): Signal<WordCountCache> {
   const key = `ffe-story-${storyId}-words`;
@@ -68,8 +68,8 @@ if (environment.currentPageType === Page.Chapter) {
 }
 
 // Cache migration from < 0.8
-for (let i = localStorage.length - 1; i >= 0; i--) {
-  const key = localStorage.key(i);
+const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) as string);
+for (const key of keys) {
   const match = key && key.match(/^ffe-story-(\d+)-chapter-(\d+)-words$/);
   if (match) {
     const [, storyId, chapterId] = match;

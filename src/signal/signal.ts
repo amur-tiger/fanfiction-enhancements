@@ -40,8 +40,6 @@ interface SignalOptions<T> {
   onChange?: (value: T) => void;
 }
 
-const marker = Symbol("signal");
-
 export function createSignal<T>(): Signal<T | undefined>;
 export function createSignal<T>(value: SyncSignalInit<T>, options?: SignalOptions<T>): Signal<T>;
 export function createSignal<T>(value: AsyncSignalInit<T>, options?: SignalOptions<T>): Signal<T | undefined>;
@@ -97,8 +95,6 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
       return currentValue;
     },
     {
-      [marker]: true,
-
       set: (valueOrCallback: T | ((previous: T) => T), opt?: { silent?: boolean }) => {
         const silent = opt?.silent;
 
@@ -125,5 +121,12 @@ export function isPromise(value: unknown): value is PromiseLike<unknown> {
 }
 
 export function isSignal(value: unknown): value is Signal<unknown> {
-  return value != null && typeof value === "function" && marker in value;
+  return (
+    value != null &&
+    typeof value === "function" &&
+    "set" in value &&
+    typeof value.set === "function" &&
+    "peek" in value &&
+    typeof value.peek === "function"
+  );
 }

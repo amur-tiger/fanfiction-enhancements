@@ -1,4 +1,4 @@
-import type { Follow, Story as StoryData } from "ffn-parser";
+import type { Story as StoryData } from "ffn-parser";
 import Api from "./Api";
 import type { Synchronizer } from "./DropBox";
 import { type SmartValue, SmartValueLS } from "./SmartValue";
@@ -91,7 +91,7 @@ export default class ValueContainer {
       return undefined;
     }
 
-    return new Story(storyData, this);
+    return new Story(storyData);
   }
 
   public getStoryValue(id: number): SmartValue<StoryData> {
@@ -101,82 +101,5 @@ export default class ValueContainer {
     }
 
     return this.instances[key] as SmartValue<StoryData>;
-  }
-
-  public getAlertValue(id: number): SmartValue<boolean> {
-    const key = CacheName.storyAlert(id);
-    if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLS<boolean>(
-        key,
-        this.storage,
-        async () => {
-          const alerts = await this.api.getStoryAlerts();
-          await this.followedStoryDiff(CacheName.isStoryAlertKey, alerts, this.getAlertValue);
-
-          return !!alerts.find((alert) => alert.id === id);
-        },
-        async (alert) => {
-          if (alert) {
-            await this.api.addStoryAlert(id);
-          } else {
-            await this.api.removeStoryAlert(id);
-          }
-        },
-      );
-    }
-
-    return this.instances[key] as SmartValue<boolean>;
-  }
-
-  public getFavoriteValue(id: number): SmartValue<boolean> {
-    const key = CacheName.storyFavorite(id);
-    if (!this.instances[key]) {
-      this.instances[key] = new SmartValueLS<boolean>(
-        key,
-        this.storage,
-        async () => {
-          const favorites = await this.api.getStoryFavorites();
-          await this.followedStoryDiff(CacheName.isStoryFavoriteKey, favorites, this.getFavoriteValue);
-
-          return !!favorites.find((favorite) => favorite.id === id);
-        },
-        async (favorite) => {
-          if (favorite) {
-            await this.api.addStoryFavorite(id);
-          } else {
-            await this.api.removeStoryFavorite(id);
-          }
-        },
-      );
-    }
-
-    return this.instances[key] as SmartValue<boolean>;
-  }
-
-  private async followedStoryDiff(
-    matchFn: (key: string) => boolean,
-    updated: Follow[],
-    valueGetter: (id: number) => SmartValue<boolean>,
-  ) {
-    const visited = new Set();
-    await Promise.all(
-      updated.map(async (followed) => {
-        const value = valueGetter.call(this, followed.id);
-
-        visited.add(value.name);
-        await value.update(true);
-      }),
-    );
-
-    const current = Object.keys(this.instances)
-      .filter(matchFn)
-      .map((key) => this.instances[key]);
-    await Promise.all(
-      current.map(async (value) => {
-        if (!visited.has(value.name)) {
-          await value.update(false);
-        }
-      }),
-    );
   }
 }

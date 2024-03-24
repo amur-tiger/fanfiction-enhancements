@@ -1,11 +1,10 @@
-import { parseFollows, parseStory } from "ffn-parser";
+import { parseStory } from "ffn-parser";
 import Container from "./container";
 import { environment, Page } from "./util/environment";
 import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
 import { CacheName } from "./api/ValueContainer";
 import getChapterRead from "./api/chapter-read";
-import getWordCount from "./api/word-count";
 
 import "./theme.css";
 import "./main.css";
@@ -31,17 +30,6 @@ async function main() {
   await menuBarEnhancer.enhance();
 
   if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
-    const getterName = environment.currentPageType === Page.Alerts ? "getAlertValue" : "getFavoriteValue";
-    const list = await parseFollows(document);
-    if (list) {
-      await Promise.all(
-        list.map(async (item) => {
-          const value = valueContainer[getterName](item.id);
-          await value.update(true);
-        }),
-      );
-    }
-
     const followsListEnhancer = container.getFollowsList();
     await followsListEnhancer.enhance();
   }
@@ -78,14 +66,6 @@ async function main() {
     if (currentStory) {
       const storyValue = valueContainer.getStoryValue(currentStory.id);
       await storyValue.update(currentStory);
-
-      if (environment.currentChapterId) {
-        const wordCount = getWordCount(currentStory.id, environment.currentChapterId);
-        wordCount.set({
-          count: document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0,
-          isEstimate: false,
-        });
-      }
 
       const storyProfileEnhancer = container.getStoryProfile();
       await storyProfileEnhancer.enhance();

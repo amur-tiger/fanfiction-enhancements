@@ -1,5 +1,3 @@
-import gmFetch from "./gm-fetch";
-
 interface Task<T, D = {}> {
   run: () => T | PromiseLike<T>;
   resolve: (value: T | PromiseLike<T>) => void;
@@ -39,7 +37,7 @@ let waitUntil = 0;
 export default function throttledFetch(input: RequestInfo | URL, init?: RequestInit, priority = 0): Promise<Response> {
   const request = new Request(input, init);
 
-  const task = createTask(() => gmFetch(request), {
+  const task = createTask(() => fetch(request), {
     request,
     priority,
   });
@@ -74,16 +72,6 @@ async function run(task: Task<Response, FetchContext>) {
     running += 1;
     const response = await task.run();
 
-    console.debug(
-      "%c%s %c%s %c%d",
-      "color: blue",
-      task.data.request.method,
-      "color: inherit",
-      task.data.request.url,
-      "color: blue",
-      response.status,
-    );
-
     if (response.status === 429) {
       const retryAfter = response.headers.get("Retry-After");
       const waitSeconds = ((retryAfter && !Number.isNaN(+retryAfter) && +retryAfter) || 30) + 1;
@@ -94,15 +82,6 @@ async function run(task: Task<Response, FetchContext>) {
       task.resolve(response);
     }
   } catch (ex) {
-    console.debug(
-      "%c%s %c%s %c%d",
-      "color: blue",
-      task.data.request.method,
-      "color: inherit",
-      task.data.request.url,
-      "color: red",
-      "Network error",
-    );
     blockAndRetry(task, 60);
   } finally {
     running -= 1;
