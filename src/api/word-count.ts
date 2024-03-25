@@ -1,8 +1,8 @@
 import { createSignal, type Signal, type SignalEx } from "../signal/signal";
 import effect from "../signal/effect";
 import { tryParse, type WithTimestamp } from "../utils";
-import { CacheName } from "./ValueContainer";
 import { environment, Page } from "../util/environment";
+import view from "../signal/view";
 
 export interface WordCount {
   count: number;
@@ -47,25 +47,20 @@ function getWordCountCache(storyId: number): Signal<WordCountCache> {
 }
 
 export default function getWordCount(storyId: number, chapterId: number): Signal<WordCount | undefined> {
-  const signal = getWordCountCache(storyId);
-  // @ts-ignore
-  return Object.assign(
-    function () {
-      return signal()[chapterId]?.count;
-    },
-    {
-      set: (words: WordCount) => signal.set((prev) => ({ ...prev, [chapterId]: { ...words, timestamp: Date.now() } })),
-      peek: () => signal.peek()[chapterId]?.count,
-    },
-  );
+  return view(getWordCountCache(storyId), chapterId);
 }
 
 function updateWordCount() {
   if (environment.currentPageType === Page.Chapter) {
-    const key = CacheName.wordCount(environment.currentStoryId!, environment.currentChapterId!);
+    const key = `ffe-story-${environment.currentStoryId}-words`;
     const wordCount = document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0;
-    localStorage.setItem(key, JSON.stringify(wordCount));
-    localStorage.setItem(key + "+timestamp", Date.now().toString());
+    const cache = tryParse<WordCountCache>(localStorage.getItem(key), {});
+  cache[environment.currentChapterId!] = {
+    count: wordCount,
+    isEstimate: false,
+    timestamp: Date.now(),
+  };
+  localStorage.setItem(key, JSON.stringify(cache));
   }
 }
 

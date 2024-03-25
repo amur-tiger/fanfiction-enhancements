@@ -1,90 +1,24 @@
-import { type Chapter, type Follow, parseStory, type Story as StoryData, type User, parseFollows } from "ffn-parser";
+import { type Follow, parseStory, type Story, parseFollows } from "ffn-parser";
 import { createSignal, type Signal, type SignalEx } from "../signal/signal";
 import { toDate, tryParse, type WithTimestamp } from "../utils";
 import effect from "../signal/effect";
 import { environment, Page } from "../util/environment";
 import Api from "./Api";
 
-export default class Story {
-  public readonly id: number;
-
-  public readonly title: string;
-
-  public readonly description: string;
-
-  public readonly chapters: Chapter[];
-
-  public readonly imageUrl: string | undefined;
-
-  public readonly imageOriginalUrl: string | undefined;
-
-  public readonly favorites: number;
-
-  public readonly follows: number;
-
-  public readonly reviews: number;
-
-  public readonly genre: string[];
-
-  public readonly language: string;
-
-  public readonly published: Date;
-
-  public readonly updated: Date | undefined;
-
-  public readonly rating: StoryData["rating"];
-
-  public readonly words: number;
-
-  public readonly characters: string[][];
-
-  public readonly status: StoryData["status"];
-
-  public readonly universes: string[];
-
-  public readonly author: User;
-
-  constructor(data: StoryData) {
-    this.id = data.id;
-    this.title = data.title;
-    this.description = data.description;
-    this.chapters = data.chapters;
-    this.imageUrl = data.imageUrl;
-    this.imageOriginalUrl = data.imageUrl;
-    this.favorites = data.favorites;
-    this.follows = data.follows;
-    this.reviews = data.reviews;
-    this.genre = data.genre;
-    this.language = data.language;
-    this.published = data.published instanceof Date ? data.published : new Date(data.published);
-    this.updated = data.updated == null || data.updated instanceof Date ? data.updated : new Date(data.updated);
-    this.rating = data.rating;
-    this.words = data.words;
-    this.characters = data.characters;
-    this.status = data.status;
-    this.universes = data.universes;
-
-    this.author = {
-      id: data.author.id,
-      name: data.author.name,
-    };
-  }
-}
-
 const api = new Api();
 
 type Intersect<T, S> = { [K in keyof (S & T)]: (S & T)[K] };
 
-export type StoryData2 = Intersect<
+export type StoryData = Intersect<
   {
-    [K in keyof StoryData as K extends keyof Follow ? K : never]: StoryData[K];
+    [K in keyof Story as K extends keyof Follow ? K : never]: Story[K];
   },
   {
-    [K in keyof StoryData as K extends keyof Follow ? never : K]?: StoryData[K];
+    [K in keyof Story as K extends keyof Follow ? never : K]?: Story[K];
   }
 >;
 
-type StoryCache = WithTimestamp<StoryData2>;
+type StoryCache = WithTimestamp<StoryData>;
 
 /**
  * Determine cache key for story data.
@@ -168,7 +102,7 @@ function getStoryMetadata(
  * Creates a signal for story data. Story data is automatically downloaded if missing.
  * @param storyId
  */
-export function getStory(storyId: number): Signal<StoryData2 | undefined> {
+export function getStory(storyId: number): Signal<StoryData | undefined> {
   const signal = getStoryMetadata(storyId, (next) => {
     if (next?.chapters == null) {
       api.getStoryData(storyId).then((story) => {
@@ -193,35 +127,37 @@ export function getStory(storyId: number): Signal<StoryData2 | undefined> {
 /**
  * Parses follows data from the current page.
  */
-if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
-  parseFollows().then((follows) => {
-    if (follows) {
-      for (const follow of follows) {
-        let cached = getStoryCache(follow.id);
-        if (
-          cached &&
-          (cached.id !== follow.id ||
-            cached.title !== follow.title ||
-            cached.author.id !== follow.author.id ||
-            cached.author.name !== follow.author.name ||
-            (cached.updated && toDate(cached.updated).getTime() < follow.updated.getTime()))
-        ) {
-          console.debug("Cache for '%s' is outdated, overwriting.", cached.title);
-          cached = undefined;
-        }
-        if (cached == null) {
-          console.debug("Set story data for '%s' from follow.", follow.title);
-          setStoryCache(follow.id, {
-            id: follow.id,
-            title: follow.title,
-            author: follow.author,
-            updated: follow.updated,
-            timestamp: Date.now(),
-          });
+function updateStoryData() {
+  if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
+    parseFollows().then((follows) => {
+      if (follows) {
+        for (const follow of follows) {
+          let cached = getStoryCache(follow.id);
+          if (
+            cached &&
+            (cached.id !== follow.id ||
+              cached.title !== follow.title ||
+              cached.author.id !== follow.author.id ||
+              cached.author.name !== follow.author.name ||
+              (cached.updated && toDate(cached.updated).getTime() < follow.updated.getTime()))
+          ) {
+            console.debug("Cache for '%s' is outdated, overwriting.", cached.title);
+            cached = undefined;
+          }
+          if (cached == null) {
+            console.debug("Set story data for '%s' from follow.", follow.title);
+            setStoryCache(follow.id, {
+              id: follow.id,
+              title: follow.title,
+              author: follow.author,
+              updated: follow.updated,
+              timestamp: Date.now(),
+            });
+          }
         }
       }
-    }
-  });
+    });
+  }
 }
 
 /**
@@ -242,14 +178,21 @@ if (environment.currentPageType === Page.Story || environment.currentPageType ==
 /**
  * Cache migration from < 0.8
  */
-const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) as string);
-for (const key of keys) {
-  if (key && /^ffe-story-\d+$/.test(key)) {
-    const cache = tryParse<StoryCache>(localStorage.getItem(key));
-    if (cache) {
-      cache.timestamp = +(localStorage.getItem(key + "+timestamp") ?? 0);
-      localStorage.setItem(key, JSON.stringify(cache));
+function migrateStoryData() {
+  const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) as string);
+  for (const key of keys) {
+    if (key && /^ffe-story-\d+$/.test(key)) {
+      const cache = tryParse<StoryCache>(localStorage.getItem(key));
+      if (cache) {
+        cache.timestamp = +(localStorage.getItem(key + "+timestamp") ?? 0);
+        localStorage.setItem(key, JSON.stringify(cache));
+      }
+      localStorage.removeItem(key + "+timestamp");
     }
-    localStorage.removeItem(key + "+timestamp");
   }
+}
+
+if (process.env.MODE !== "test") {
+  migrateStoryData();
+  updateStoryData();
 }

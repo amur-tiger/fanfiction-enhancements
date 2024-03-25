@@ -1,11 +1,11 @@
-import { getStory, type StoryData2 } from "../../../api/story";
+import { getStory, type StoryData } from "../../../api/story";
 import type { Chapter } from "ffn-parser";
 import { createSignal } from "../../../signal/signal";
 import getChapterRead from "../../../api/chapter-read";
 import ChapterListEntry from "./ChapterListEntry";
 import "./ChapterList.css";
 
-function hiddenChapterMapper(story: StoryData2, isRead: (chapter: Chapter) => boolean, onShow: () => void) {
+function hiddenChapterMapper(story: StoryData, isRead: (chapter: Chapter) => boolean, onShow: () => void) {
   return (chapter: Chapter, idx: number, chapters: Chapter[]) => {
     if (isRead(chapter)) {
       // if last element in list or next element is unread

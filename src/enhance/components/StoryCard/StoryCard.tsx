@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import type { Story } from "ffn-parser";
 import { createSignal } from "../../../signal/signal";
 import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
@@ -33,7 +34,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
     try {
       isDownloading.set(true);
 
-      const epub = new Epub(story as never); // todo
+      const epub = new Epub(story as Story);
       const blob = await epub.create();
 
       link.href = URL.createObjectURL(blob);

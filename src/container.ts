@@ -1,6 +1,4 @@
 import { DropBox } from "./api/DropBox";
-import Api from "./api/Api";
-import ValueContainer from "./api/ValueContainer";
 import MenuBar from "./enhance/MenuBar";
 import FollowsList from "./enhance/FollowsList";
 import StoryList from "./enhance/StoryList";
@@ -9,10 +7,6 @@ import ChapterList from "./enhance/ChapterList";
 import SaveListSettings from "./enhance/SaveListSettings";
 
 export default class Container {
-  private api?: Api;
-
-  private valueManager?: ValueContainer;
-
   private menuBar?: MenuBar;
 
   private followsList?: FollowsList;
@@ -26,22 +20,6 @@ export default class Container {
   private saveListSettings?: SaveListSettings;
 
   private dropBox?: DropBox;
-
-  public getApi(): Api {
-    if (!this.api) {
-      this.api = new Api();
-    }
-
-    return this.api;
-  }
-
-  public getValueContainer(): ValueContainer {
-    if (!this.valueManager) {
-      this.valueManager = new ValueContainer(this.getStorage(), this.getApi(), this.getDropBox());
-    }
-
-    return this.valueManager;
-  }
 
   public getMenuBar(): MenuBar {
     if (!this.menuBar) {
@@ -101,9 +79,5 @@ export default class Container {
 
   public getContainer(): Container {
     return this;
-  }
-
-  public getStorage(): Storage {
-    return localStorage;
   }
 }

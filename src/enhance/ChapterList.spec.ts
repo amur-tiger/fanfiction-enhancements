@@ -1,7 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Chapter } from "ffn-parser";
-import type Story from "../api/story";
-import type ValueContainer from "../api/ValueContainer";
+import type { Chapter, Story } from "ffn-parser";
 import { environment } from "../util/environment";
 import ChapterList from "./ChapterList";
 
@@ -77,7 +75,6 @@ describe.skip("Chapter List", () => {
     document.body.innerHTML = fragmentHTML;
     environment.currentStoryId = 1;
 
-    const valueContainer = { getStory: createStory } as unknown as ValueContainer;
     const chapterList = new ChapterList();
 
     await chapterList.enhance();
@@ -105,7 +102,6 @@ describe.skip("Chapter List", () => {
     document.body.innerHTML = fragmentHTML;
     environment.currentStoryId = 1;
 
-    const valueContainer = { getStory: createStory } as unknown as ValueContainer;
     const chapterList = new ChapterList();
 
     await chapterList.enhance();

@@ -3,7 +3,6 @@ import Container from "./container";
 import { environment, Page } from "./util/environment";
 import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
-import { CacheName } from "./api/ValueContainer";
 import getChapterRead from "./api/chapter-read";
 
 import "./theme.css";
@@ -94,7 +93,7 @@ async function migrate() {
   const readList = JSON.parse(readListStr as string);
   for (const [storyId, story] of Object.entries(readList)) {
     for (const [chapterId, chapter] of Object.entries(story as object)) {
-      await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), chapter);
+      await GM.setValue(`ffe-story-${storyId}-chapter-${chapterId}-read`, chapter);
     }
   }
 

@@ -1,9 +1,8 @@
 import { createSignal, type Signal, type SignalEx } from "../signal/signal";
 import effect from "../signal/effect";
-import { CacheName } from "./ValueContainer";
 
 export default function getChapterRead(storyId: number, chapterId: number): Signal<boolean> {
-  const key = CacheName.chapterRead(storyId, chapterId);
+  const key = `ffe-story-${storyId}-chapter-${chapterId}-read`;
 
   const signal = createSignal<boolean>(
     GM.getValue(key).then((value) => value === "true"),

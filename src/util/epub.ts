@@ -1,7 +1,6 @@
 import JSZip from "jszip";
-import type { Chapter } from "ffn-parser";
+import type { Chapter, Story } from "ffn-parser";
 import { createChapterLink } from "../api/links";
-import type Story from "../api/story";
 import throttledFetch from "../api/throttled-fetch";
 import { Priority } from "../api/priority";
 
@@ -180,7 +179,7 @@ ${content}
   }
 
   public hasCover(): boolean {
-    return !!(this.story.imageOriginalUrl ?? this.story.imageUrl);
+    return !!this.story.imageUrl;
   }
 
   public getFilename(): string {
@@ -198,7 +197,7 @@ ${content}
     zip.file("toc.ncx", await this.getNcxXml());
     zip.file("toc.xhtml", await this.getTocHtml());
 
-    const coverUrl = this.story.imageOriginalUrl ?? this.story.imageUrl;
+    const coverUrl = this.story.imageUrl;
     if (coverUrl) {
       zip.file("cover.xhtml", await this.getCoverHtml());
       const cover = await throttledFetch(`//www.fanfiction.net${coverUrl}`, undefined, Priority.EpubChapter);
