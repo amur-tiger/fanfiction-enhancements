@@ -25,19 +25,19 @@ const ratings: Record<string, { class: string; title: string } | undefined> = {
 };
 
 export interface RatingProps {
-  rating: string;
+  rating?: string;
 }
 
 export default function Rating({ rating }: RatingProps) {
   return (
     <a
       href="https://www.fictionratings.com/"
-      class={clsx("ffe-rating", ratings[rating]?.class)}
-      title={ratings[rating]?.title ?? "No Rating Available"}
+      class={clsx("ffe-rating", ratings[rating ?? ""]?.class)}
+      title={ratings[rating ?? ""]?.title ?? "No Rating Available"}
       rel="noreferrer"
       target="rating"
     >
-      {rating in ratings ? rating : "?"}
+      {rating && rating in ratings ? rating : "?"}
     </a>
   );
 }

@@ -137,3 +137,36 @@ export function timeout(time: number): Promise<void> {
     setTimeout(resolve, time);
   });
 }
+
+/**
+ * Tries to parse a text as JSON, and returns undefined if it fails.
+ * @param text
+ */
+export function tryParse<T = unknown>(text: string | null | undefined): T | undefined;
+
+/**
+ * Tries to parse a text as JSON, and returns the fallback if it fails.
+ * @param text
+ * @param fallback
+ */
+export function tryParse<T = unknown>(text: string | null | undefined, fallback: T): T;
+
+export function tryParse<T = unknown>(text: string | null | undefined, fallback?: T): T | undefined {
+  if (!text) {
+    return fallback;
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+export type WithTimestamp<T> = T & { timestamp: number };
+
+export function toDate(date: Date | string): Date {
+  if (date instanceof Date) {
+    return date;
+  }
+  return new Date(date);
+}

@@ -1,19 +1,11 @@
 import { environment } from "../util/environment";
-import ChapterListComponent from "./components/ChapterList/ChapterList";
 import type Enhancer from "./Enhancer";
-import ValueContainer from "../api/ValueContainer";
+import ChapterListComponent from "./components/ChapterList/ChapterList";
 
 export default class ChapterList implements Enhancer {
-  public constructor(private readonly valueContainer: ValueContainer) {}
-
   public async enhance(): Promise<void> {
     const contentWrapper = document.getElementById("content_wrapper_inner");
     if (!contentWrapper || !environment.currentStoryId) {
-      return;
-    }
-
-    const story = await this.valueContainer.getStory(environment.currentStoryId);
-    if (!story) {
       return;
     }
 
@@ -32,7 +24,7 @@ export default class ChapterList implements Enhancer {
     }
 
     // add chapter list
-    const chapterList = <ChapterListComponent story={story} />;
+    const chapterList = <ChapterListComponent storyId={environment.currentStoryId} />;
     contentWrapper.insertBefore(chapterList, document.getElementById("review_success"));
   }
 }

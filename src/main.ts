@@ -1,10 +1,9 @@
-import { parseFollows, parseStory } from "ffn-parser";
+import { parseStory } from "ffn-parser";
 import Container from "./container";
 import { environment, Page } from "./util/environment";
 import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
-import { CacheName } from "./api/ValueContainer";
-import createGmSignal from "./signal/gm-signal";
+import getChapterRead from "./api/chapter-read";
 
 import "./theme.css";
 import "./main.css";
@@ -19,8 +18,6 @@ async function main() {
     return;
   }
 
-  const valueContainer = container.getValueContainer();
-
   const dropBox = container.getDropBox();
   if (await dropBox.isAuthorized()) {
     dropBox.synchronize().catch(console.error);
@@ -30,17 +27,6 @@ async function main() {
   await menuBarEnhancer.enhance();
 
   if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
-    const getterName = environment.currentPageType === Page.Alerts ? "getAlertValue" : "getFavoriteValue";
-    const list = await parseFollows(document);
-    if (list) {
-      await Promise.all(
-        list.map(async (item) => {
-          const value = valueContainer[getterName](item.id);
-          await value.update(true);
-        }),
-      );
-    }
-
     const followsListEnhancer = container.getFollowsList();
     await followsListEnhancer.enhance();
   }
@@ -59,12 +45,6 @@ async function main() {
   }
 
   if (environment.currentPageType === Page.Story) {
-    const currentStory = await parseStory(document);
-    if (currentStory) {
-      const storyValue = valueContainer.getStoryValue(currentStory.id);
-      await storyValue.update(currentStory);
-    }
-
     const storyProfileEnhancer = container.getStoryProfile();
     await storyProfileEnhancer.enhance();
 
@@ -75,16 +55,6 @@ async function main() {
   if (environment.currentPageType === Page.Chapter) {
     const currentStory = await parseStory(document);
     if (currentStory) {
-      const storyValue = valueContainer.getStoryValue(currentStory.id);
-      await storyValue.update(currentStory);
-
-      if (environment.currentChapterId) {
-        const wordCountValue = valueContainer.getWordCountValue(currentStory.id, environment.currentChapterId);
-        await wordCountValue.update(
-          document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0,
-        );
-      }
-
       const storyProfileEnhancer = container.getStoryProfile();
       await storyProfileEnhancer.enhance();
 
@@ -92,7 +62,7 @@ async function main() {
       await storyTextEnhancer.enhance();
 
       if (environment.currentChapterId) {
-        const readValue = createGmSignal(CacheName.chapterRead(currentStory.id, environment.currentChapterId));
+        const isRead = getChapterRead(currentStory.id, environment.currentChapterId);
         const markRead = async () => {
           const amount = document.documentElement.scrollTop;
           const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -104,7 +74,7 @@ async function main() {
               currentStory.title,
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
-            readValue.set(true);
+            isRead.set(true);
           }
         };
 
@@ -123,7 +93,7 @@ async function migrate() {
   const readList = JSON.parse(readListStr as string);
   for (const [storyId, story] of Object.entries(readList)) {
     for (const [chapterId, chapter] of Object.entries(story as object)) {
-      await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), chapter);
+      await GM.setValue(`ffe-story-${storyId}-chapter-${chapterId}-read`, chapter);
     }
   }
 

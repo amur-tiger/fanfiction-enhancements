@@ -1,5 +1,3 @@
-import { CacheName } from "./ValueContainer";
-
 declare const unsafeWindow: Window;
 
 const OAUTH2_CALLBACK = "ffe-oauth2-cb";
@@ -65,10 +63,6 @@ export class DropBox implements Synchronizer {
 
     await Promise.all(
       Object.keys(remoteData).map(async (key) => {
-        if (CacheName.isTimestampKey(key)) {
-          return;
-        }
-
         const localTimestamp = +((await GM.getValue(`${key}+timestamp`)) ?? 0);
         const remoteTimestamp = +remoteData[`${key}+timestamp`];
 
@@ -85,10 +79,6 @@ export class DropBox implements Synchronizer {
     let hasUpdate = false;
     await Promise.all(
       (await GM.listValues()).map(async (key) => {
-        if (CacheName.isTimestampKey(key)) {
-          return;
-        }
-
         const localTimestamp = +((await GM.getValue(`${key}+timestamp`)) ?? 0);
         const remoteTimestamp = +remoteData[`${key}+timestamp`] || 0;
         if (localTimestamp > remoteTimestamp) {

@@ -1,17 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, type Mock, it, vi } from "vitest";
 import Api from "./Api";
-import RequestManager from "./request-manager/RequestManager";
+import throttledFetch from "./throttled-fetch";
+
+vi.mock("./throttled-fetch");
 
 describe("Api", () => {
-  let requestManager: RequestManager;
-
-  beforeEach(() => {
-    requestManager = new RequestManager();
+  afterEach(() => {
+    (throttledFetch as Mock).mockReset();
   });
 
   describe("Alerts", () => {
     it("should add alert", async () => {
-      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      (throttledFetch as Mock).mockImplementation(async (url, opts) => {
         expect(url).toBe("/api/ajax_subs.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -21,14 +21,14 @@ describe("Api", () => {
         return { json: async () => ({}) } as Response;
       });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       await api.addStoryAlert(1);
 
-      expect(requestManager.fetch).toHaveBeenCalled();
+      expect(throttledFetch).toHaveBeenCalled();
     });
 
     it("should remove alert", async () => {
-      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      (throttledFetch as Mock).mockImplementation(async (url, opts) => {
         expect(url).toBe("/alert/story.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -38,10 +38,10 @@ describe("Api", () => {
         return { text: async () => ({}) } as Response;
       });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       await api.removeStoryAlert(1);
 
-      expect(requestManager.fetch).toHaveBeenCalled();
+      expect(throttledFetch).toHaveBeenCalled();
     });
 
     it("should retrieve multi-page alerts list", async () => {
@@ -87,7 +87,7 @@ describe("Api", () => {
     			</table>
     		</form>`;
 
-      vi.spyOn(requestManager, "fetch")
+      (throttledFetch as Mock)
         .mockImplementationOnce(async (url) => {
           expect(url).toBe("/alert/story.php");
           return { text: async () => page1 } as Response;
@@ -97,10 +97,10 @@ describe("Api", () => {
           return { text: async () => page2 } as Response;
         });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       const list = await api.getStoryAlerts();
 
-      expect(requestManager.fetch).toHaveBeenCalledTimes(2);
+      expect(throttledFetch).toHaveBeenCalledTimes(2);
       expect(list.length).toBe(2);
 
       const item1 = list[0];
@@ -119,7 +119,7 @@ describe("Api", () => {
 
   describe("Favorites", () => {
     it("should add favorite", async () => {
-      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      (throttledFetch as Mock).mockImplementation(async (url, opts) => {
         expect(url).toBe("/api/ajax_subs.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -129,14 +129,14 @@ describe("Api", () => {
         return { json: async () => ({}) } as Response;
       });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       await api.addStoryFavorite(1);
 
-      expect(requestManager.fetch).toHaveBeenCalled();
+      expect(throttledFetch).toHaveBeenCalled();
     });
 
     it("should remove favorite", async () => {
-      vi.spyOn(requestManager, "fetch").mockImplementation(async (url, opts) => {
+      (throttledFetch as Mock).mockImplementation(async (url, opts) => {
         expect(url).toBe("/favorites/story.php");
         expect(opts?.method).toBe("POST");
         expect(opts?.body).toBeInstanceOf(FormData);
@@ -146,10 +146,10 @@ describe("Api", () => {
         return { text: async () => ({}) } as Response;
       });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       await api.removeStoryFavorite(1);
 
-      expect(requestManager.fetch).toHaveBeenCalled();
+      expect(throttledFetch).toHaveBeenCalled();
     });
 
     it("should retrieve multi-page favorites list", async () => {
@@ -195,7 +195,7 @@ describe("Api", () => {
     			</table>
     		</form>`;
 
-      vi.spyOn(requestManager, "fetch")
+      (throttledFetch as Mock)
         .mockImplementationOnce(async (url) => {
           expect(url).toBe("/favorites/story.php");
           return { text: async () => page1 } as Response;
@@ -205,10 +205,10 @@ describe("Api", () => {
           return { text: async () => page2 } as Response;
         });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       const list = await api.getStoryFavorites();
 
-      expect(requestManager.fetch).toHaveBeenCalledTimes(2);
+      expect(throttledFetch).toHaveBeenCalledTimes(2);
       expect(list.length).toBe(2);
 
       const item1 = list[0];
@@ -252,12 +252,12 @@ describe("Api", () => {
     			<div id="storytext">Two words.</div>
     		</div>`;
 
-      vi.spyOn(requestManager, "fetch").mockImplementation(async (url) => {
+      (throttledFetch as Mock).mockImplementation(async (url) => {
         expect(url).toBe("/s/123");
         return { text: async () => page } as Response;
       });
 
-      const api = new Api(requestManager);
+      const api = new Api();
       const story = await api.getStoryData(123);
 
       expect(story?.id).toBe(123);

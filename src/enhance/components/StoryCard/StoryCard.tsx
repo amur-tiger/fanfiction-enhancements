@@ -1,20 +1,28 @@
 import clsx from "clsx";
+import type { Story } from "ffn-parser";
 import { createSignal } from "../../../signal/signal";
 import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
-import type RequestManager from "../../../api/request-manager/RequestManager";
-import type Story from "../../../api/Story";
+import { getStory } from "../../../api/story";
 import Epub from "../../../util/epub";
+import { getStoryAlert, getStoryFavorite } from "../../../api/follows";
+import { toDate } from "../../../utils";
 import BellIcon from "../../../assets/bell.svg";
 import "./StoryCard.css";
 
 export interface StoryCardProps {
-  requestManager: RequestManager;
-  story: Story;
+  storyId: number;
 }
 
-export default function StoryCard({ requestManager, story }: StoryCardProps) {
+export default function StoryCard({ storyId }: StoryCardProps) {
+  const story = getStory(storyId)();
+  if (!story) {
+    return <div class="ffe-sc">loading...</div>;
+  }
+
   const isDownloading = createSignal(false);
+  const hasAlert = getStoryAlert(story.id);
+  const isFavorite = getStoryFavorite(story.id);
 
   const handleDownloadClick = async () => {
     const link = (element as HTMLElement).querySelector(".ffe-download-link") as HTMLAnchorElement | null;
@@ -26,7 +34,7 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
     try {
       isDownloading.set(true);
 
-      const epub = new Epub(requestManager, story);
+      const epub = new Epub(story as Story);
       const blob = await epub.create();
 
       link.href = URL.createObjectURL(blob);
@@ -62,16 +70,16 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
 
           <div class="btn-group">
             <Button
-              class={clsx("ffe-sc-follow", { "ffe-active": story.alert() })}
+              class={clsx("ffe-sc-follow", { "ffe-active": hasAlert() })}
               title="Toggle Story Alert"
-              onClick={() => story.alert.set((prev) => !prev)}
+              onClick={() => hasAlert.set((prev) => !prev)}
             >
               <BellIcon />
             </Button>
             <Button
-              class={clsx("ffe-sc-favorite icon-heart", { "ffe-active": story.favorite() })}
+              class={clsx("ffe-sc-favorite icon-heart", { "ffe-active": isFavorite() })}
               title="Toggle Favorite"
-              onClick={() => story.favorite.set((prev) => !prev)}
+              onClick={() => isFavorite.set((prev) => !prev)}
             />
           </div>
         </div>
@@ -140,14 +148,16 @@ export default function StoryCard({ requestManager, story }: StoryCardProps) {
         {story.published && (
           <span class="ffe-sc-footer-info">
             <strong>Published:&nbsp;</strong>
-            <time datetime={story.published.toISOString()}>{story.published.toLocaleDateString("en")}</time>
+            <time datetime={toDate(story.published).toISOString()}>
+              {toDate(story.published).toLocaleDateString("en")}
+            </time>
           </span>
         )}
 
         {story.updated && (
           <span class="ffe-sc-footer-info">
             <strong>Updated:&nbsp;</strong>
-            <time datetime={story.updated.toISOString()}>{story.updated.toLocaleDateString("en")}</time>
+            <time datetime={toDate(story.updated).toISOString()}>{toDate(story.updated).toLocaleDateString("en")}</time>
           </span>
         )}
       </div>

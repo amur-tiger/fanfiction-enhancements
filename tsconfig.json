@@ -5,8 +5,10 @@
     "jsxImportSource": "@jsx",
     "lib": [
       "dom",
+      "dom.iterable",
       "es2020"
     ],
+    "module": "ESNext",
     "moduleResolution": "node",
     "paths": {
       "@jsx/*": [
