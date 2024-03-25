@@ -2,7 +2,7 @@ import type { Story as StoryData } from "ffn-parser";
 import Api from "./Api";
 import type { Synchronizer } from "./DropBox";
 import { type SmartValue, SmartValueLS } from "./SmartValue";
-import Story from "./Story";
+import Story from "./story";
 
 export class CacheName {
   public static story(id: number): string {
@@ -83,15 +83,6 @@ export default class ValueContainer {
 
       await instance.update(value);
     });
-  }
-
-  public async getStory(id: number): Promise<Story | undefined> {
-    const storyData = await this.getStoryValue(id).get();
-    if (!storyData) {
-      return undefined;
-    }
-
-    return new Story(storyData);
   }
 
   public getStoryValue(id: number): SmartValue<StoryData> {

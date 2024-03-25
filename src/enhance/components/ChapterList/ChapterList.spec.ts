@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createSignal } from "../../../signal/signal";
+import type { Chapter } from "ffn-parser";
 import { timeout } from "../../../utils";
-import type Chapter from "../../../api/Chapter";
-import type Story from "../../../api/Story";
-import ChapterList from "./ChapterList";
+import type Story from "../../../api/story";
 
 // todo eliminate setTimeout call for sleep-less tests
 // todo update for new hidden chapters rendering
-describe.skip("ChapterList Component", () => {
+describe.skip("ChapterList Component", async () => {
+  const mod = await import("./ChapterList");
+  const ChapterList = mod.default;
+
   function isRead(item: Element) {
     expect((item.firstElementChild?.firstElementChild as HTMLInputElement).checked).toBe(true);
   }
@@ -40,7 +41,6 @@ describe.skip("ChapterList Component", () => {
       storyId: 0,
       id: chapterId,
       title: `Chapter ${chapterId}`,
-      read: createSignal(read as boolean | undefined),
     };
   }
 
@@ -49,7 +49,7 @@ describe.skip("ChapterList Component", () => {
       chapters: [chapter(true), chapter(true), chapter(true), chapter(false), chapter(false)],
     } as never;
 
-    const element = ChapterList({ story }) as HTMLElement;
+    const element = ChapterList({ storyId: 123 }) as HTMLElement;
     await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
@@ -84,7 +84,7 @@ describe.skip("ChapterList Component", () => {
       ],
     } as never;
 
-    const element = ChapterList({ story }) as HTMLElement;
+    const element = ChapterList({ storyId: 123 }) as HTMLElement;
     await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 
@@ -136,7 +136,7 @@ describe.skip("ChapterList Component", () => {
       ],
     } as never;
 
-    const element = ChapterList({ story }) as HTMLElement;
+    const element = ChapterList({ storyId: 123 }) as HTMLElement;
     await timeout(15);
     const items = Array.from(element.getElementsByClassName("ffe-cl-chapter")) as HTMLElement[];
 

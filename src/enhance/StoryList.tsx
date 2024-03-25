@@ -1,13 +1,9 @@
 import { parseStoryList } from "ffn-parser";
 import type Enhancer from "./Enhancer";
-import Story from "../api/Story";
 import StoryCard from "./components/StoryCard/StoryCard";
-
 import "./StoryList.css";
 
 export default class StoryList implements Enhancer {
-  public constructor() {}
-
   public async enhance(): Promise<void> {
     const list = await parseStoryList(document);
     if (!list) {
@@ -23,20 +19,13 @@ export default class StoryList implements Enhancer {
     container.classList.add("ffe-story-list", "maxwidth");
     cw.parentElement?.insertBefore(container, null);
 
-    const deferChapterList = [];
     for (const followedStory of list) {
       const item = document.createElement("li");
       item.classList.add("ffe-story-item");
       container.appendChild(item);
 
-      const story = new Story({
-        ...followedStory,
-        chapters: [],
-      });
-      const card = <StoryCard story={story} />;
+      const card = <StoryCard storyId={followedStory.id} />;
       item.appendChild(card);
-
-      deferChapterList.push([story, item]);
     }
 
     cw.querySelectorAll(".z-list").forEach((e) => e.parentElement?.removeChild(e));

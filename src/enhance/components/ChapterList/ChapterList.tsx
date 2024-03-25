@@ -1,17 +1,18 @@
-import type Story from "../../../api/Story";
-import "./ChapterList.css";
+import { getStory, type StoryData2 } from "../../../api/story";
+import type { Chapter } from "ffn-parser";
 import { createSignal } from "../../../signal/signal";
+import getChapterRead from "../../../api/chapter-read";
 import ChapterListEntry from "./ChapterListEntry";
-import type Chapter from "../../../api/Chapter";
+import "./ChapterList.css";
 
-function hiddenChapterMapper(story: Story, onShow: () => void) {
+function hiddenChapterMapper(story: StoryData2, isRead: (chapter: Chapter) => boolean, onShow: () => void) {
   return (chapter: Chapter, idx: number, chapters: Chapter[]) => {
-    if (chapter.read()) {
+    if (isRead(chapter)) {
       // if last element in list or next element is unread
-      if (idx === chapters.length - 1 || !chapters[idx + 1].read()) {
+      if (idx === chapters.length - 1 || !isRead(chapters[idx + 1])) {
         let count = 0;
         for (let i = idx; i >= 0; i--) {
-          if (!chapters[i].read()) {
+          if (!isRead(chapters[i])) {
             break;
           }
           count += 1;
@@ -33,7 +34,7 @@ function hiddenChapterMapper(story: Story, onShow: () => void) {
       if (idx === chapters.length - 4) {
         let count = 0;
         for (let i = idx; i >= 0; i--) {
-          if (chapters[i].read()) {
+          if (isRead(chapters[i])) {
             break;
           }
           count += 1;
@@ -48,7 +49,7 @@ function hiddenChapterMapper(story: Story, onShow: () => void) {
         );
       }
 
-      if (idx < chapters.length - 3 && !chapters[idx - 1].read() && !chapters[idx - 2].read()) {
+      if (idx < chapters.length - 3 && !isRead(chapters[idx - 1]) && !isRead(chapters[idx - 2])) {
         return null;
       }
     }
@@ -58,10 +59,16 @@ function hiddenChapterMapper(story: Story, onShow: () => void) {
 }
 
 export interface ChapterListProps {
-  story: Story;
+  storyId: number;
 }
 
-export default function ChapterList({ story }: ChapterListProps) {
+export default function ChapterList({ storyId }: ChapterListProps) {
+  const story = getStory(storyId)();
+  if (!story) {
+    return <div class="ffe-cl-container" />;
+  }
+
+  const isReadMap = new Map(story.chapters?.map((chapter) => [chapter.id, getChapterRead(story.id, chapter.id)]));
   const isExtended = createSignal(false);
 
   return (
@@ -69,8 +76,14 @@ export default function ChapterList({ story }: ChapterListProps) {
       <div class="ffe-cl">
         <ol>
           {isExtended()
-            ? story.chapters.map((chapter) => <ChapterListEntry storyId={story.id} chapter={chapter} />)
-            : story.chapters.flatMap(hiddenChapterMapper(story, () => isExtended.set(true)))}
+            ? story.chapters?.map((chapter) => <ChapterListEntry storyId={story.id} chapter={chapter} />)
+            : story.chapters?.flatMap(
+                hiddenChapterMapper(
+                  story,
+                  (chapter: Chapter) => isReadMap.get(chapter.id)!(),
+                  () => isExtended.set(true),
+                ),
+              )}
         </ol>
       </div>
     </div>

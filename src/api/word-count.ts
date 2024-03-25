@@ -60,27 +60,36 @@ export default function getWordCount(storyId: number, chapterId: number): Signal
   );
 }
 
-if (environment.currentPageType === Page.Chapter) {
-  const key = CacheName.wordCount(environment.currentStoryId!, environment.currentChapterId!);
-  const wordCount = document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0;
-  localStorage.setItem(key, JSON.stringify(wordCount));
-  localStorage.setItem(key + "+timestamp", Date.now().toString());
+function updateWordCount() {
+  if (environment.currentPageType === Page.Chapter) {
+    const key = CacheName.wordCount(environment.currentStoryId!, environment.currentChapterId!);
+    const wordCount = document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0;
+    localStorage.setItem(key, JSON.stringify(wordCount));
+    localStorage.setItem(key + "+timestamp", Date.now().toString());
+  }
 }
 
-// Cache migration from < 0.8
-const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) as string);
-for (const key of keys) {
-  const match = key && key.match(/^ffe-story-(\d+)-chapter-(\d+)-words$/);
-  if (match) {
-    const [, storyId, chapterId] = match;
-    const cache = tryParse<WordCountCache>(localStorage.getItem(`ffe-story-${storyId}-words`), {});
-    cache[+chapterId] = {
-      count: +localStorage.getItem(key)!,
-      isEstimate: false,
-      timestamp: +(localStorage.getItem(key + "+timestamp") || Date.now()),
-    };
-    localStorage.setItem(`ffe-story-${storyId}-words`, JSON.stringify(cache));
-    localStorage.removeItem(key);
-    localStorage.removeItem(key + "+timestamp");
+function migrateWordCount() {
+  // Cache migration from < 0.8
+  const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) as string);
+  for (const key of keys) {
+    const match = key && key.match(/^ffe-story-(\d+)-chapter-(\d+)-words$/);
+    if (match) {
+      const [, storyId, chapterId] = match;
+      const cache = tryParse<WordCountCache>(localStorage.getItem(`ffe-story-${storyId}-words`), {});
+      cache[+chapterId] = {
+        count: +localStorage.getItem(key)!,
+        isEstimate: false,
+        timestamp: +(localStorage.getItem(key + "+timestamp") || Date.now()),
+      };
+      localStorage.setItem(`ffe-story-${storyId}-words`, JSON.stringify(cache));
+      localStorage.removeItem(key);
+      localStorage.removeItem(key + "+timestamp");
+    }
   }
+}
+
+if (process.env.MODE !== "test") {
+  migrateWordCount();
+  updateWordCount();
 }

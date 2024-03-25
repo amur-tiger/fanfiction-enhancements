@@ -19,6 +19,9 @@ const buildOptions: BuildOptions = {
   bundle: true,
   format: "iife",
   target: ["chrome89", "firefox87"],
+  define: {
+    "process.env.MODE": '"production"',
+  },
   banner: {
     js: header,
   },

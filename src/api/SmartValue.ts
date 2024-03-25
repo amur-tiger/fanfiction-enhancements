@@ -167,8 +167,7 @@ export class SmartValueLS<T> implements SmartValue<T> {
   }
 
   protected async setCached(value: T): Promise<void> {
-    const data = JSON.stringify(value);
+    const data = JSON.stringify({ ...value, timestamp: Date.now() });
     this.storage.setItem(this.name, data);
-    this.storage.setItem(`${this.name}+timestamp`, `${new Date().getTime()}`);
   }
 }

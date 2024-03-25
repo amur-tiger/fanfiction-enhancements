@@ -53,7 +53,7 @@ export default class Container {
 
   public getFollowsList(): FollowsList {
     if (!this.followsList) {
-      this.followsList = new FollowsList(this.getValueContainer());
+      this.followsList = new FollowsList();
     }
 
     return this.followsList;
@@ -69,7 +69,7 @@ export default class Container {
 
   public getStoryProfile(): StoryProfile {
     if (!this.storyProfile) {
-      this.storyProfile = new StoryProfile(this.getValueContainer());
+      this.storyProfile = new StoryProfile();
     }
 
     return this.storyProfile;
@@ -77,7 +77,7 @@ export default class Container {
 
   public getChapterList(): ChapterList {
     if (!this.chapterList) {
-      this.chapterList = new ChapterList(this.getValueContainer());
+      this.chapterList = new ChapterList();
     }
 
     return this.chapterList;

@@ -163,3 +163,10 @@ export function tryParse<T = unknown>(text: string | null | undefined, fallback?
 }
 
 export type WithTimestamp<T> = T & { timestamp: number };
+
+export function toDate(date: Date | string): Date {
+  if (date instanceof Date) {
+    return date;
+  }
+  return new Date(date);
+}

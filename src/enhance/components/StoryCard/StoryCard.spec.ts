@@ -1,44 +1,29 @@
-import { describe, expect, it, vi } from "vitest";
-import type Story from "../../../api/Story";
-import StoryCard from "./StoryCard";
+import { describe, expect, it } from "vitest";
 
 // todo find way to run with included SVG
-describe.skip("StoryCard Component", () => {
-  function createStory(props?: Partial<Story>): Story {
-    // (story as any).alert = td.object<SmartValue<boolean>>();
-    // (story as any).favorite = td.object<SmartValue<boolean>>();
-
-    return {
-      author: { id: 123, name: "Author" },
-      published: new Date(),
-      updated: new Date(),
-      ...props,
-    } as Story;
-  }
+describe.skip("StoryCard Component", async () => {
+  const mod = await import("./StoryCard");
+  const StoryCard = mod.default;
 
   it("should create a div element", () => {
-    const story = createStory();
-
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     expect(element.tagName).toBe("DIV");
   });
 
   it("should insert a rating", () => {
-    const story = createStory();
-
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     expect(element.querySelector(".ffe-rating")).toBeDefined();
   });
 
   it("should insert title", () => {
-    const story = createStory({
-      id: 123,
-      title: "the title",
-    });
+    // const story = createStory({
+    //   id: 123,
+    //   title: "the title",
+    // });
 
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const title = element.querySelector(".ffe-sc-title") as HTMLAnchorElement;
     expect(title.tagName).toBe("A");
@@ -47,14 +32,14 @@ describe.skip("StoryCard Component", () => {
   });
 
   it("should insert author", () => {
-    const story = createStory({
-      author: {
-        id: 456,
-        name: "author",
-      },
-    });
+    // const story = createStory({
+    //   author: {
+    //     id: 456,
+    //     name: "author",
+    //   },
+    // });
 
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const author = element.querySelector(".ffe-sc-author") as HTMLAnchorElement;
     expect(author.tagName).toBe("A");
@@ -63,9 +48,7 @@ describe.skip("StoryCard Component", () => {
   });
 
   it("should insert buttons", () => {
-    const story = createStory();
-
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const buttons = element.querySelector(".ffe-sc-mark") as HTMLDivElement;
     const follow = buttons.querySelector(".ffe-sc-follow") as HTMLSpanElement;
@@ -76,11 +59,11 @@ describe.skip("StoryCard Component", () => {
   });
 
   it("should insert image", () => {
-    const story = createStory({
-      imageUrl: "/src/img.jpg",
-    });
+    // const story = createStory({
+    //   imageUrl: "/src/img.jpg",
+    // });
 
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const image = element.querySelector(".ffe-sc-image img") as HTMLImageElement;
     expect(image.tagName).toBe("IMG");
@@ -88,11 +71,11 @@ describe.skip("StoryCard Component", () => {
   });
 
   it("should insert description", () => {
-    const story = createStory({
-      description: "this is a description",
-    });
+    // const story = createStory({
+    //   description: "this is a description",
+    // });
 
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const description = element.querySelector(".ffe-sc-description");
     expect(description?.tagName).toBe("DIV");
@@ -100,17 +83,17 @@ describe.skip("StoryCard Component", () => {
   });
 
   it("should insert relevant tags", () => {
-    const story = createStory({
-      id: 123,
-      follows: 2,
-      favorites: 1,
-      language: "Elvish",
-      genre: ["Adventure", "Fantasy"],
-      characters: [["Adam", "Eva"], ["Steve"]],
-      reviews: 11,
-    });
+    // const story = createStory({
+    //   id: 123,
+    //   follows: 2,
+    //   favorites: 1,
+    //   language: "Elvish",
+    //   genre: ["Adventure", "Fantasy"],
+    //   characters: [["Adam", "Eva"], ["Steve"]],
+    //   reviews: 11,
+    // });
 
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const tags = element.querySelectorAll(".ffe-sc-tags .ffe-sc-tag");
     expect(tags.length).toBe(8);
@@ -143,14 +126,14 @@ describe.skip("StoryCard Component", () => {
   });
 
   it("should insert footer", () => {
-    const story = createStory({
-      words: 12345,
-      status: "Complete",
-      published: new Date(2012, 1, 3),
-      updated: new Date(2012, 11, 24),
-    });
+    // const story = createStory({
+    //   words: 12345,
+    //   status: "Complete",
+    //   published: new Date(2012, 1, 3),
+    //   updated: new Date(2012, 11, 24),
+    // });
 
-    const element = StoryCard({ story }) as HTMLElement;
+    const element = StoryCard({ storyId: 123 }) as HTMLElement;
 
     const footer = element.querySelector(".ffe-sc-footer");
     expect(footer?.childElementCount).toBe(4);

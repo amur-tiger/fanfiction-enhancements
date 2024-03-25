@@ -19,8 +19,6 @@ async function main() {
     return;
   }
 
-  const valueContainer = container.getValueContainer();
-
   const dropBox = container.getDropBox();
   if (await dropBox.isAuthorized()) {
     dropBox.synchronize().catch(console.error);
@@ -48,12 +46,6 @@ async function main() {
   }
 
   if (environment.currentPageType === Page.Story) {
-    const currentStory = await parseStory(document);
-    if (currentStory) {
-      const storyValue = valueContainer.getStoryValue(currentStory.id);
-      await storyValue.update(currentStory);
-    }
-
     const storyProfileEnhancer = container.getStoryProfile();
     await storyProfileEnhancer.enhance();
 
@@ -64,9 +56,6 @@ async function main() {
   if (environment.currentPageType === Page.Chapter) {
     const currentStory = await parseStory(document);
     if (currentStory) {
-      const storyValue = valueContainer.getStoryValue(currentStory.id);
-      await storyValue.update(currentStory);
-
       const storyProfileEnhancer = container.getStoryProfile();
       await storyProfileEnhancer.enhance();
 

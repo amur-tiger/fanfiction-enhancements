@@ -1,7 +1,7 @@
 import JSZip from "jszip";
-import type Chapter from "../api/Chapter";
+import type { Chapter } from "ffn-parser";
 import { createChapterLink } from "../api/links";
-import type Story from "../api/Story";
+import type Story from "../api/story";
 import throttledFetch from "../api/throttled-fetch";
 import { Priority } from "../api/priority";
 
