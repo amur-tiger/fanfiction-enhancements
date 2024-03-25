@@ -66,7 +66,7 @@ function setStoryCache(storyId: number, story: StoryCache | undefined) {
  * @param storyId
  * @param onChange
  */
-function getStoryMetadata(
+export function getStoryMetadata(
   storyId: number,
   onChange?: (next: StoryCache | undefined) => void,
 ): Signal<StoryCache | undefined> {
