@@ -4,8 +4,6 @@ import { tryParse, type WithTimestamp } from "../utils";
 import Api from "./Api";
 import view from "../signal/view";
 
-const api = new Api();
-
 type FollowsCache = WithTimestamp<Record<number, WithTimestamp<{ id: number; follow: boolean }> | undefined>>;
 
 function getStoryFollowCache(type: "alerts" | "favorites"): Signal<FollowsCache> {
@@ -54,9 +52,9 @@ export function getStoryFavorite(storyId: number): Signal<boolean> {
     (cache) => cache[storyId]?.follow ?? false,
     (cache, follow) => {
       if (follow) {
-        void api.addStoryFavorite(storyId);
+        void Api.instance.addStoryFavorite(storyId);
       } else {
-        void api.removeStoryFavorite(storyId);
+        void Api.instance.removeStoryFavorite(storyId);
       }
 
       return {
@@ -78,9 +76,9 @@ export function getStoryAlert(storyId: number): Signal<boolean> {
     (cache) => cache[storyId]?.follow ?? false,
     (cache, follow) => {
       if (follow) {
-        void api.addStoryAlert(storyId);
+        void Api.instance.addStoryAlert(storyId);
       } else {
-        void api.removeStoryAlert(storyId);
+        void Api.instance.removeStoryAlert(storyId);
       }
 
       return {
@@ -101,7 +99,7 @@ function updateFollows() {
   const maxAge = 5 * 60 * 1000;
   const favorites = getStoryFollowCache("favorites");
   if (favorites.peek().timestamp < Date.now() - maxAge) {
-    api.getStoryFavorites().then((follows) => {
+    Api.instance.getStoryFavorites().then((follows) => {
       favorites.set({
         timestamp: Date.now(),
         ...Object.fromEntries(
@@ -119,7 +117,7 @@ function updateFollows() {
   }
   const alerts = getStoryFollowCache("alerts");
   if (alerts.peek().timestamp < Date.now() - maxAge) {
-    api.getStoryAlerts().then((follows) => {
+    Api.instance.getStoryAlerts().then((follows) => {
       alerts.set({
         timestamp: Date.now(),
         ...Object.fromEntries(

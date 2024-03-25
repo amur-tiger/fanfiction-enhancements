@@ -5,8 +5,6 @@ import effect from "../signal/effect";
 import { environment, Page } from "../util/environment";
 import Api from "./Api";
 
-const api = new Api();
-
 type Intersect<T, S> = { [K in keyof (S & T)]: (S & T)[K] };
 
 export type StoryData = Intersect<
@@ -105,8 +103,9 @@ function getStoryMetadata(
 export function getStory(storyId: number): Signal<StoryData | undefined> {
   const signal = getStoryMetadata(storyId, (next) => {
     if (next?.chapters == null) {
-      api.getStoryData(storyId).then((story) => {
+      Api.instance.getStoryData(storyId).then((story) => {
         if (story) {
+          console.log("Set story data for '%s' from download", story.title);
           signal.set({ ...story, timestamp: Date.now() });
         }
       });
@@ -114,8 +113,9 @@ export function getStory(storyId: number): Signal<StoryData | undefined> {
   });
 
   if (signal.peek()?.chapters == null) {
-    api.getStoryData(storyId).then((story) => {
+    Api.instance.getStoryData(storyId).then((story) => {
       if (story) {
+        console.log("Set story data for '%s' from download", story.title);
         signal.set({ ...story, timestamp: Date.now() });
       }
     });

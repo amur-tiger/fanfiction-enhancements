@@ -5,9 +5,13 @@ import throttledFetch from "./throttled-fetch";
 import { Priority } from "./priority";
 
 export default class Api {
+  public static instance = new Api();
+
   private alerts?: Promise<Follow[]>;
 
   private favorites?: Promise<Follow[]>;
+
+  private storyData = new Map<number, Promise<StoryData | undefined>>();
 
   /**
    * Retrieves all story alerts that are set on FFN for the current user.
@@ -60,19 +64,21 @@ export default class Api {
   }
 
   public async getStoryData(id: number): Promise<StoryData | undefined> {
-    const body = await this.get(`/s/${id}`, Priority.StoryData);
-    const template = document.createElement("template");
-    template.innerHTML = body;
+    let cached = this.storyData.get(id);
+    if (cached) {
+      return cached;
+    }
 
-    return parseStory(template.content);
-  }
+    cached = (async () => {
+      const body = await this.get(`/s/${id}`, Priority.StoryData);
+      const template = document.createElement("template");
+      template.innerHTML = body;
 
-  public async getChapterWordCount(storyId: number, chapterId: number): Promise<number> {
-    const body = await this.get(`/s/${storyId}/${chapterId}`, Priority.WordCount);
-    const template = document.createElement("template");
-    template.innerHTML = body;
+      return parseStory(template.content);
+    })();
 
-    return template.content.getElementById("storytext")?.textContent?.trim()?.split(/\s+/)?.length ?? 0;
+    this.storyData.set(id, cached);
+    return cached;
   }
 
   public async addStoryAlert(id: number): Promise<void> {
