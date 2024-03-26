@@ -116,7 +116,7 @@ export function createLink(link: string, options?: LinkOptions): string {
   return `${link}?${args.join("&")}`;
 }
 
-export const FFN_BASE_URL = "//fanfiction.net";
+export const FFN_BASE_URL = "//www.fanfiction.net";
 
 function slug(str: string): string {
   return str.replace(/\W+/g, "-");
