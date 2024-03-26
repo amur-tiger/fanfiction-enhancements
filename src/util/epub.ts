@@ -1,8 +1,11 @@
-import JSZip from "jszip";
+import type { default as JSZipType } from "jszip";
 import type { Chapter, Story } from "ffn-parser";
 import { createChapterLink } from "../api/links";
 import throttledFetch from "../api/throttled-fetch";
 import { Priority } from "../api/priority";
+import { toDate } from "../utils";
+
+declare const JSZip: JSZipType;
 
 function escapeFile(text: string): string {
   return text.replace(/[<>:"/\\|?*]/g, "-");
@@ -13,9 +16,11 @@ function escapeXml(text: string): string {
 }
 
 export default class Epub {
-  public constructor(private readonly story: Story) {}
+  public constructor(private readonly story: Story) {
+    console.debug("[EPUB] Using JSZip version: %s", JSZip.version);
+  }
 
-  private async getContainerXml(): Promise<string> {
+  private getContainerXml(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
@@ -25,7 +30,7 @@ export default class Epub {
 `;
   }
 
-  private async getContentXml(): Promise<string> {
+  private getContentXml(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="book-id" version="3.0">
   <metadata
@@ -37,8 +42,8 @@ export default class Epub {
     <dc:creator>${escapeXml(this.story.author.name)}</dc:creator>
     <dc:contributor>FanFiction Enhancements (https://github.com/amur-tiger/fanfiction-enhancements)</dc:contributor>
     <dc:publisher>FanFiction.net</dc:publisher>
-    <dc:date>${this.story.published.toISOString()}</dc:date>
-    <meta property="dcterms:modified">${new Date().toISOString().substr(0, 19)}Z</meta>
+    <dc:date>${toDate(this.story.published).toISOString()}</dc:date>
+    <meta property="dcterms:modified">${new Date().toISOString().substring(0, 19)}Z</meta>
   </metadata>
 
   <manifest>
@@ -71,7 +76,7 @@ export default class Epub {
 </package>`;
   }
 
-  private async getNcxXml(): Promise<string> {
+  private getNcxXml(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
   <head>
@@ -102,7 +107,7 @@ export default class Epub {
 `;
   }
 
-  private async getTocHtml(): Promise<string> {
+  private getTocHtml(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -112,7 +117,7 @@ export default class Epub {
     <meta charset="UTF-8" />
     <meta name="generator" content="FanFiction Enhancements (https://github.com/amur-tiger/fanfiction-enhancements)" />
     <meta name="author" content="${escapeXml(this.story.author.name)}" />
-    <meta name="date" content="${this.story.published.toISOString()}" />
+    <meta name="date" content="${toDate(this.story.published).toISOString()}" />
     <title>Table of Contents</title>
   </head>
   <body>
@@ -128,7 +133,7 @@ export default class Epub {
 </html>`;
   }
 
-  public async getCoverHtml(): Promise<string> {
+  public getCoverHtml(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="${escapeXml(this.story.language)}">
@@ -136,7 +141,7 @@ export default class Epub {
     <meta charset="UTF-8" />
     <meta name="generator" content="FanFiction Enhancements (https://github.com/amur-tiger/fanfiction-enhancements)"/>
     <meta name="author" content="${escapeXml(this.story.author.name)}"/>
-    <meta name="date" content="${this.story.published.toISOString()}"/>
+    <meta name="date" content="${toDate(this.story.published).toISOString()}"/>
     <title>Cover</title>
   </head>
   <body>
@@ -169,7 +174,7 @@ export default class Epub {
     <meta charset="UTF-8" />
     <meta name="generator" content="FanFiction Enhancements (https://github.com/amur-tiger/fanfiction-enhancements)"/>
     <meta name="author" content="${escapeXml(this.story.author.name)}"/>
-    <meta name="date" content="${this.story.published.toISOString()}"/>
+    <meta name="date" content="${toDate(this.story.published).toISOString()}"/>
     <title>${escapeXml(chapter.title)}</title>
 </head>
 <body>
@@ -187,19 +192,22 @@ ${content}
   }
 
   public async create(): Promise<Blob> {
+    console.debug("[EPUB] Creating EPUB for '%s'", this.story.title);
+
     const zip = new JSZip();
     zip.file("mimetype", "application/epub+zip");
 
     const meta = zip.folder("META-INF")!;
-    meta.file("container.xml", await this.getContainerXml());
+    meta.file("container.xml", this.getContainerXml());
 
-    zip.file("content.opf", await this.getContentXml());
-    zip.file("toc.ncx", await this.getNcxXml());
-    zip.file("toc.xhtml", await this.getTocHtml());
+    zip.file("content.opf", this.getContentXml());
+    zip.file("toc.ncx", this.getNcxXml());
+    zip.file("toc.xhtml", this.getTocHtml());
 
     const coverUrl = this.story.imageUrl;
     if (coverUrl) {
-      zip.file("cover.xhtml", await this.getCoverHtml());
+      console.debug("[EPUB] Fetching cover");
+      zip.file("cover.xhtml", this.getCoverHtml());
       const cover = await throttledFetch(`//www.fanfiction.net${coverUrl}`, undefined, Priority.EpubChapter);
       if (!cover.ok) {
         throw new Error(cover.statusText);
@@ -209,10 +217,12 @@ ${content}
 
     await Promise.all(
       this.story.chapters.map(async (chapter) => {
+        console.debug("[EPUB] Fetching chapter %d: '%s'", chapter.id, chapter.title);
         zip.file(`chapter-${chapter.id}.xhtml`, await this.getChapterHtml(chapter));
       }),
     );
 
+    console.debug("[EPUB] Packing file");
     return zip.generateAsync({ type: "blob" });
   }
 }

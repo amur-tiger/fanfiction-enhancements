@@ -3,7 +3,7 @@ import pkg from "../package.json";
 const commit = process.env.GITHUB_SHA;
 const build = process.env.GITHUB_RUN_NUMBER;
 const version = `${pkg.version}${build || commit ? "+" : ""}${build ? `${build}.` : ""}${
-  commit ? commit.substr(0, 7) : ""
+  commit ? commit.substring(0, 7) : ""
 }`;
 
 const header = `// ==UserScript==
@@ -18,6 +18,7 @@ const header = `// ==UserScript==
 // @supportURL   ${pkg.bugs.url}
 // @updateURL    https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.meta.js
 // @downloadURL  https://amur-tiger.github.io/fanfiction-enhancements/latest/fanfiction-enhancements.user.js
+// @require      https://unpkg.com/jszip@${pkg.dependencies["jszip"].replace(/^[~^]/, "")}/dist/jszip.min.js
 // @match        *://www.fanfiction.net/*
 // @grant        GM.getValue
 // @grant        GM.setValue

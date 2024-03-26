@@ -33,7 +33,7 @@
   "dependencies": {
     "clsx": "^2.1.0",
     "ffn-parser": "^0.0.7",
-    "jszip": "^3.10.1"
+    "jszip": "~3.9.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

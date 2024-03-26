@@ -25,6 +25,7 @@ const buildOptions: BuildOptions = {
   banner: {
     js: header,
   },
+  external: ["jszip"],
   plugins: [jsxTransform(), gmCssLoader(), svgLoader()],
 };
 
