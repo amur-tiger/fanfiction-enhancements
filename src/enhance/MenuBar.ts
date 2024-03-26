@@ -1,14 +1,11 @@
 import { environment } from "../util/environment";
-import { DropBox } from "../api/DropBox";
 import type Enhancer from "./Enhancer";
+import scoped from "../signal/scope";
+import { getAuthorizedSignal, startSyncAuthorization } from "../sync/auth";
 import BellIcon from "../assets/bell.svg";
-import DropboxIcon from "../assets/dropbox.svg";
-
 import "./MenuBar.css";
 
 export default class MenuBar implements Enhancer {
-  constructor(private readonly dropBox: DropBox) {}
-
   public async enhance(): Promise<void> {
     if (!environment.currentUserName) {
       return;
@@ -51,20 +48,19 @@ export default class MenuBar implements Enhancer {
     toFavorites.title = "Go to Story Favorites";
     toFavorites.href = "/favorites/story.php";
 
-    const toDropBox = document.createElement("a");
-    toDropBox.classList.add("ffe-mb-icon", "ffe-mb-dropbox");
-    toDropBox.title = "Connect to DropBox";
-    toDropBox.href = "#";
-    toDropBox.appendChild(DropboxIcon());
+    const toSync = document.createElement("a");
+    toSync.classList.add("ffe-mb-icon", "icon-mpl2-sync");
+    toSync.title = "Connect to Google Drive";
+    toSync.href = "#";
 
-    if (await this.dropBox.isAuthorized()) {
-      toDropBox.classList.add("ffe-mb-checked");
-    }
+    const isAuthorized = getAuthorizedSignal();
+    scoped(() => {
+      toSync.classList.toggle("ffe-mb-checked", isAuthorized());
+    });
 
-    toDropBox.addEventListener("click", async (event) => {
+    toSync.addEventListener("click", async (event) => {
       event.preventDefault();
-      await this.dropBox.authorize();
-      toDropBox.classList.add("ffe-mb-checked");
+      await startSyncAuthorization();
     });
 
     const separator1 = document.createElement("span");
@@ -77,7 +73,7 @@ export default class MenuBar implements Enhancer {
     parent.insertBefore(separator2, ref);
     parent.insertBefore(toAlerts, ref);
     parent.insertBefore(toFavorites, ref);
-    parent.insertBefore(toDropBox, ref);
+    parent.insertBefore(toSync, ref);
     parent.insertBefore(separator1, ref);
   }
 }

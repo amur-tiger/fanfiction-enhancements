@@ -18,25 +18,11 @@ interface SignalSetterOptions {
   isInternal?: boolean;
 }
 
-export interface Signal<T> extends EventTarget {
+export interface ReadonlySignal<T> extends EventTarget {
   /**
    * Retrieves the current value.
    */
   (): T;
-
-  /**
-   * Sets a new value.
-   * @param value
-   * @param options
-   */
-  set(value: T, options?: SignalSetterOptions): void;
-
-  /**
-   * Sets a new value.
-   * @param callback
-   * @param options
-   */
-  set(callback: (previous: T) => T, options?: SignalSetterOptions): void;
 
   /**
    * Retrieves the current value without triggering re-renders.
@@ -54,6 +40,22 @@ export interface Signal<T> extends EventTarget {
     callback: EventListenerOrEventListenerObject | null,
     options?: AddEventListenerOptions | boolean,
   ): void;
+}
+
+export interface Signal<T> extends ReadonlySignal<T> {
+  /**
+   * Sets a new value.
+   * @param value
+   * @param options
+   */
+  set(value: T, options?: SignalSetterOptions): void;
+
+  /**
+   * Sets a new value.
+   * @param callback
+   * @param options
+   */
+  set(callback: (previous: T) => T, options?: SignalSetterOptions): void;
 }
 
 type SignalInit<T> = T | PromiseLike<T>;

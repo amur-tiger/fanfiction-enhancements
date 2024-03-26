@@ -1,4 +1,3 @@
-import { DropBox } from "./api/DropBox";
 import MenuBar from "./enhance/MenuBar";
 import FollowsList from "./enhance/FollowsList";
 import StoryList from "./enhance/StoryList";
@@ -19,11 +18,9 @@ export default class Container {
 
   private saveListSettings?: SaveListSettings;
 
-  private dropBox?: DropBox;
-
   public getMenuBar(): MenuBar {
     if (!this.menuBar) {
-      this.menuBar = new MenuBar(this.getDropBox());
+      this.menuBar = new MenuBar();
     }
 
     return this.menuBar;
@@ -67,14 +64,6 @@ export default class Container {
     }
 
     return this.saveListSettings;
-  }
-
-  public getDropBox(): DropBox {
-    if (!this.dropBox) {
-      this.dropBox = new DropBox();
-    }
-
-    return this.dropBox;
   }
 
   public getContainer(): Container {
