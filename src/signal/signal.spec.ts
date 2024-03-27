@@ -16,12 +16,6 @@ describe(createSignal, () => {
       expect(data()).toBe("hello");
     });
 
-    it("should execute the init function", () => {
-      const data = createSignal(() => "hello");
-
-      expect(data()).toBe("hello");
-    });
-
     it("should take the value from a promise", async () => {
       const data = createSignal(Promise.resolve("hello"));
 
@@ -138,6 +132,24 @@ describe(createSignal, () => {
       await Promise.resolve();
       expect(innerFn).not.toHaveBeenCalled();
       expect(outerFn).toHaveBeenCalledOnce();
+    });
+
+    it("should use provided equals method", async () => {
+      const fn = vi.fn();
+      const data = createSignal(6, {
+        equals(previous, next) {
+          return previous % 2 === next % 2;
+        },
+      });
+
+      scoped(() => {
+        data();
+      }, fn);
+
+      data.set(8);
+
+      await Promise.resolve();
+      expect(fn).not.toHaveBeenCalled();
     });
   });
 

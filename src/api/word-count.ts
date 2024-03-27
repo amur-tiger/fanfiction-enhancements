@@ -46,20 +46,30 @@ function getWordCountCache(storyId: number): Signal<WordCountCache> {
 }
 
 export default function getWordCount(storyId: number, chapterId: number): Signal<WordCount | undefined> {
-  return view(
-    getWordCountCache(storyId),
-    (cache) => {
+  return view(getWordCountCache(storyId), {
+    get(cache) {
       const count = cache[chapterId];
       if (count && !count.isEstimate) {
         return count;
       }
       return getWordCountOrEstimate(cache, storyId, chapterId);
     },
-    (cache, next) => ({
-      ...cache,
-      [chapterId]: next,
-    }),
-  );
+
+    set(cache, next) {
+      return {
+        ...cache,
+        [chapterId]: next,
+      };
+    },
+
+    equals(previous, next) {
+      return (
+        previous?.count === next?.count &&
+        previous?.isEstimate === next?.isEstimate &&
+        previous?.timestamp === next?.timestamp
+      );
+    },
+  });
 }
 
 function getWordCountOrEstimate(

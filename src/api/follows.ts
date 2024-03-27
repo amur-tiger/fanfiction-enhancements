@@ -44,10 +44,12 @@ function getStoryFollowCache(type: "alerts" | "favorites"): Signal<FollowsCache>
 }
 
 export function getStoryFavorite(storyId: number): Signal<boolean> {
-  return view(
-    getStoryFollowCache("favorites"),
-    (cache) => cache[storyId]?.follow ?? false,
-    (cache, follow) => {
+  return view(getStoryFollowCache("favorites"), {
+    get(cache) {
+      return cache[storyId]?.follow ?? false;
+    },
+
+    set(cache, follow) {
       if (follow) {
         void Api.instance.addStoryFavorite(storyId);
       } else {
@@ -64,14 +66,16 @@ export function getStoryFavorite(storyId: number): Signal<boolean> {
         },
       };
     },
-  );
+  });
 }
 
 export function getStoryAlert(storyId: number): Signal<boolean> {
-  return view(
-    getStoryFollowCache("alerts"),
-    (cache) => cache[storyId]?.follow ?? false,
-    (cache, follow) => {
+  return view(getStoryFollowCache("alerts"), {
+    get(cache) {
+      return cache[storyId]?.follow ?? false;
+    },
+
+    set(cache, follow) {
       if (follow) {
         void Api.instance.addStoryAlert(storyId);
       } else {
@@ -88,7 +92,7 @@ export function getStoryAlert(storyId: number): Signal<boolean> {
         },
       };
     },
-  );
+  });
 }
 
 function updateFollows() {

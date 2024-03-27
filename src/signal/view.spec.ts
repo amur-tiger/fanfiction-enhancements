@@ -20,11 +20,10 @@ describe(view, () => {
 
   it("should return a property with accessor", () => {
     const signal = createSignal({ prop: 1 });
-    const prop = view(
-      signal,
-      (s) => s.prop,
-      (p, s) => ({ ...p, prop: s }),
-    );
+    const prop = view(signal, {
+      get: (s) => s.prop,
+      set: (p, s) => ({ ...p, prop: s }),
+    });
 
     expect(prop()).toBe(1);
   });
@@ -46,11 +45,10 @@ describe(view, () => {
 
   it("should set the property with accessor", async () => {
     const signal = createSignal({ prop: 1, other: 9 });
-    const prop = view(
-      signal,
-      (s) => s.prop,
-      (p, s) => ({ ...p, prop: s }),
-    );
+    const prop = view(signal, {
+      get: (s) => s.prop,
+      set: (p, s) => ({ ...p, prop: s }),
+    });
 
     prop.set(2);
 
@@ -99,5 +97,20 @@ describe(view, () => {
       },
       { interval: 1 },
     );
+  });
+
+  it("should use provided equals method", async () => {
+    const fn = vi.fn();
+    const signal = createSignal({ prop: 1 });
+    const prop = view(signal, "prop", () => true);
+
+    scoped(() => {
+      prop();
+    }, fn);
+
+    signal.set({ prop: 2 });
+
+    await Promise.resolve();
+    expect(fn).not.toHaveBeenCalled();
   });
 });

@@ -56,36 +56,25 @@ export interface Signal<T> extends EventTarget {
   ): void;
 }
 
-type SignalInit<T> = SyncSignalInit<T> | AsyncSignalInit<T>;
-type SyncSignalInit<T> = T | (() => T);
-type AsyncSignalInit<T> = PromiseLike<T>;
+type SignalInit<T> = T | PromiseLike<T>;
 
-interface SignalOptions<T> {}
+interface SignalOptions<T> {
+  equals?: (previous: T, next: T) => boolean;
+}
 
 export function createSignal<T>(): Signal<T | undefined>;
-export function createSignal<T>(value: SyncSignalInit<T>, options?: SignalOptions<T>): Signal<T>;
-export function createSignal<T>(value: AsyncSignalInit<T>, options?: SignalOptions<T>): Signal<T | undefined>;
+export function createSignal<T>(value: T, options?: SignalOptions<T>): Signal<T>;
+export function createSignal<T>(value: PromiseLike<T>, options?: SignalOptions<T>): Signal<T | undefined>;
 
 export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T>): Signal<T> {
+  const equals = options?.equals ?? ((previous, next) => previous === next);
   let currentValue: T;
 
   // Initializer value for this signal
-  if (typeof value === "function") {
-    const initResult = (value as Function)();
-    if (isPromise(initResult)) {
-      initResult.then((next) => {
-        const oldValue = currentValue;
-        currentValue = next as T;
-        signal.dispatchEvent(new ChangeEvent(oldValue, currentValue, true));
-      });
-    } else {
-      currentValue = initResult;
-    }
-  } else if (isPromise(value)) {
+  if (isPromise(value)) {
     value.then((next) => {
-      const oldValue = currentValue;
       currentValue = next;
-      signal.dispatchEvent(new ChangeEvent(oldValue, currentValue, true));
+      signal.dispatchEvent(new ChangeEvent(undefined, currentValue, true));
     });
   } else {
     currentValue = value as T;
@@ -110,7 +99,9 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
           currentValue = valueOrCallback;
         }
 
-        signal.dispatchEvent(new ChangeEvent(oldValue, currentValue, isInternal));
+        if (!equals(oldValue, currentValue)) {
+          signal.dispatchEvent(new ChangeEvent(oldValue, currentValue, isInternal));
+        }
       },
 
       peek() {
