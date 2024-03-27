@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createSignal, isSignal } from "./signal";
 import view from "./view";
-import context from "./context";
+import scoped from "./scope";
 
 describe(view, () => {
   it("should return a signal", () => {
@@ -68,7 +68,7 @@ describe(view, () => {
     const signal = createSignal({ prop: 1 });
     const prop = view(signal, "prop");
 
-    context(() => {
+    scoped(() => {
       prop();
     }, fn);
 
@@ -87,7 +87,7 @@ describe(view, () => {
     const signal = createSignal({ prop: 1 });
     const prop = view(signal, "prop");
 
-    context(() => {
+    scoped(() => {
       signal();
     }, fn);
 

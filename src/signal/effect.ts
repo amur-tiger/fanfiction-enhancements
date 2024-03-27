@@ -1,10 +1,10 @@
-import context, { onDispose } from "./context";
+import scoped, { Scope } from "./scope";
 
 export default function effect(callback: () => void | (() => void)) {
-  context(() => {
+  scoped(() => {
     const cleanup = callback();
     if (typeof cleanup === "function") {
-      onDispose(cleanup);
+      Scope.getCurrent()?.onDispose(cleanup);
     }
   });
 }

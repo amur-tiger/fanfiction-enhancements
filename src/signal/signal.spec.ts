@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import context from "./context";
+import scoped from "./scope";
 import { createSignal, isSignal } from "./signal";
 
 describe(createSignal, () => {
@@ -26,56 +26,22 @@ describe(createSignal, () => {
       const data = createSignal(Promise.resolve("hello"));
 
       expect(data()).toBeUndefined();
-      await vi.waitFor(
-        () => {
-          expect(data()).toBe("hello");
-        },
-        { interval: 1 },
-      );
-    });
-
-    it("should take the value from an async init function", async () => {
-      const data = createSignal(async () => "hello");
-
-      expect(data()).toBeUndefined();
-      await vi.waitFor(
-        () => {
-          expect(data()).toBe("hello");
-        },
-        { interval: 1 },
-      );
+      await Promise.resolve();
+      expect(data()).toBe("hello");
     });
 
     it("should update context for init promise", async () => {
       const fn = vi.fn();
-      const data = createSignal(Promise.resolve("hello"));
+      const value = Promise.resolve("hello");
+      const data = createSignal(value);
 
-      context(() => {
+      scoped(() => {
         data();
       }, fn);
 
-      await vi.waitFor(
-        () => {
-          expect(fn).toHaveBeenCalled();
-        },
-        { interval: 1 },
-      );
-    });
-
-    it("should update context for async function init", async () => {
-      const fn = vi.fn();
-      const data = createSignal(async () => "hello");
-
-      context(() => {
-        data();
-      }, fn);
-
-      await vi.waitFor(
-        () => {
-          expect(fn).toHaveBeenCalled();
-        },
-        { interval: 1 },
-      );
+      await value;
+      await Promise.resolve();
+      expect(fn).toHaveBeenCalled();
     });
   });
 
@@ -86,16 +52,17 @@ describe(createSignal, () => {
       expect(data.peek()).toBe("boo");
     });
 
-    it("should not notify the context", () => {
+    it("should not notify the context", async () => {
       const fn = vi.fn();
       const data = createSignal("boo");
 
-      context(() => {
+      scoped(() => {
         data.peek();
       }, fn);
 
       data.set("baz");
 
+      await Promise.resolve();
       expect(fn).not.toHaveBeenCalled();
     });
   });
@@ -126,18 +93,14 @@ describe(createSignal, () => {
       const fn = vi.fn();
       const data = createSignal(6);
 
-      context(() => {
+      scoped(() => {
         data();
       }, fn);
 
       data.set(3);
 
-      await vi.waitFor(
-        () => {
-          expect(fn).toHaveBeenCalledOnce();
-        },
-        { interval: 1 },
-      );
+      await Promise.resolve();
+      expect(fn).toHaveBeenCalledOnce();
     });
 
     it("should not run parent context", async () => {
@@ -145,21 +108,17 @@ describe(createSignal, () => {
       const outerFn = vi.fn();
       const data = createSignal(6);
 
-      context(() => {
-        context(() => {
+      scoped(() => {
+        scoped(() => {
           data();
         }, innerFn);
       }, outerFn);
 
       data.set(3);
 
-      await vi.waitFor(
-        () => {
-          expect(innerFn).toHaveBeenCalledOnce();
-          expect(outerFn).not.toHaveBeenCalled();
-        },
-        { interval: 1 },
-      );
+      await Promise.resolve();
+      expect(innerFn).toHaveBeenCalledOnce();
+      expect(outerFn).not.toHaveBeenCalled();
     });
 
     it("should not run child context if parent is called", async () => {
@@ -167,8 +126,8 @@ describe(createSignal, () => {
       const outerFn = vi.fn();
       const data = createSignal(6);
 
-      context(() => {
-        context(() => {
+      scoped(() => {
+        scoped(() => {
           data();
         }, innerFn);
         data();
@@ -176,13 +135,9 @@ describe(createSignal, () => {
 
       data.set(3);
 
-      await vi.waitFor(
-        () => {
-          expect(innerFn).not.toHaveBeenCalled();
-          expect(outerFn).toHaveBeenCalledOnce();
-        },
-        { interval: 1 },
-      );
+      await Promise.resolve();
+      expect(innerFn).not.toHaveBeenCalled();
+      expect(outerFn).toHaveBeenCalledOnce();
     });
   });
 
@@ -200,16 +155,11 @@ describe(createSignal, () => {
 
     it("should not call change handler for async init", async () => {
       const fn = vi.fn();
-      const data = createSignal(Promise.resolve(9), {
+      createSignal(Promise.resolve(9), {
         onChange: fn,
       });
 
-      await vi.waitFor(
-        () => {
-          expect(data()).toBe(9);
-        },
-        { interval: 1 },
-      );
+      await Promise.resolve();
       expect(fn).not.toHaveBeenCalled();
     });
   });
