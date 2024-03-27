@@ -18,7 +18,7 @@ const buildOptions: BuildOptions = {
   outfile: "target/latest/fanfiction-enhancements.user.js",
   bundle: true,
   format: "iife",
-  target: ["chrome89", "firefox87"],
+  target: ["es2021"],
   define: {
     "process.env.MODE": '"production"',
   },

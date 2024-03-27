@@ -1,5 +1,5 @@
 import render from "./render";
-import { onDispose } from "../signal/context";
+import { onDispose } from "../signal/scope";
 
 declare global {
   namespace JSX {

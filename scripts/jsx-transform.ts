@@ -70,7 +70,7 @@ export default function jsxTransform(): Plugin {
 }
 
 function babelTransform(): PluginObj {
-  let contextVariableName = "";
+  let renderVariableName = "";
 
   return {
     name: "jsxTransform",
@@ -87,12 +87,9 @@ function babelTransform(): PluginObj {
     visitor: {
       Program: {
         exit(path) {
-          if (contextVariableName) {
+          if (renderVariableName) {
             path.node.body.push(
-              importDeclaration(
-                [importDefaultSpecifier(identifier(contextVariableName))],
-                stringLiteral("@jsx/render"),
-              ),
+              importDeclaration([importDefaultSpecifier(identifier(renderVariableName))], stringLiteral("@jsx/render")),
             );
           }
         },
@@ -116,14 +113,14 @@ function babelTransform(): PluginObj {
 
               p.stop();
               hasCall = true;
-              if (!contextVariableName) {
-                contextVariableName = path.scope.generateUid("render");
+              if (!renderVariableName) {
+                renderVariableName = path.scope.generateUid("render");
               }
             },
           });
 
           if (hasCall && !isArrowFunctionExpression(path.parent)) {
-            path.replaceWith(callExpression(identifier(contextVariableName), [arrowFunctionExpression([], path.node)]));
+            path.replaceWith(callExpression(identifier(renderVariableName), [arrowFunctionExpression([], path.node)]));
             path.skip();
           }
         }
