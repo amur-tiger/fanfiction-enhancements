@@ -19,7 +19,7 @@
     "rootDir": "src",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017",
+    "target": "ESNext",
     "typeRoots": [
       "node_modules/@types",
       "typings"
