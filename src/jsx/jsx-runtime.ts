@@ -1,5 +1,5 @@
 import render from "./render";
-import { Scope } from "../signal/scope";
+import { onDispose } from "../signal/scope";
 
 declare global {
   namespace JSX {
@@ -62,7 +62,7 @@ function applyAttributes(element: HTMLElement, attributes: Record<string, unknow
       if (value != null) {
         const type = key.substring(2).toLowerCase();
         element.addEventListener(type, value as never);
-        Scope.getCurrent()?.onDispose(() => element.removeEventListener(type, value as never));
+        onDispose(() => element.removeEventListener(type, value as never));
       }
     } else if (typeof value === "boolean") {
       if (value) {

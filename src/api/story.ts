@@ -1,7 +1,7 @@
-import { type Follow, parseStory, type Story, parseFollows } from "ffn-parser";
-import { createSignal, type Signal, type SignalEx } from "../signal/signal";
+import { type Follow, parseFollows, parseStory, type Story } from "ffn-parser";
+import { createSignal, type Signal } from "../signal/signal";
 import { toDate, tryParse, type WithTimestamp } from "../utils";
-import effect from "../signal/effect";
+import { listen } from "../signal/effect";
 import { environment, Page } from "../util/environment";
 import Api from "./Api";
 
@@ -70,27 +70,26 @@ export function getStoryMetadata(
   storyId: number,
   onChange?: (next: StoryCache | undefined) => void,
 ): Signal<StoryCache | undefined> {
-  const signal = createSignal(getStoryCache(storyId), {
-    onChange: (next) => {
-      setStoryCache(storyId, next);
-      onChange?.(next);
-    },
+  const signal = createSignal(getStoryCache(storyId));
+
+  listen(signal, "change", (event) => {
+    if (event.isInternal) {
+      return;
+    }
+
+    setStoryCache(storyId, event.newValue);
+    onChange?.(event.newValue);
   });
 
-  effect(() => {
-    const handler = (event: StorageEvent) => {
-      if (event.key !== getKey(storyId)) {
-        return;
-      }
+  listen(window, "storage", (event) => {
+    if (event.key !== getKey(storyId)) {
+      return;
+    }
 
-      const next = tryParse<StoryCache>(event.newValue);
-      if (next) {
-        (signal as SignalEx<StoryCache>).set(next, { silent: true });
-      }
-    };
-
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    const next = tryParse<StoryCache>(event.newValue);
+    if (next) {
+      signal.set(next, { isInternal: true });
+    }
   });
 
   return signal;

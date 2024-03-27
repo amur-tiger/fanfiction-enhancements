@@ -1,5 +1,5 @@
-import { createSignal, type Signal, type SignalEx } from "../signal/signal";
-import effect from "../signal/effect";
+import { ChangeEvent, createSignal, type Signal } from "../signal/signal";
+import { listen } from "../signal/effect";
 import { tryParse, type WithTimestamp } from "../utils";
 import { environment, Page } from "../util/environment";
 import view from "../signal/view";
@@ -14,34 +14,32 @@ type WordCountCache = Record<number, WithTimestamp<WordCount> | undefined>;
 
 function getWordCountCache(storyId: number): Signal<WordCountCache> {
   const key = `ffe-story-${storyId}-words`;
+  const signal = createSignal(tryParse<WordCountCache>(localStorage.getItem(key), {}));
 
-  const signal = createSignal(tryParse<WordCountCache>(localStorage.getItem(key), {}), {
-    onChange(next) {
-      localStorage.setItem(key, JSON.stringify(next));
+  listen(signal, "change", (event: ChangeEvent<WordCountCache>) => {
+    if (event.isInternal) {
+      return;
+    }
 
-      dispatchEvent(
-        new StorageEvent("storage", {
-          key,
-          newValue: JSON.stringify(next),
-        }),
-      );
-    },
+    localStorage.setItem(key, JSON.stringify(event.newValue));
+
+    dispatchEvent(
+      new StorageEvent("storage", {
+        key,
+        newValue: JSON.stringify(event.newValue),
+      }),
+    );
   });
 
-  effect(() => {
-    const handler = (event: StorageEvent) => {
-      if (event.key !== key) {
-        return;
-      }
+  listen(window, "storage", (event) => {
+    if (event.key !== key) {
+      return;
+    }
 
-      const next = tryParse<WordCountCache>(event.newValue);
-      if (next) {
-        (signal as SignalEx<WordCountCache>).set(next, { silent: true });
-      }
-    };
-
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    const next = tryParse<WordCountCache>(event.newValue);
+    if (next) {
+      signal.set(next, { isInternal: true });
+    }
   });
 
   return signal;

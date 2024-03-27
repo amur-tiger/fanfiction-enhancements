@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import scoped from "./scope";
-import { createSignal, isSignal } from "./signal";
+import { ChangeEvent, createSignal, isSignal } from "./signal";
 
 describe(createSignal, () => {
   describe("init", () => {
@@ -144,23 +144,21 @@ describe(createSignal, () => {
   describe("onChange", () => {
     it("should call change handler on change", () => {
       const fn = vi.fn();
-      const data = createSignal<number>(9, {
-        onChange: fn,
-      });
+      const data = createSignal<number>(9);
+      data.addEventListener("change", fn);
 
       data.set(28);
 
-      expect(fn).toHaveBeenCalledWith(28);
+      expect(fn).toHaveBeenCalledWith(new ChangeEvent(9, 28, false));
     });
 
-    it("should not call change handler for async init", async () => {
+    it("should call change handler silently for async init", async () => {
       const fn = vi.fn();
-      createSignal(Promise.resolve(9), {
-        onChange: fn,
-      });
+      const data = createSignal(Promise.resolve(9));
+      data.addEventListener("change", fn);
 
       await Promise.resolve();
-      expect(fn).not.toHaveBeenCalled();
+      expect(fn).toHaveBeenCalledWith(new ChangeEvent(undefined, 9, true));
     });
   });
 });

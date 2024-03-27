@@ -1,4 +1,4 @@
-import type { Signal, SignalEx } from "./signal";
+import type { Signal } from "./signal";
 
 function view<T, K extends keyof T>(signal: Signal<T>, key: K): Signal<T[K]>;
 function view<T, R>(signal: Signal<T>, get: (value: T) => R, set: (previous: T, value: R) => T): Signal<R>;
@@ -19,7 +19,7 @@ function view<T, R>(
     },
     {
       set: ((valueOrCallback, options) => {
-        (signal as SignalEx<T>).set(
+        signal.set(
           (previous) =>
             set!(
               previous,
@@ -27,11 +27,11 @@ function view<T, R>(
             ),
           options,
         );
-      }) as SignalEx<R>["set"],
+      }) as Signal<R>["set"],
 
       peek: () => get(signal.peek()),
     },
-  ) as SignalEx<R>;
+  ) as Signal<R>;
 }
 
 export default view;

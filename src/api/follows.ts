@@ -1,5 +1,5 @@
-import { createSignal, type Signal, type SignalEx } from "../signal/signal";
-import effect from "../signal/effect";
+import { createSignal, type Signal } from "../signal/signal";
+import { listen } from "../signal/effect";
 import { tryParse, type WithTimestamp } from "../utils";
 import Api from "./Api";
 import view from "../signal/view";
@@ -8,39 +8,36 @@ type FollowsCache = WithTimestamp<Record<number, WithTimestamp<{ id: number; fol
 
 function getStoryFollowCache(type: "alerts" | "favorites"): Signal<FollowsCache> {
   const key = `ffe-${type}`;
-
   const signal = createSignal(
     tryParse<FollowsCache>(localStorage.getItem(key), {
       timestamp: 0,
     }),
-    {
-      async onChange(next) {
-        localStorage.setItem(key, JSON.stringify(next));
-
-        dispatchEvent(
-          new StorageEvent("storage", {
-            key,
-            newValue: JSON.stringify(next),
-          }),
-        );
-      },
-    },
   );
 
-  effect(() => {
-    const handler = (event: StorageEvent) => {
-      if (event.key !== key) {
-        return;
-      }
+  listen(signal, "change", async (event) => {
+    if (event.isInternal) {
+      return;
+    }
 
-      const next = tryParse<FollowsCache>(event.newValue);
-      if (next) {
-        (signal as SignalEx<FollowsCache>).set(next, { silent: true });
-      }
-    };
+    localStorage.setItem(key, JSON.stringify(event.newValue));
 
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    dispatchEvent(
+      new StorageEvent("storage", {
+        key,
+        newValue: JSON.stringify(event.newValue),
+      }),
+    );
+  });
+
+  listen(window, "storage", (event) => {
+    if (event.key !== key) {
+      return;
+    }
+
+    const next = tryParse<FollowsCache>(event.newValue);
+    if (next) {
+      signal.set(next, { isInternal: true });
+    }
   });
 
   return signal;
