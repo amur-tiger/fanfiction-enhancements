@@ -1,4 +1,4 @@
-import { type Follow, parseFollows, parseStory, type Story } from "ffn-parser";
+import { type Follow, parseFollows, parseStory, parseStoryList, type Story } from "ffn-parser";
 import { createSignal, type Signal } from "../signal/signal";
 import { toDate, tryParse, type WithTimestamp } from "../utils";
 import { listen } from "../signal/effect";
@@ -111,7 +111,7 @@ export function getStory(storyId: number): Signal<StoryData | undefined> {
     }
   });
 
-  if (signal.peek()?.chapters == null) {
+  if (signal.peek()?.description == null) {
     Api.instance.getStoryData(storyId).then((story) => {
       if (story) {
         console.log("Set story data for '%s' from download", story.title);
@@ -129,30 +129,62 @@ export function getStory(storyId: number): Signal<StoryData | undefined> {
 function updateStoryData() {
   if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
     parseFollows().then((follows) => {
-      if (follows) {
-        for (const follow of follows) {
-          let cached = getStoryCache(follow.id);
-          if (
-            cached &&
-            (cached.id !== follow.id ||
-              cached.title !== follow.title ||
-              cached.author.id !== follow.author.id ||
-              cached.author.name !== follow.author.name ||
-              (cached.updated && toDate(cached.updated).getTime() < follow.updated.getTime()))
-          ) {
-            console.debug("Cache for '%s' is outdated, overwriting.", cached.title);
-            cached = undefined;
-          }
-          if (cached == null) {
-            console.debug("Set story data for '%s' from follow.", follow.title);
-            setStoryCache(follow.id, {
-              id: follow.id,
-              title: follow.title,
-              author: follow.author,
-              updated: follow.updated,
-              timestamp: Date.now(),
-            });
-          }
+      if (!follows) {
+        return;
+      }
+
+      for (const follow of follows) {
+        let cached = getStoryCache(follow.id);
+        if (
+          cached &&
+          (cached.id !== follow.id ||
+            cached.title !== follow.title ||
+            cached.author.id !== follow.author.id ||
+            cached.author.name !== follow.author.name ||
+            (cached.updated && toDate(cached.updated).getTime() < follow.updated.getTime()))
+        ) {
+          console.debug("Cache for '%s' is outdated, overwriting.", cached.title);
+          cached = undefined;
+        }
+        if (cached == null) {
+          console.debug("Set story data for '%s' from follow.", follow.title);
+          setStoryCache(follow.id, {
+            id: follow.id,
+            title: follow.title,
+            author: follow.author,
+            updated: follow.updated,
+            timestamp: Date.now(),
+          });
+        }
+      }
+    });
+  }
+
+  if (environment.currentPageType === Page.StoryList) {
+    parseStoryList().then((list) => {
+      if (!list) {
+        return;
+      }
+
+      for (const story of list) {
+        let cached = getStoryCache(story.id);
+        if (
+          cached &&
+          (cached.id !== story.id ||
+            cached.title !== story.title ||
+            cached.author.id !== story.author.id ||
+            cached.author.name !== story.author.name ||
+            (cached.updated && story.updated && toDate(cached.updated).getTime() < toDate(story.updated).getTime()))
+        ) {
+          console.debug("Cache for '%s' is outdated, overwriting.", cached.title);
+          cached = undefined;
+        }
+        if (cached == null) {
+          console.debug("Set story data for '%s' from story list.", story.title);
+          setStoryCache(story.id, {
+            ...story,
+            timestamp: Date.now(),
+          });
         }
       }
     });
