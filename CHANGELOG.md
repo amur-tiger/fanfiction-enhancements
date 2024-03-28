@@ -2,6 +2,7 @@
 
 ## unreleased
 
+* Feature: Use Google Drive instead of DropBox for sync, should work better now
 * Update dependencies and tooling
 * Update JSX renderer
 
