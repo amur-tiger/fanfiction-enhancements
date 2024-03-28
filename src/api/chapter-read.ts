@@ -7,7 +7,7 @@ export interface ChapterReadMetadata {
   stories: Record<number, Record<number, IsRead | undefined> | undefined>;
 }
 
-interface IsRead {
+export interface IsRead {
   read: boolean;
   timestamp: number;
 }

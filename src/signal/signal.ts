@@ -29,6 +29,11 @@ export interface ReadonlySignal<T> extends EventTarget {
    */
   peek(): T;
 
+  /**
+   * Resolved when the initialization finished.
+   */
+  isInitialized(): Promise<void>;
+
   addEventListener<K extends keyof SignalEventMap<T>>(
     event: K,
     callback: (event: SignalEventMap<T>[K]) => void,
@@ -108,6 +113,10 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
 
       peek() {
         return currentValue;
+      },
+
+      async isInitialized() {
+        await (isPromise(value) ? value : Promise.resolve());
       },
 
       addEventListener(

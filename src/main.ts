@@ -3,6 +3,7 @@ import Container from "./container";
 import { environment, Page } from "./util/environment";
 import StoryText from "./enhance/StoryText";
 import getChapterRead from "./api/chapter-read";
+import { syncChapterReadStatus, uploadMetadata } from "./sync/sync";
 
 import "./theme.css";
 import "./main.css";
@@ -14,6 +15,8 @@ async function main() {
     console.log("OAuth 2 landing page - no enhancements will be applied");
     return;
   }
+
+  syncChapterReadStatus().catch(console.error);
 
   const menuBarEnhancer = container.getMenuBar();
   await menuBarEnhancer.enhance();
@@ -67,6 +70,7 @@ async function main() {
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
             isRead.set(true);
+            await uploadMetadata();
           }
         };
 

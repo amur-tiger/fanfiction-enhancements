@@ -48,7 +48,7 @@ function view<T, R>(
       return get(signal.peek());
     },
     {
-      set: (valueOrCallback, options) => {
+      set(valueOrCallback, options) {
         signal.set(
           (previous) =>
             set!(
@@ -60,6 +60,10 @@ function view<T, R>(
       },
 
       peek: () => get(signal.peek()),
+
+      isInitialized() {
+        return signal.isInitialized();
+      },
 
       addEventListener(
         event: string,
