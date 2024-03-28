@@ -1,9 +1,9 @@
 import { parseStory } from "ffn-parser";
 import Container from "./container";
 import { environment, Page } from "./util/environment";
-import { oAuth2LandingPage } from "./api/DropBox";
 import StoryText from "./enhance/StoryText";
 import getChapterRead from "./api/chapter-read";
+import { syncChapterReadStatus, uploadMetadata } from "./sync/sync";
 
 import "./theme.css";
 import "./main.css";
@@ -13,15 +13,10 @@ const container = new Container();
 async function main() {
   if (environment.currentPageType === Page.OAuth2) {
     console.log("OAuth 2 landing page - no enhancements will be applied");
-    oAuth2LandingPage();
-
     return;
   }
 
-  const dropBox = container.getDropBox();
-  if (await dropBox.isAuthorized()) {
-    dropBox.synchronize().catch(console.error);
-  }
+  syncChapterReadStatus().catch(console.error);
 
   const menuBarEnhancer = container.getMenuBar();
   await menuBarEnhancer.enhance();
@@ -75,6 +70,7 @@ async function main() {
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
             isRead.set(true);
+            await uploadMetadata();
           }
         };
 

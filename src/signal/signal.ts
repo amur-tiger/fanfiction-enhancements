@@ -18,12 +18,36 @@ interface SignalSetterOptions {
   isInternal?: boolean;
 }
 
-export interface Signal<T> extends EventTarget {
+export interface ReadonlySignal<T> extends EventTarget {
   /**
    * Retrieves the current value.
    */
   (): T;
 
+  /**
+   * Retrieves the current value without triggering re-renders.
+   */
+  peek(): T;
+
+  /**
+   * Resolved when the initialization finished.
+   */
+  isInitialized(): Promise<void>;
+
+  addEventListener<K extends keyof SignalEventMap<T>>(
+    event: K,
+    callback: (event: SignalEventMap<T>[K]) => void,
+    options?: AddEventListenerOptions | boolean,
+  ): void;
+
+  addEventListener(
+    event: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean,
+  ): void;
+}
+
+export interface Signal<T> extends ReadonlySignal<T> {
   /**
    * Sets a new value.
    * @param value
@@ -37,23 +61,6 @@ export interface Signal<T> extends EventTarget {
    * @param options
    */
   set(callback: (previous: T) => T, options?: SignalSetterOptions): void;
-
-  /**
-   * Retrieves the current value without triggering re-renders.
-   */
-  peek(): T;
-
-  addEventListener<K extends keyof SignalEventMap<T>>(
-    event: K,
-    callback: (event: SignalEventMap<T>[K]) => void,
-    options?: AddEventListenerOptions | boolean,
-  ): void;
-
-  addEventListener(
-    event: string,
-    callback: EventListenerOrEventListenerObject | null,
-    options?: AddEventListenerOptions | boolean,
-  ): void;
 }
 
 type SignalInit<T> = T | PromiseLike<T>;
@@ -106,6 +113,10 @@ export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T
 
       peek() {
         return currentValue;
+      },
+
+      async isInitialized() {
+        await (isPromise(value) ? value : Promise.resolve());
       },
 
       addEventListener(

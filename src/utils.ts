@@ -151,6 +151,13 @@ export function tryParse<T = unknown>(text: string | null | undefined): T | unde
  */
 export function tryParse<T = unknown>(text: string | null | undefined, fallback: T): T;
 
+/**
+ * Tries to parse a text as JSON, and returns the fallback if it fails.
+ * @param text
+ * @param fallback
+ */
+export function tryParse<T = unknown>(text: string | null | undefined, fallback: T | undefined): T | undefined;
+
 export function tryParse<T = unknown>(text: string | null | undefined, fallback?: T): T | undefined {
   if (!text) {
     return fallback;
