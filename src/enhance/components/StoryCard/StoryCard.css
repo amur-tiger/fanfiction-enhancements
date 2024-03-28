@@ -11,12 +11,13 @@
 .ffe-sc-title {
   color: var(--ffe-on-paper-color) !important;
   font-size: 1.8em;
+
+  &:hover {
+    border-bottom: 0;
+    text-decoration: underline;
+  }
 }
 
-.ffe-sc-title:hover {
-  border-bottom: 0;
-  text-decoration: underline;
-}
 
 .ffe-sc-by {
   color: var(--ffe-on-paper-color);
@@ -29,20 +30,27 @@
 
 .ffe-sc-mark {
   float: right;
+
+
+  & > * {
+    margin-right: 4px;
+  }
 }
 
-.ffe-sc-mark > * {
-  margin-right: 4px;
-}
-
-.ffe-sc-follow:hover,
-.ffe-sc-follow.ffe-active {
+.ffe-sc-alert:hover,
+.ffe-sc-alert.ffe-active {
   color: var(--ffe-alert-color);
 }
 
 .ffe-sc-favorite:hover,
 .ffe-sc-favorite.ffe-active {
   color: var(--ffe-favorite-color);
+}
+
+.ffe-sc-follow-count {
+  color: var(--ffe-on-button-color);
+  font-weight: bolder;
+  margin-left: 0.4em;
 }
 
 .ffe-sc-tags {
@@ -61,10 +69,10 @@
   margin-bottom: 8px;
   margin-right: 5px;
   padding: 3px 8px;
-}
 
-.ffe-sc-tag a {
-  color: var(--ffe-link-color);
+  a {
+    color: var(--ffe-link-color);
+  }
 }
 
 .ffe-sc-tag-language {
