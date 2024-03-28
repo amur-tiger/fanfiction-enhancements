@@ -2,6 +2,7 @@
 
 ## unreleased
 
+* Changed: Move alert and favorite count into their respective buttons ([#77](https://github.com/amur-tiger/fanfiction-enhancements/issues/77))
 * Feature: Use Google Drive instead of DropBox for sync, should work better now
 * Update dependencies and tooling
 * Update JSX renderer
