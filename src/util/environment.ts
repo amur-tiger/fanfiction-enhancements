@@ -60,7 +60,6 @@ export function getPage(location: Location): Page {
   return Page.Other;
 }
 
-/* eslint-disable no-undef,camelcase */
 export const environment = {
   currentUserId: typeof userid === "undefined" ? undefined : userid,
   currentUserName: typeof XUNAME === "undefined" || XUNAME === false ? undefined : XUNAME,
@@ -76,4 +75,3 @@ export const environment = {
   validLanguages: typeof array_languages === "undefined" ? [] : array_languages.slice(1),
   validStatus: typeof array_status === "undefined" ? [] : array_status.slice(1),
 };
-/* eslint-enable no-undef,camelcase */

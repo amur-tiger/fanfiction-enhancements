@@ -1,9 +1,9 @@
-import { parseFollows, parseStory } from "ffn-parser";
+import { parseStory } from "ffn-parser";
 import Container from "./container";
 import { environment, Page } from "./util/environment";
-import { oAuth2LandingPage } from "./api/DropBox";
-import { StoryText } from "./enhance";
-import { CacheName } from "./api/ValueContainer";
+import StoryText from "./enhance/StoryText";
+import getChapterRead from "./api/chapter-read";
+import { syncChapterReadStatus, uploadMetadata } from "./sync/sync";
 
 import "./theme.css";
 import "./main.css";
@@ -12,36 +12,16 @@ const container = new Container();
 
 async function main() {
   if (environment.currentPageType === Page.OAuth2) {
-    // eslint-disable-next-line no-console
     console.log("OAuth 2 landing page - no enhancements will be applied");
-    oAuth2LandingPage();
-
     return;
   }
 
-  const valueContainer = container.getValueContainer();
-
-  const dropBox = container.getDropBox();
-  if (await dropBox.isAuthorized()) {
-    // eslint-disable-next-line no-console
-    dropBox.synchronize().catch(console.error);
-  }
+  syncChapterReadStatus().catch(console.error);
 
   const menuBarEnhancer = container.getMenuBar();
   await menuBarEnhancer.enhance();
 
   if (environment.currentPageType === Page.Alerts || environment.currentPageType === Page.Favorites) {
-    const getterName = environment.currentPageType === Page.Alerts ? "getAlertValue" : "getFavoriteValue";
-    const list = await parseFollows(document);
-    if (list) {
-      await Promise.all(
-        list.map(async (item) => {
-          const value = valueContainer[getterName](item.id);
-          await value.update(true);
-        }),
-      );
-    }
-
     const followsListEnhancer = container.getFollowsList();
     await followsListEnhancer.enhance();
   }
@@ -60,12 +40,6 @@ async function main() {
   }
 
   if (environment.currentPageType === Page.Story) {
-    const currentStory = await parseStory(document);
-    if (currentStory) {
-      const storyValue = valueContainer.getStoryValue(currentStory.id);
-      await storyValue.update(currentStory);
-    }
-
     const storyProfileEnhancer = container.getStoryProfile();
     await storyProfileEnhancer.enhance();
 
@@ -76,16 +50,6 @@ async function main() {
   if (environment.currentPageType === Page.Chapter) {
     const currentStory = await parseStory(document);
     if (currentStory) {
-      const storyValue = valueContainer.getStoryValue(currentStory.id);
-      await storyValue.update(currentStory);
-
-      if (environment.currentChapterId) {
-        const wordCountValue = valueContainer.getWordCountValue(currentStory.id, environment.currentChapterId);
-        await wordCountValue.update(
-          document.getElementById("storytext")?.textContent?.trim()?.split(/\s+/).length ?? 0,
-        );
-      }
-
       const storyProfileEnhancer = container.getStoryProfile();
       await storyProfileEnhancer.enhance();
 
@@ -93,20 +57,20 @@ async function main() {
       await storyTextEnhancer.enhance();
 
       if (environment.currentChapterId) {
-        const readValue = valueContainer.getChapterReadValue(currentStory.id, environment.currentChapterId);
+        const isRead = getChapterRead(currentStory.id, environment.currentChapterId);
         const markRead = async () => {
           const amount = document.documentElement.scrollTop;
           const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
           if (amount / (max - 550) >= 1) {
             window.removeEventListener("scroll", markRead);
-            // eslint-disable-next-line no-console
             console.log(
               "Setting '%s' chapter '%s' to read",
               currentStory.title,
               currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
             );
-            await readValue.set(true);
+            isRead.set(true);
+            await uploadMetadata();
           }
         };
 
@@ -125,8 +89,7 @@ async function migrate() {
   const readList = JSON.parse(readListStr as string);
   for (const [storyId, story] of Object.entries(readList)) {
     for (const [chapterId, chapter] of Object.entries(story as object)) {
-      // eslint-disable-next-line no-await-in-loop
-      await GM.setValue(CacheName.chapterRead(+storyId, +chapterId), chapter);
+      await GM.setValue(`ffe-story-${storyId}-chapter-${chapterId}-read`, chapter);
     }
   }
 
@@ -134,5 +97,4 @@ async function migrate() {
   await GM.deleteValue("ffe-cache-alerts");
 }
 
-// eslint-disable-next-line no-console
 migrate().then(main).catch(console.error);

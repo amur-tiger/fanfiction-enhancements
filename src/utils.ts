@@ -8,7 +8,6 @@ export function loadScript(url: string): Promise<Event> {
     const script = document.createElement("script");
     script.addEventListener("load", resolve);
     script.addEventListener("error", (err) => {
-      // eslint-disable-next-line no-console
       console.error("Failed to load script: %s", url);
       reject(err);
     });
@@ -123,7 +122,6 @@ export function parseGetParams(url: string): Record<string, string | boolean> {
 
     return result;
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error(e);
 
     return {};
@@ -138,4 +136,44 @@ export function timeout(time: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, time);
   });
+}
+
+/**
+ * Tries to parse a text as JSON, and returns undefined if it fails.
+ * @param text
+ */
+export function tryParse<T = unknown>(text: string | null | undefined): T | undefined;
+
+/**
+ * Tries to parse a text as JSON, and returns the fallback if it fails.
+ * @param text
+ * @param fallback
+ */
+export function tryParse<T = unknown>(text: string | null | undefined, fallback: T): T;
+
+/**
+ * Tries to parse a text as JSON, and returns the fallback if it fails.
+ * @param text
+ * @param fallback
+ */
+export function tryParse<T = unknown>(text: string | null | undefined, fallback: T | undefined): T | undefined;
+
+export function tryParse<T = unknown>(text: string | null | undefined, fallback?: T): T | undefined {
+  if (!text) {
+    return fallback;
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+export type WithTimestamp<T> = T & { timestamp: number };
+
+export function toDate(date: Date | string): Date {
+  if (date instanceof Date) {
+    return date;
+  }
+  return new Date(date);
 }

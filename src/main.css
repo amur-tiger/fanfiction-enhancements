@@ -1,4 +1,7 @@
-a, a:link, a:active, a:visited {
+a,
+a:link,
+a:active,
+a:visited {
   color: var(--ffe-link-color);
 }
 
@@ -14,17 +17,24 @@ html ul.topnav li.active a {
   color: #000;
 }
 
-body, .zmenu, .tcat {
+body,
+.zmenu,
+.tcat {
   background-color: var(--ffe-panel-color) !important;
   border-color: var(--ffe-divider-color);
   color: var(--ffe-on-panel-color);
+}
+
+.btn {
+  color: var(--ffe-on-button-color);
 }
 
 #content_parent {
   background-color: var(--ffe-background-color) !important;
 }
 
-#content_wrapper, .lc {
+#content_wrapper,
+.lc {
   background-color: var(--ffe-paper-color) !important;
   color: var(--ffe-on-paper-color);
 }

@@ -1,4 +1,4 @@
-import Enhancer from "./Enhancer";
+import type Enhancer from "./Enhancer";
 
 export default class SaveListSettings implements Enhancer {
   private getSort(): Promise<string> {

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
 type GMValue = string | number | boolean;
 
 // Important note: All used functions, despite being declared in this file, still need to be declared in the

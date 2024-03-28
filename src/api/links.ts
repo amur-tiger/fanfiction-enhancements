@@ -1,4 +1,4 @@
-import { Chapter, Follow, Story, User } from "ffn-parser";
+import type { Chapter, Follow, Story, User } from "ffn-parser";
 
 export enum SortOption {
   UpdateDate = 1,
@@ -116,7 +116,7 @@ export function createLink(link: string, options?: LinkOptions): string {
   return `${link}?${args.join("&")}`;
 }
 
-export const FFN_BASE_URL = "//fanfiction.net";
+export const FFN_BASE_URL = "//www.fanfiction.net";
 
 function slug(str: string): string {
   return str.replace(/\W+/g, "-");

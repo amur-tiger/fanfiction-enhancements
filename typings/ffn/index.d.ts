@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention,camelcase,no-underscore-dangle */
-
 /**
  * Shows a small popup message for a specified amount of time in milliseconds. If no time is specified, the
  * message will be shown for 2500 milliseconds.

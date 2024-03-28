@@ -1,5 +1,13 @@
 # FanFiction Enhancements
 
+## 0.8.0
+
+* Changed: Move alert and favorite count into their respective buttons ([#77](https://github.com/amur-tiger/fanfiction-enhancements/issues/77))
+* Feature: Show progress of ePub download in download button
+* Feature: Use Google Drive instead of DropBox for sync, should work better
+* Update dependencies and tooling
+* Update JSX renderer
+
 ## 0.7.4
 
 * Feature: Dark mode support with additional toggle in menu bar ([#72](https://github.com/amur-tiger/fanfiction-enhancements/issues/72))

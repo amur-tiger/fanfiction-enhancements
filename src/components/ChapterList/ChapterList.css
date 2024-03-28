@@ -1,0 +1,44 @@
+.ffe-cl-container {
+  margin-bottom: 50px;
+  padding: 20px;
+}
+
+.ffe-cl ol {
+  border-top: 1px solid var(--ffe-divider-color);
+  list-style-type: none;
+  margin: 0;
+}
+
+.ffe-cl-chapter {
+  background-color: var(--ffe-panel-color);
+  border-bottom: 1px solid var(--ffe-divider-color);
+  font-size: 1.1em;
+  line-height: 2em;
+  padding: 4px 20px;
+}
+
+.ffe-cl-chapter a {
+  color: var(--ffe-link-color);
+}
+
+.ffe-cl-words {
+  color: var(--ffe-on-panel-color);
+  float: right;
+  font-size: 0.9em;
+}
+
+.ffe-cl-estimate {
+  color: var(--ffe-on-panel-color-faint);
+
+  &:before {
+    content: "~";
+  }
+}
+
+.ffe-cl-collapsed {
+  text-align: center;
+
+  a {
+    cursor: pointer;
+  }
+}

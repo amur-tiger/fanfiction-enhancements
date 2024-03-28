@@ -1,4 +1,4 @@
-import Enhancer from "./Enhancer";
+import type Enhancer from "./Enhancer";
 
 import "./StoryText.css";
 

@@ -1,22 +1,30 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "jsx": "react",
-    "jsxFactory": "render",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@jsx",
     "lib": [
       "dom",
+      "dom.iterable",
       "es2020"
     ],
+    "module": "ESNext",
     "moduleResolution": "node",
+    "paths": {
+      "@jsx/*": [
+        "./src/jsx/*"
+      ]
+    },
     "resolveJsonModule": true,
     "rootDir": "src",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017",
+    "target": "ESNext",
     "typeRoots": [
       "node_modules/@types",
       "typings"
-    ]
+    ],
+    "verbatimModuleSyntax": true
   },
   "include": [
     "src"
