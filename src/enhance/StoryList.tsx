@@ -1,6 +1,6 @@
 import { parseStoryList } from "ffn-parser";
 import type Enhancer from "./Enhancer";
-import StoryCard from "./components/StoryCard/StoryCard";
+import StoryCard from "../components/StoryCard/StoryCard";
 import "./StoryList.css";
 
 export default class StoryList implements Enhancer {

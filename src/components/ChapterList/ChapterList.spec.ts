@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Chapter, Story } from "ffn-parser";
-import { timeout } from "../../../utils";
+import { timeout } from "../../utils";
 
 // todo eliminate setTimeout call for sleep-less tests
 // todo update for new hidden chapters rendering

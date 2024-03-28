@@ -1,13 +1,13 @@
 import clsx from "clsx";
 import type { Story } from "ffn-parser";
-import { createSignal } from "../../../signal/signal";
+import { createSignal } from "../../signal/signal";
 import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
-import { getStory } from "../../../api/story";
-import Epub from "../../../util/epub";
-import { getStoryAlert, getStoryFavorite } from "../../../api/follows";
-import { toDate } from "../../../utils";
-import BellIcon from "../../../assets/bell.svg";
+import { getStory } from "../../api/story";
+import Epub from "../../util/epub";
+import { getStoryAlert, getStoryFavorite } from "../../api/follows";
+import { toDate } from "../../utils";
+import BellIcon from "../../assets/bell.svg";
 import "./StoryCard.css";
 
 export interface StoryCardProps {
