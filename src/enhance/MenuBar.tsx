@@ -1,7 +1,8 @@
 import { environment } from "../util/environment";
+import clsx from "clsx";
+import render from "@jsx/render";
 import type Enhancer from "./Enhancer";
-import scoped from "../signal/scope";
-import { getAuthorizedSignal, startSyncAuthorization } from "../sync/auth";
+import { getAuthorizedSignal, removeSyncToken, startSyncAuthorization } from "../sync/auth";
 import BellIcon from "../assets/bell.svg";
 import "./MenuBar.css";
 
@@ -23,57 +24,62 @@ export default class MenuBar implements Enhancer {
       document.documentElement.dataset.theme = XCOOKIE.read_theme;
     });
 
-    const toggleTheme = document.createElement("a");
-    toggleTheme.classList.add("ffe-mb-icon", "ffe-mb-theme", "icon-tl-contrast");
-    toggleTheme.title = "Toggle Light/Dark Theme";
-    toggleTheme.href = "#";
-    toggleTheme.addEventListener("click", (event) => {
-      event.preventDefault();
-      if (XCOOKIE.read_theme === "light") {
-        _fontastic_change_theme("dark");
-      } else {
-        _fontastic_change_theme("light");
-      }
-      document.documentElement.dataset.theme = XCOOKIE.read_theme;
-    });
+    parent.insertBefore(
+      <a
+        class="ffe-mb-theme ffe-mb-icon icon-tl-contrast"
+        title="Toggle Light/Dark Theme"
+        href="#"
+        onClick={(event: MouseEvent) => {
+          event.preventDefault();
+          if (XCOOKIE.read_theme === "light") {
+            _fontastic_change_theme("dark");
+          } else {
+            _fontastic_change_theme("light");
+          }
+          document.documentElement.dataset.theme = XCOOKIE.read_theme;
+        }}
+      />,
+      ref,
+    );
 
-    const toAlerts = document.createElement("a");
-    toAlerts.classList.add("ffe-mb-icon", "ffe-mb-alerts", "ffe-mb-bell");
-    toAlerts.title = "Go to Story Alerts";
-    toAlerts.href = "/alert/story.php";
-    toAlerts.appendChild(BellIcon());
+    parent.insertBefore(<span class="ffe-mb-separator" />, ref);
 
-    const toFavorites = document.createElement("a");
-    toFavorites.classList.add("ffe-mb-icon", "ffe-mb-favorites", "icon-heart");
-    toFavorites.title = "Go to Story Favorites";
-    toFavorites.href = "/favorites/story.php";
+    parent.insertBefore(
+      <a class="ffe-mb-alerts ffe-mb-icon ffe-mb-bell" title="Go to Story Alerts" href="/alert/story.php">
+        <BellIcon />
+      </a>,
+      ref,
+    );
 
-    const toSync = document.createElement("a");
-    toSync.classList.add("ffe-mb-icon", "icon-mpl2-sync");
-    toSync.title = "Connect to Google Drive";
-    toSync.href = "#";
+    parent.insertBefore(
+      <a class="ffe-mb-favorites ffe-mb-icon icon-heart" title="Go to Story Favorites" href="/favorites/story.php" />,
+      ref,
+    );
 
     const isAuthorized = getAuthorizedSignal();
-    scoped(() => {
-      toSync.classList.toggle("ffe-mb-checked", isAuthorized());
-    });
+    parent.insertBefore(
+      render(() => (
+        <a
+          class={clsx("ffe-mb-icon icon-mpl2-sync", {
+            "ffe-mb-checked": isAuthorized(),
+          })}
+          title={isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"}
+          href="#"
+          onClick={async (event: MouseEvent) => {
+            event.preventDefault();
+            if (isAuthorized()) {
+              if (confirm("Stop sync with Google Drive?")) {
+                await removeSyncToken();
+              }
+            } else {
+              await startSyncAuthorization();
+            }
+          }}
+        />
+      )),
+      ref,
+    );
 
-    toSync.addEventListener("click", async (event) => {
-      event.preventDefault();
-      await startSyncAuthorization();
-    });
-
-    const separator1 = document.createElement("span");
-    separator1.classList.add("ffe-mb-separator");
-
-    const separator2 = document.createElement("span");
-    separator2.classList.add("ffe-mb-separator");
-
-    parent.insertBefore(toggleTheme, ref);
-    parent.insertBefore(separator2, ref);
-    parent.insertBefore(toAlerts, ref);
-    parent.insertBefore(toFavorites, ref);
-    parent.insertBefore(toSync, ref);
-    parent.insertBefore(separator1, ref);
+    parent.insertBefore(<span class="ffe-mb-separator" />, ref);
   }
 }
