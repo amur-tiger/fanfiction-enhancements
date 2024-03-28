@@ -7,6 +7,12 @@ import { toDate } from "../utils";
 
 declare const JSZip: JSZipType;
 
+export interface CreateProgress {
+  progress: number;
+  step: number;
+  stepCount: number;
+}
+
 function escapeFile(text: string): string {
   return text.replace(/[<>:"/\\|?*]/g, "-");
 }
@@ -191,8 +197,15 @@ ${content}
     return escapeFile(`${this.story.title} - ${this.story.author.name}.epub`);
   }
 
-  public async create(): Promise<Blob> {
+  public async create(onProgress?: (progress: CreateProgress) => void): Promise<Blob> {
     console.debug("[EPUB] Creating EPUB for '%s'", this.story.title);
+
+    const stepCount = this.story.chapters.length + 3;
+    let step = 0;
+    const advance = () => {
+      step += 1;
+      onProgress?.({ progress: step / stepCount, step, stepCount });
+    };
 
     const zip = new JSZip();
     zip.file("mimetype", "application/epub+zip");
@@ -203,6 +216,8 @@ ${content}
     zip.file("content.opf", this.getContentXml());
     zip.file("toc.ncx", this.getNcxXml());
     zip.file("toc.xhtml", this.getTocHtml());
+
+    advance();
 
     const coverUrl = this.story.imageUrl;
     if (coverUrl) {
@@ -215,14 +230,20 @@ ${content}
       zip.file("cover.jpg", await cover.blob());
     }
 
+    advance();
+
     await Promise.all(
       this.story.chapters.map(async (chapter) => {
         console.debug("[EPUB] Fetching chapter %d: '%s'", chapter.id, chapter.title);
         zip.file(`chapter-${chapter.id}.xhtml`, await this.getChapterHtml(chapter));
+        advance();
       }),
     );
 
     console.debug("[EPUB] Packing file");
-    return zip.generateAsync({ type: "blob" });
+    const result = zip.generateAsync({ type: "blob" });
+    advance();
+
+    return result;
   }
 }

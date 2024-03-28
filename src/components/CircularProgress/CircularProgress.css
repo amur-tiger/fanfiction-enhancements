@@ -1,0 +1,13 @@
+.ffe-cp-progress {
+  visibility: hidden;
+  position: absolute;
+}
+
+.ffe-cp-circle-background {
+  stroke: var(--ffe-on-button-color-faint);
+}
+
+.ffe-cp-circle-foreground {
+  transform: rotate(-90deg);
+  stroke: var(--ffe-primary-color);
+}

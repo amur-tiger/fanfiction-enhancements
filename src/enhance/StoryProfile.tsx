@@ -1,6 +1,6 @@
 import { environment } from "../util/environment";
 import type Enhancer from "./Enhancer";
-import StoryCard from "./components/StoryCard/StoryCard";
+import StoryCard from "../components/StoryCard/StoryCard";
 import "./StoryProfile.css";
 
 export default class StoryProfile implements Enhancer {

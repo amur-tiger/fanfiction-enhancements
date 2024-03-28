@@ -33,7 +33,15 @@ export function jsx(tag: string | JSX.Component | undefined, props: JSX.Componen
     throw new Error("Fragment is not supported");
   }
 
-  const element = document.createElement(tag);
+  let element;
+  if ("xmlns" in attributes) {
+    element = document.createElementNS(attributes.xmlns as string, tag);
+  } else if (svgTagNames.includes(tag)) {
+    element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  } else {
+    element = document.createElement(tag);
+  }
+
   applyAttributes(element, attributes);
 
   const flatten = (child: JSX.Children): JSX.Node[] => (Array.isArray(child) ? child.flatMap(flatten) : [child]);
@@ -51,7 +59,7 @@ export function jsx(tag: string | JSX.Component | undefined, props: JSX.Componen
 // noinspection JSUnusedGlobalSymbols
 export const jsxs = jsx;
 
-function applyAttributes(element: HTMLElement, attributes: Record<string, unknown>) {
+function applyAttributes(element: Element, attributes: Record<string, unknown>) {
   for (const attribute of Array.from(element.attributes)) {
     if (!(attribute.nodeName in attributes)) {
       element.removeAttribute(attribute.nodeName);
@@ -77,3 +85,32 @@ function applyAttributes(element: HTMLElement, attributes: Record<string, unknow
     }
   }
 }
+
+export const svgTagNames = [
+  "circle",
+  "clipPath",
+  "color-profile",
+  "cursor",
+  "defs",
+  "desc",
+  "discard",
+  "ellipse",
+  "filter",
+  "g",
+  "line",
+  "linearGradient",
+  "mask",
+  "mpath",
+  "path",
+  "pattern",
+  "polygon",
+  "polyline",
+  "radialGradient",
+  "rect",
+  "solidColor",
+  "svg",
+  "text",
+  "textArea",
+  "textPath",
+  "title",
+];

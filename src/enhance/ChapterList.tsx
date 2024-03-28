@@ -1,6 +1,6 @@
 import { environment } from "../util/environment";
 import type Enhancer from "./Enhancer";
-import ChapterListComponent from "./components/ChapterList/ChapterList";
+import ChapterListComponent from "../components/ChapterList/ChapterList";
 
 export default class ChapterList implements Enhancer {
   public async enhance(): Promise<void> {

@@ -1,7 +1,7 @@
-import { getStory, type StoryData } from "../../../api/story";
+import { getStory, type StoryData } from "../../api/story";
 import type { Chapter } from "ffn-parser";
-import { createSignal } from "../../../signal/signal";
-import getChapterRead from "../../../api/chapter-read";
+import { createSignal } from "../../signal/signal";
+import getChapterRead from "../../api/chapter-read";
 import ChapterListEntry from "./ChapterListEntry";
 import "./ChapterList.css";
 import render from "@jsx/render";

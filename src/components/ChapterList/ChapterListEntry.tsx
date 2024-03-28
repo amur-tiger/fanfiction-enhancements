@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import type { Chapter } from "ffn-parser";
 import CheckBox from "../CheckBox/CheckBox";
-import getChapterRead from "../../../api/chapter-read";
-import getWordCount from "../../../api/word-count";
+import getChapterRead from "../../api/chapter-read";
+import getWordCount from "../../api/word-count";
 
 export interface ChapterListEntryProps {
   storyId: number;
