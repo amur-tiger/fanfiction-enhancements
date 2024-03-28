@@ -11,10 +11,8 @@ export interface ButtonProps {
 }
 
 export default function Button({ class: className, title, disabled, onClick, children }: ButtonProps) {
-  const id = `ffe-button-${parseInt(`${Math.random() * 100000000}`, 10)}`;
-
   return (
-    <span role="button" id={id} class={clsx("btn", { disabled }, className)} title={title} onClick={onClick}>
+    <span role="button" class={clsx("btn", { disabled }, className)} title={title} onClick={onClick}>
       {children}
     </span>
   );

@@ -53,6 +53,11 @@
   margin-left: 0.4em;
 }
 
+.ffe-sc-download-button {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
 .ffe-sc-tags {
   border-bottom: 1px solid var(--ffe-divider-color);
   display: flex;

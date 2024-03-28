@@ -4,11 +4,12 @@ import { createSignal } from "../../signal/signal";
 import Button from "../Button/Button";
 import Rating from "../Rating/Rating";
 import { getStory } from "../../api/story";
-import Epub from "../../util/epub";
+import Epub, { type CreateProgress } from "../../util/epub";
 import { getStoryAlert, getStoryFavorite } from "../../api/follows";
 import { toDate } from "../../utils";
 import BellIcon from "../../assets/bell.svg";
 import "./StoryCard.css";
+import CircularProgress from "../CircularProgress/CircularProgress";
 
 export interface StoryCardProps {
   storyId: number;
@@ -21,6 +22,8 @@ export default function StoryCard({ storyId }: StoryCardProps) {
   }
 
   const isDownloading = createSignal(false);
+  const progress = createSignal<CreateProgress>();
+
   const hasAlert = getStoryAlert(story.id);
   const isFavorite = getStoryFavorite(story.id);
 
@@ -38,7 +41,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
       isDownloading.set(true);
 
       const epub = new Epub(story as Story);
-      const blob = await epub.create();
+      const blob = await epub.create(progress.set);
 
       link.href = URL.createObjectURL(blob);
       link.download = epub.getFilename();
@@ -63,11 +66,23 @@ export default function StoryCard({ storyId }: StoryCardProps) {
         <div class="ffe-sc-mark">
           <Button
             onClick={handleDownloadClick}
-            title="Download as ePub"
-            class="ffe-download-button"
+            title={
+              isDownloading() ? `Progress: ${Math.round((progress()?.progress ?? 0) * 100)}\u202f%` : "Download as ePub"
+            }
+            class="ffe-sc-download-button"
             disabled={isDownloading()}
           >
-            <span class="icon-arrow-down" />
+            {isDownloading() ? (
+              <CircularProgress size={20} progress={progress()?.progress} />
+            ) : (
+              <span class="icon-arrow-down" />
+            )}
+            {isDownloading() && (
+              <span>
+                {Math.round((progress()?.progress ?? 0) * 100)}
+                {"\u202f"}%
+              </span>
+            )}
           </Button>
           <a style="display: none" class="ffe-download-link" />
 
