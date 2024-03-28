@@ -28,7 +28,7 @@
 }
 
 .ffe-cl-estimate {
-  color: var(--ffe-divider-color);
+  color: var(--ffe-on-panel-color-faint);
 
   &:before {
     content: "~";

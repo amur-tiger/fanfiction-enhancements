@@ -24,6 +24,9 @@ export default function StoryCard({ storyId }: StoryCardProps) {
   const hasAlert = getStoryAlert(story.id);
   const isFavorite = getStoryFavorite(story.id);
 
+  const alertOffset = createSignal(0);
+  const favoriteOffset = createSignal(0);
+
   const handleDownloadClick = async () => {
     const link = (element as HTMLElement).querySelector(".ffe-download-link") as HTMLAnchorElement | null;
 
@@ -70,17 +73,32 @@ export default function StoryCard({ storyId }: StoryCardProps) {
 
           <div class="btn-group">
             <Button
-              class={clsx("ffe-sc-follow", { "ffe-active": hasAlert() })}
+              class={clsx("ffe-sc-alert", { "ffe-active": hasAlert() })}
               title="Toggle Story Alert"
-              onClick={() => hasAlert.set((prev) => !prev)}
+              onClick={() =>
+                hasAlert.set((prev) => {
+                  alertOffset.set((po) => (prev ? po - 1 : po + 1));
+                  return !prev;
+                })
+              }
             >
               <BellIcon />
+              <span class="ffe-sc-follow-count">{((story.follows ?? 0) + alertOffset()).toLocaleString("en")}</span>
             </Button>
             <Button
               class={clsx("ffe-sc-favorite icon-heart", { "ffe-active": isFavorite() })}
               title="Toggle Favorite"
-              onClick={() => isFavorite.set((prev) => !prev)}
-            />
+              onClick={() =>
+                isFavorite.set((prev) => {
+                  favoriteOffset.set((po) => (prev ? po - 1 : po + 1));
+                  return !prev;
+                })
+              }
+            >
+              <span class="ffe-sc-follow-count">
+                {((story.favorites ?? 0) + favoriteOffset()).toLocaleString("en")}
+              </span>
+            </Button>
           </div>
         </div>
       </div>
@@ -116,12 +134,6 @@ export default function StoryCard({ storyId }: StoryCardProps) {
             <a href={`/r/${story.id}/`}>Reviews:&nbsp;{story.reviews}</a>
           </span>
         )}
-
-        {story.favorites != null && (
-          <span class="ffe-sc-tag ffe-sc-tag-favorites">Favorites:&nbsp;{story.favorites}</span>
-        )}
-
-        {story.follows != null && <span class="ffe-sc-tag ffe-sc-tag-follows">Follows:&nbsp;{story.follows}</span>}
       </div>
 
       {story.imageUrl && (
