@@ -1,9 +1,23 @@
 import scoped from "../signal/scope";
+import { Fragment } from "./jsx-runtime";
 
-export default function render<T extends ChildNode>(render: () => T): T {
-  let element = scoped(render, (next) => {
-    element.replaceWith(next);
-    element = next;
-  });
+// function render<T extends ChildNode>(render: () => JSX.Children): T;
+// function render<T extends ChildNode>(render: () => JSX.Children | string | number): T | Text;
+
+function render(render: () => JSX.Children): JSX.Element {
+  let element = scoped(
+    () =>
+      Fragment({
+        children: render(),
+      }),
+    (next) => {
+      Fragment.replace(element, next);
+      element = next;
+    },
+  );
+
   return element;
 }
+
+export default render;
+export { default as compute } from "../signal/compute";

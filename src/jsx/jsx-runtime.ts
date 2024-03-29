@@ -1,9 +1,38 @@
-import render from "./render";
 import { onDispose } from "../signal/scope";
+import { isSignal } from "../signal/signal";
+import effect from "../signal/effect";
 
 declare global {
   namespace JSX {
-    // export type IntrinsicElements = Record<string, unknown>;
+    type PropertyName<K> = K extends "className"
+      ? "class"
+      : K extends "htmlFor"
+        ? "for"
+        : K extends `on${infer E}`
+          ? `on${Capitalize<E>}`
+          : K;
+
+    type PropertyType<T, K extends keyof T> = K extends "style"
+      ? string
+      : K extends "children"
+        ? JSX.Children
+        : T[K] extends SVGAnimatedString
+          ? string
+          : T[K] extends SVGAnimatedLength
+            ? string | number
+            : T[K] extends SVGAnimatedRect
+              ? string
+              : T[K];
+
+    export type IntrinsicElements = {
+      [Tag in keyof HTMLElementTagNameMap]: {
+        [K in keyof HTMLElementTagNameMap[Tag] as PropertyName<K>]?: PropertyType<HTMLElementTagNameMap[Tag], K>;
+      };
+    } & {
+      [Tag in keyof SVGElementTagNameMap]: {
+        [K in keyof SVGElementTagNameMap[Tag] as PropertyName<K>]?: PropertyType<SVGElementTagNameMap[Tag], K>;
+      };
+    };
 
     export type ComponentProps = { children?: JSX.Children } & Record<string, unknown>;
 
@@ -11,7 +40,7 @@ declare global {
       (props: P): Element;
     }
 
-    export type Element = ChildNode;
+    export type Element = ChildNode | DocumentFragment;
 
     export type Node = Element | string | number | boolean | null | undefined;
 
@@ -19,18 +48,24 @@ declare global {
   }
 }
 
-export function jsx<K extends keyof HTMLElementTagNameMap>(tag: K, props: JSX.ComponentProps): HTMLElementTagNameMap[K];
-export function jsx(tag: string | JSX.Component | undefined, props: JSX.ComponentProps): JSX.Element;
+export function toChildArray(children: JSX.Children | null | undefined): JSX.Node[] {
+  if (children == null) {
+    return [];
+  }
 
-export function jsx(tag: string | JSX.Component | undefined, props: JSX.ComponentProps): JSX.Element {
+  const flatten = (child: JSX.Children): JSX.Node[] => (Array.isArray(child) ? child.flatMap(flatten) : [child]);
+
+  return flatten(children);
+}
+
+export function jsx<K extends keyof HTMLElementTagNameMap>(tag: K, props: JSX.ComponentProps): HTMLElementTagNameMap[K];
+export function jsx(tag: string | JSX.Component, props: JSX.ComponentProps): JSX.Element;
+
+export function jsx(tag: string | JSX.Component, props: JSX.ComponentProps): JSX.Element {
   const { children, ...attributes } = props;
 
   if (typeof tag === "function") {
-    return render(() => tag(props));
-  }
-
-  if (tag == null) {
-    throw new Error("Fragment is not supported");
+    return tag(props);
   }
 
   let element;
@@ -44,10 +79,7 @@ export function jsx(tag: string | JSX.Component | undefined, props: JSX.Componen
 
   applyAttributes(element, attributes);
 
-  const flatten = (child: JSX.Children): JSX.Node[] => (Array.isArray(child) ? child.flatMap(flatten) : [child]);
-  const childNodes = children != null ? flatten(children) : [];
-
-  for (const child of childNodes) {
+  for (const child of toChildArray(children)) {
     if (child != null && typeof child !== "boolean") {
       element.append(child as never);
     }
@@ -66,23 +98,32 @@ function applyAttributes(element: Element, attributes: Record<string, unknown>) 
     }
   }
   for (const [key, value] of Object.entries(attributes)) {
-    if (/^on/.test(key)) {
-      if (value != null) {
-        const type = key.substring(2).toLowerCase();
-        element.addEventListener(type, value as never);
-        onDispose(() => element.removeEventListener(type, value as never));
-      }
-    } else if (typeof value === "boolean") {
-      if (value) {
-        element.setAttribute(key, key);
-      } else {
-        element.removeAttribute(key);
-      }
-    } else if (value != null) {
-      element.setAttribute(key, value as never);
+    applyAttribute(element, key, value);
+  }
+}
+
+function applyAttribute(element: Element, key: string, value: unknown) {
+  if (/^on/.test(key)) {
+    if (typeof value === "function") {
+      const type = key.substring(2).toLowerCase();
+      element.addEventListener(type, value as never);
+      onDispose(() => element.removeEventListener(type, value as never));
+    }
+  } else if (isSignal(value)) {
+    effect(() => {
+      console.log("signal %s = %o", key, value());
+      applyAttribute(element, key, value());
+    });
+  } else if (typeof value === "boolean") {
+    if (value) {
+      element.setAttribute(key, key);
     } else {
       element.removeAttribute(key);
     }
+  } else if (value != null) {
+    element.setAttribute(key, value as never);
+  } else {
+    element.removeAttribute(key);
   }
 }
 
@@ -114,3 +155,43 @@ export const svgTagNames = [
   "textPath",
   "title",
 ];
+
+const fragmentRegister = new WeakMap<DocumentFragment, ChildNode[]>();
+
+interface FragmentProps {
+  children: JSX.Children;
+}
+
+export const Fragment = Object.assign(
+  function Fragment({ children }: FragmentProps) {
+    const element = document.createDocumentFragment();
+
+    for (const child of toChildArray(children)) {
+      if (child != null && typeof child !== "boolean") {
+        element.append(child as never);
+      }
+    }
+
+    if (element.childNodes.length === 0) {
+      element.append(document.createComment("fragment"));
+    }
+
+    fragmentRegister.set(element, Array.from(element.childNodes));
+
+    return element;
+  },
+  {
+    replace(fragment: DocumentFragment, next: DocumentFragment) {
+      const list = fragmentRegister.get(fragment);
+      if (list == null || list.length === 0) {
+        throw new Error("Given fragment does not exist or is empty.");
+      }
+
+      for (let i = 1; i < list.length; i++) {
+        list[i].remove();
+      }
+
+      list[0].replaceWith(next);
+    },
+  },
+);

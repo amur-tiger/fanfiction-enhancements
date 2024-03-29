@@ -1,10 +1,10 @@
+import render from "@jsx/render";
 import { getStory, type StoryData } from "../../api/story";
 import type { Chapter } from "ffn-parser";
 import { createSignal } from "../../signal/signal";
 import getChapterRead from "../../api/chapter-read";
 import ChapterListEntry from "./ChapterListEntry";
 import "./ChapterList.css";
-import render from "@jsx/render";
 
 function hiddenChapterMapper(story: StoryData, isRead: (chapter: Chapter) => boolean, onShow: () => void) {
   return (chapter: Chapter, idx: number, chapters: Chapter[]) => {
@@ -43,7 +43,7 @@ function hiddenChapterMapper(story: StoryData, isRead: (chapter: Chapter) => boo
 
         return (
           <li class="ffe-cl-chapter ffe-cl-collapsed">
-            <a onclick={onShow}>
+            <a onClick={onShow}>
               Show {count - 2} hidden chapter{count !== 3 && "s"}
             </a>
           </li>

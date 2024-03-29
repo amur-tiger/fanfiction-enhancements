@@ -175,7 +175,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
         {story.published && (
           <span class="ffe-sc-footer-info">
             <strong>Published:&nbsp;</strong>
-            <time datetime={toDate(story.published).toISOString()}>
+            <time dateTime={toDate(story.published).toISOString()}>
               {toDate(story.published).toLocaleDateString("en")}
             </time>
           </span>
@@ -184,7 +184,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
         {story.updated && (
           <span class="ffe-sc-footer-info">
             <strong>Updated:&nbsp;</strong>
-            <time datetime={toDate(story.updated).toISOString()}>{toDate(story.updated).toLocaleDateString("en")}</time>
+            <time dateTime={toDate(story.updated).toISOString()}>{toDate(story.updated).toLocaleDateString("en")}</time>
           </span>
         )}
       </div>
