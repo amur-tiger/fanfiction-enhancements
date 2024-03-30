@@ -1,6 +1,6 @@
 # FanFiction Enhancements
 
-## unreleased
+## 0.8.2
 
 * Fixed: Added automatic re-authentication for sync with Google
 * Fixed: Download progress not showing
