@@ -9,6 +9,10 @@ a:visited {
   color: var(--ffe-on-panel-color);
 }
 
+.caret {
+  border-top-color: currentColor;
+}
+
 html ul.topnav li a {
   color: var(--ffe-on-paper-color);
 }
@@ -27,6 +31,24 @@ body,
 
 .btn {
   color: var(--ffe-on-button-color);
+  background-color: var(--ffe-button-background-color);
+  background-image: var(--ffe-button-background);
+  box-shadow: var(--ffe-button-inset-shadow);
+
+  &:not(:disabled):not(.disabled):hover {
+    color: var(--ffe-on-button-color);
+    background-color: var(--ffe-button-hover-color);
+  }
+
+  [data-theme="dark"] & {
+    border: none;
+    text-shadow: none;
+  }
+}
+
+[data-theme="dark"] .btn-group > .btn + .btn {
+  margin-left: 0;
+  border-left: 1px solid var(--ffe-divider-color);
 }
 
 #content_parent {
@@ -41,4 +63,8 @@ body,
 
 #content_wrapper_inner {
   border-color: var(--ffe-divider-color);
+}
+
+#p_footer a {
+  color: var(--ffe-on-panel-link-color);
 }

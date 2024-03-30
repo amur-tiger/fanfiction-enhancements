@@ -12,7 +12,7 @@ export interface ButtonProps {
 
 export default function Button({ class: className, title, disabled, onClick, children }: ButtonProps) {
   return (
-    <button class={clsx("btn", { disabled }, className)} title={title} onClick={onClick}>
+    <button class={clsx("btn", { disabled }, className)} disabled={disabled} title={title} onClick={onClick}>
       {children}
     </button>
   );

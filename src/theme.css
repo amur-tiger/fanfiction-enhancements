@@ -1,24 +1,79 @@
 :root {
-  --ffe-primary-color: #333399;
-  --ffe-on-primary-color: #fff;
-  --ffe-alert-color: #60cf23;
-  --ffe-favorite-color: #ffb400;
-  --ffe-language-tag-color: #a151bd;
-  --ffe-on-language-tag-color: #fff;
-  --ffe-universe-tag-color: #44b7b7;
-  --ffe-on-universe-tag-color: #fff;
-  --ffe-genre-tag-color: #4f91d6;
-  --ffe-on-genre-tag-color: #fff;
-  --ffe-character-tag-color: #23b974;
-  --ffe-on-character-tag-color: #fff;
-  --ffe-incomplete-tag-color: #f7a616;
-  --ffe-on-incomplete-tag-color: #fff;
-  --ffe-complete-tag-color: #63bd40;
-  --ffe-on-complete-tag-color: #fff;
+  --ffe-primary-color-lightness: 39.1%;
+  --ffe-primary-color-chroma: 0.162;
+  --ffe-primary-color-hue: 275.91;
+  --ffe-primary-color: oklch(var(--ffe-primary-color-lightness) var(--ffe-primary-color-chroma) var(--ffe-primary-color-hue));
+  --ffe-on-primary-color: oklch(100% 0 0);
+
+  --ffe-alert-color-lightness: 75.93%;
+  --ffe-alert-color-chroma: 0.221;
+  --ffe-alert-color-hue: 137.66;
+  --ffe-alert-color: oklch(var(--ffe-alert-color-lightness) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
+
+  --ffe-favorite-color-lightness: 81.97%;
+  --ffe-favorite-color-chroma: 0.1706020418716201;
+  --ffe-favorite-color-hue: 78.46575923690708;
+  --ffe-favorite-color: oklch(var(--ffe-favorite-color-lightness) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
+
+  --ffe-language-tag-color-lightness: 57.67%;
+  --ffe-language-tag-color-chroma: 0.175;
+  --ffe-language-tag-color-hue: 316.51;
+  --ffe-language-tag-color: oklch(var(--ffe-language-tag-color-lightness) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
+  --ffe-on-language-tag-color: oklch(100% 0 0);
+
+  --ffe-universe-tag-color-lightness: 71.57%;
+  --ffe-universe-tag-color-chroma: 0.102;
+  --ffe-universe-tag-color-hue: 195.12;
+  --ffe-universe-tag-color: oklch(var(--ffe-universe-tag-color-lightness) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
+  --ffe-on-universe-tag-color: oklch(100% 0 0);
+
+  --ffe-genre-tag-color-lightness: 64.37%;
+  --ffe-genre-tag-color-chroma: 0.124;
+  --ffe-genre-tag-color-hue: 251.25;
+  --ffe-genre-tag-color: oklch(var(--ffe-genre-tag-color-lightness) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
+  --ffe-on-genre-tag-color: oklch(100% 0 0);
+
+  --ffe-character-tag-color-lightness: 69.51%;
+  --ffe-character-tag-color-chroma: 0.157;
+  --ffe-character-tag-color-hue: 156.89;
+  --ffe-character-tag-color: oklch(var(--ffe-character-tag-color-lightness) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
+  --ffe-on-character-tag-color: oklch(100% 0 0);
+
+  --ffe-incomplete-tag-color-lightness: 78.55%;
+  --ffe-incomplete-tag-color-chroma: 0.163;
+  --ffe-incomplete-tag-color-hue: 73.2;
+  --ffe-incomplete-tag-color: oklch(var(--ffe-incomplete-tag-color-lightness) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
+  --ffe-on-incomplete-tag-color: oklch(100% 0 0);
+
+  --ffe-complete-tag-color-lightness: 71.67%;
+  --ffe-complete-tag-color-chroma: 0.183;
+  --ffe-complete-tag-color-hue: 138.2;
+  --ffe-complete-tag-color: oklch(var(--ffe-complete-tag-color-lightness) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+  --ffe-on-complete-tag-color: oklch(100% 0 0);
+
+  --ffe-rating-k-color-lightness: 78.32%;
+  --ffe-rating-k-color-chroma: 0.172;
+  --ffe-rating-k-color-hue: 131.18;
+  --ffe-rating-k-color: oklch(var(--ffe-rating-k-color-lightness) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
+
+  --ffe-rating-t-color-lightness: 88.88%;
+  --ffe-rating-t-color-chroma: 0.1827405123650646;
+  --ffe-rating-t-color-hue: 95.76038031927554;
+  --ffe-rating-t-color: oklch(var(--ffe-rating-t-color-lightness) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
+
+  --ffe-rating-m-color-lightness: 54.81%;
+  --ffe-rating-m-color-chroma: 0.17;
+  --ffe-rating-m-color-hue: 29.63;
+  --ffe-rating-m-color: oklch(var(--ffe-rating-m-color-lightness) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
 
   --ffe-background-color: #e4e3d5;
   --ffe-panel-color: #f6f7ee;
   --ffe-paper-color: #fff;
+
+  --ffe-button-background: linear-gradient(to bottom, #fff, #e6e6e6);
+  --ffe-button-background-color: #e6e6e6;
+  --ffe-button-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .05);
+  --ffe-button-hover-color: #e6e6e6;
 
   --ffe-divider-color: #cdcdcd;
   --ffe-weak-divider-color: rgba(0, 0, 0, 0.15);
@@ -29,17 +84,38 @@
   --ffe-on-button-color: #555;
   --ffe-on-button-color-faint: #999;
   --ffe-link-color: #0f37a0;
+  --ffe-on-panel-link-color: #0f37a0;
 }
 
 html[data-theme="dark"] {
-  --ffe-background-color: #666666;
+  --ffe-alert-color: oklch(calc(var(--ffe-alert-color-lightness) * 0.9) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
+  --ffe-favorite-color: oklch(calc(var(--ffe-favorite-color-lightness) * 0.9) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
+  --ffe-language-tag-color: oklch(calc(var(--ffe-language-tag-color-lightness) * 0.5) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
+  --ffe-universe-tag-color: oklch(calc(var(--ffe-universe-tag-color-lightness) * 0.5) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
+  --ffe-genre-tag-color: oklch(calc(var(--ffe-genre-tag-color-lightness) * 0.5) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
+  --ffe-character-tag-color: oklch(calc(var(--ffe-character-tag-color-lightness) * 0.5) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
+  --ffe-incomplete-tag-color: oklch(calc(var(--ffe-incomplete-tag-color-lightness) * 0.7) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
+  --ffe-complete-tag-color: oklch(calc(var(--ffe-complete-tag-color-lightness) * 0.7) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+
+  --ffe-rating-k-color: oklch(calc(var(--ffe-rating-k-color-lightness) * 0.7) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
+  --ffe-rating-t-color: oklch(calc(var(--ffe-rating-t-color-lightness) * 0.7) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
+  --ffe-rating-m-color: oklch(calc(var(--ffe-rating-m-color-lightness) * 0.7) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
+
+  --ffe-background-color: #111;
   --ffe-panel-color: #515151;
   --ffe-paper-color: #333333;
+
+  --ffe-button-background: linear-gradient(to bottom, #888, #5d5d5d);
+  --ffe-button-background-color: #5d5d5d;
+  --ffe-button-inset-shadow: none;
+  --ffe-button-hover-color: #5d5d5d;
 
   --ffe-divider-color: #000;
   --ffe-weak-divider-color: rgba(255, 255, 255, 0.15);
 
   --ffe-on-panel-color: #fff;
   --ffe-on-paper-color: #ddd;
+  --ffe-on-button-color: #fff;
   --ffe-link-color: #7397f2;
+  --ffe-on-panel-link-color: #b9ceff;
 }

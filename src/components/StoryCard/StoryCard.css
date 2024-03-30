@@ -39,12 +39,12 @@
 
 .ffe-sc-alert:hover,
 .ffe-sc-alert.ffe-active {
-  color: var(--ffe-alert-color);
+  color: var(--ffe-alert-color) !important;
 }
 
 .ffe-sc-favorite:hover,
 .ffe-sc-favorite.ffe-active {
-  color: var(--ffe-favorite-color);
+  color: var(--ffe-favorite-color) !important;
 }
 
 .ffe-sc-follow-count {
