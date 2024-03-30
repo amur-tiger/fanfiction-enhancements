@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.8.0+23.d38754b
+// @version      0.8.1+24.0be3b64
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2024, Arne 'TigeR' Linck
@@ -846,15 +846,6 @@
     scope.addEventListener(Scope.EVENT_DISPOSE, dispose, { once: true });
   }
 
-  // src/jsx/render.ts
-  function render(render2) {
-    let element = scoped(render2, (next) => {
-      element.replaceWith(next);
-      element = next;
-    });
-    return element;
-  }
-
   // src/signal/signal.ts
   var ChangeEvent = class extends Event {
     constructor(oldValue, newValue, isInternal = false) {
@@ -916,6 +907,9 @@
   }
   function isPromise(value) {
     return value != null && typeof value === "object" && "then" in value && typeof value.then === "function";
+  }
+  function isSignal(value) {
+    return value != null && typeof value === "function" && "set" in value && typeof value.set === "function" && "peek" in value && typeof value.peek === "function";
   }
 
   // src/signal/effect.ts
@@ -1055,13 +1049,17 @@
 `);
 
   // src/jsx/jsx-runtime.ts
+  function toChildArray(children) {
+    if (children == null) {
+      return [];
+    }
+    const flatten = (child) => Array.isArray(child) ? child.flatMap(flatten) : [child];
+    return flatten(children);
+  }
   function jsx(tag, props) {
     const { children, ...attributes } = props;
     if (typeof tag === "function") {
-      return render(() => tag(props));
-    }
-    if (tag == null) {
-      throw new Error("Fragment is not supported");
+      return tag(props);
     }
     let element;
     if ("xmlns" in attributes) {
@@ -1072,9 +1070,7 @@
       element = document.createElement(tag);
     }
     applyAttributes(element, attributes);
-    const flatten = (child) => Array.isArray(child) ? child.flatMap(flatten) : [child];
-    const childNodes = children != null ? flatten(children) : [];
-    for (const child of childNodes) {
+    for (const child of toChildArray(children)) {
       if (child != null && typeof child !== "boolean") {
         element.append(child);
       }
@@ -1089,23 +1085,31 @@
       }
     }
     for (const [key, value] of Object.entries(attributes)) {
-      if (/^on/.test(key)) {
-        if (value != null) {
-          const type = key.substring(2).toLowerCase();
-          element.addEventListener(type, value);
-          onDispose(() => element.removeEventListener(type, value));
-        }
-      } else if (typeof value === "boolean") {
-        if (value) {
-          element.setAttribute(key, key);
-        } else {
-          element.removeAttribute(key);
-        }
-      } else if (value != null) {
-        element.setAttribute(key, value);
+      applyAttribute(element, key, value);
+    }
+  }
+  function applyAttribute(element, key, value) {
+    if (/^on/.test(key)) {
+      if (typeof value === "function") {
+        const type = key.substring(2).toLowerCase();
+        element.addEventListener(type, value);
+        onDispose(() => element.removeEventListener(type, value));
+      }
+    } else if (isSignal(value)) {
+      effect(() => {
+        console.log("signal %s = %o", key, value());
+        applyAttribute(element, key, value());
+      });
+    } else if (typeof value === "boolean") {
+      if (value) {
+        element.setAttribute(key, key);
       } else {
         element.removeAttribute(key);
       }
+    } else if (value != null) {
+      element.setAttribute(key, value);
+    } else {
+      element.removeAttribute(key);
     }
   }
   var svgTagNames = [
@@ -1136,6 +1140,56 @@
     "textPath",
     "title"
   ];
+  var fragmentRegister = /* @__PURE__ */ new WeakMap();
+  var Fragment = Object.assign(
+    function Fragment2({ children }) {
+      const element = document.createDocumentFragment();
+      for (const child of toChildArray(children)) {
+        if (child != null && typeof child !== "boolean") {
+          element.append(child);
+        }
+      }
+      if (element.childNodes.length === 0) {
+        element.append(document.createComment("fragment"));
+      }
+      fragmentRegister.set(element, Array.from(element.childNodes));
+      return element;
+    },
+    {
+      replace(fragment, next) {
+        const list = fragmentRegister.get(fragment);
+        if (list == null || list.length === 0) {
+          throw new Error("Given fragment does not exist or is empty.");
+        }
+        for (let i = 1; i < list.length; i++) {
+          list[i].remove();
+        }
+        list[0].replaceWith(next);
+      }
+    }
+  );
+
+  // src/signal/compute.ts
+  function compute(callback) {
+    const initial = scoped(callback, (next) => signal.set(next));
+    const signal = createSignal(initial);
+    return signal;
+  }
+
+  // src/jsx/render.ts
+  function render(render2) {
+    let element = scoped(
+      () => Fragment({
+        children: render2()
+      }),
+      (next) => {
+        Fragment.replace(element, next);
+        element = next;
+      }
+    );
+    return element;
+  }
+  var render_default = render;
 
   // jsx:src/enhance/MenuBar.tsx
   var MenuBar = class {
@@ -1182,11 +1236,11 @@
         href: "/favorites/story.php"
       }), ref);
       const isAuthorized = getAuthorizedSignal();
-      parent.insertBefore(render(() => jsx("a", {
-        class: clsx_default("ffe-mb-icon icon-mpl2-sync", {
+      parent.insertBefore(jsx("a", {
+        class: compute(() => clsx_default("ffe-mb-icon icon-mpl2-sync", {
           "ffe-mb-checked": isAuthorized()
-        }),
-        title: isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive",
+        })),
+        title: compute(() => isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"),
         href: "#",
         onClick: async (event) => {
           event.preventDefault();
@@ -1198,7 +1252,7 @@
             await startSyncAuthorization();
           }
         }
-      })), ref);
+      }), ref);
       parent.insertBefore(jsx("span", {
         class: "ffe-mb-separator"
       }), ref);
@@ -1958,9 +2012,9 @@
   }) {
     const isRead = getChapterRead(storyId, chapter2.id);
     const words = getWordCount(storyId, chapter2.id);
-    return render(() => jsxs("li", {
+    return jsxs("li", {
       class: "ffe-cl-chapter",
-      children: [render(() => jsx(CheckBox, {
+      children: [render_default(() => jsx(CheckBox, {
         checked: isRead(),
         onChange: isRead.set
       })), jsx("span", {
@@ -1969,15 +2023,15 @@
           href: `/s/${storyId}/${chapter2.id}`,
           children: chapter2.title
         })
-      }), words() != null && render(() => jsxs("span", {
-        class: clsx_default("ffe-cl-words", {
+      }), render_default(() => words() != null && jsxs("span", {
+        class: compute(() => clsx_default("ffe-cl-words", {
           "ffe-cl-estimate": words()?.isEstimate
-        }),
-        children: [render(() => jsx("b", {
-          children: words()?.count.toLocaleString("en")
-        })), " words"]
+        })),
+        children: [jsx("b", {
+          children: render_default(() => words()?.count.toLocaleString("en"))
+        }), " words"]
       }))]
-    }));
+    });
   }
 
   // gm-css:src/components/ChapterList/ChapterList.css
@@ -2001,7 +2055,7 @@
 }
 
 .ffe-cl-chapter a {
-  color: var(--ffe-link-color);
+  color: var(--ffe-on-panel-link-color) !important;
 }
 
 .ffe-cl-words {
@@ -2061,7 +2115,7 @@
           return jsx("li", {
             class: "ffe-cl-chapter ffe-cl-collapsed",
             children: jsxs("a", {
-              onclick: onShow,
+              onClick: onShow,
               children: ["Show ", count - 2, " hidden chapter", count !== 3 && "s"]
             })
           });
@@ -2080,7 +2134,7 @@
     storyId
   }) {
     const isExtended = createSignal(false);
-    return render(() => {
+    return render_default(() => {
       const story = getStory(storyId)();
       if (!story) {
         return jsx("div", {
@@ -2088,18 +2142,18 @@
         });
       }
       const isReadMap = new Map(story.chapters?.map((chapter2) => [chapter2.id, getChapterRead(story.id, chapter2.id)]));
-      return render(() => jsx("div", {
+      return jsx("div", {
         class: "ffe-cl-container",
-        children: render(() => jsx("div", {
+        children: jsx("div", {
           class: "ffe-cl",
-          children: render(() => jsx("ol", {
-            children: isExtended() ? story.chapters?.map((chapter2) => jsx(ChapterListEntry, {
+          children: jsx("ol", {
+            children: render_default(() => isExtended() ? story.chapters?.map((chapter2) => jsx(ChapterListEntry, {
               storyId: story.id,
               chapter: chapter2
-            })) : story.chapters?.flatMap(hiddenChapterMapper(story, (chapter2) => isReadMap.get(chapter2.id)(), () => isExtended.set(true)))
-          }))
-        }))
-      }));
+            })) : story.chapters?.flatMap(hiddenChapterMapper(story, (chapter2) => isReadMap.get(chapter2.id)(), () => isExtended.set(true))))
+          })
+        })
+      });
     });
   }
 
@@ -2121,15 +2175,15 @@
     onClick,
     children
   }) {
-    return render(() => jsx("span", {
-      role: "button",
-      class: clsx_default("btn", {
+    return jsx("button", {
+      class: compute(() => clsx_default("btn", {
         disabled
-      }, className),
+      }, className)),
+      disabled,
       title: title2,
       onClick,
       children
-    }));
+    });
   }
 
   // gm-css:src/components/Rating/Rating.css
@@ -2137,7 +2191,7 @@
   background: gray;
   padding: 3px 5px;
   color: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--ffe-weak-divider-color);
   text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   margin-right: 5px;
@@ -2145,24 +2199,21 @@
 }
 
 .ffe-rating:hover {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+  border-bottom-color: transparent;
 }
 
 .ffe-rating-k,
 .ffe-rating-kp {
-  background: #78ac40;
-  box-shadow: 0 1px 0 #90ce4d inset;
+  background: var(--ffe-rating-k-color);
 }
 
 .ffe-rating-t,
 .ffe-rating-m {
-  background: #ffb400;
-  box-shadow: 0 1px 0 #ffd800 inset;
+  background: var(--ffe-rating-t-color);
 }
 
 .ffe-rating-ma {
-  background: #c03d2f;
-  box-shadow: 0 1px 0 #e64938 inset;
+  background: var(--ffe-rating-m-color);
 }
 `);
 
@@ -2192,14 +2243,14 @@
   function Rating({
     rating
   }) {
-    return render(() => jsx("a", {
+    return jsx("a", {
       href: "https://www.fictionratings.com/",
-      class: clsx_default("ffe-rating", ratings[rating ?? ""]?.class),
+      class: compute(() => clsx_default("ffe-rating", ratings[rating ?? ""]?.class)),
       title: ratings[rating ?? ""]?.title ?? "No Rating Available",
       rel: "noreferrer",
       target: "rating",
       children: rating && rating in ratings ? rating : "?"
-    }));
+    });
   }
 
   // src/api/links.ts
@@ -2592,12 +2643,12 @@ ${content}
 
 .ffe-sc-alert:hover,
 .ffe-sc-alert.ffe-active {
-  color: var(--ffe-alert-color);
+  color: var(--ffe-alert-color) !important;
 }
 
 .ffe-sc-favorite:hover,
 .ffe-sc-favorite.ffe-active {
-  color: var(--ffe-favorite-color);
+  color: var(--ffe-favorite-color) !important;
 }
 
 .ffe-sc-follow-count {
@@ -2721,11 +2772,13 @@ ${content}
 }
 
 .ffe-cp-circle-background {
+  fill: none;
   stroke: var(--ffe-on-button-color-faint);
 }
 
 .ffe-cp-circle-foreground {
   transform: rotate(-90deg);
+  fill: none;
   stroke: var(--ffe-primary-color);
 }
 `);
@@ -2752,17 +2805,15 @@ ${content}
           cx: size / 2,
           cy: size / 2,
           r: (size - strokeWidth) / 2,
-          fill: "none",
           "stroke-width": strokeWidth
         }), jsx("circle", {
           class: "ffe-cp-circle-foreground",
           cx: size / 2,
           cy: size / 2,
           r: (size - strokeWidth) / 2,
-          fill: "none",
           "stroke-width": strokeWidth,
-          "transform-origin": `${size / 2} ${size / 2}`,
-          "stroke-dasharray": `${dash} ${circumference - dash}`
+          "stroke-dasharray": `${dash} ${circumference - dash}`,
+          style: `transform-origin: ${size / 2} ${size / 2}`
         })]
       })]
     });
@@ -2801,9 +2852,9 @@ ${content}
         isDownloading.set(false);
       }
     };
-    const element = render(() => jsxs("div", {
+    const element = jsxs("div", {
       class: "ffe-sc",
-      children: [render(() => jsxs("div", {
+      children: [jsxs("div", {
         class: "ffe-sc-header",
         children: [jsx(Rating, {
           rating: story.rating
@@ -2818,27 +2869,27 @@ ${content}
           href: `/u/${story.author.id}`,
           class: "ffe-sc-author",
           children: story.author.name
-        }), render(() => jsxs("div", {
+        }), jsxs("div", {
           class: "ffe-sc-mark",
-          children: [render(() => jsxs(Button, {
+          children: [render_default(() => jsxs(Button, {
             onClick: handleDownloadClick,
             title: isDownloading() ? `Progress: ${Math.round((progress()?.progress ?? 0) * 100)}\u202F%` : "Download as ePub",
             class: "ffe-sc-download-button",
             disabled: isDownloading(),
-            children: [isDownloading() ? render(() => jsx(CircularProgress, {
+            children: [render_default(() => isDownloading() ? jsx(CircularProgress, {
               size: 20,
               progress: progress()?.progress
-            })) : jsx("span", {
+            }) : jsx("span", {
               class: "icon-arrow-down"
-            }), isDownloading() && render(() => jsxs("span", {
-              children: [Math.round((progress()?.progress ?? 0) * 100), "\u202F", "%"]
+            })), render_default(() => isDownloading() && jsxs("span", {
+              children: [render_default(() => Math.round((progress()?.progress ?? 0) * 100)), "\u202F", "%"]
             }))]
           })), jsx("a", {
             style: "display: none",
             class: "ffe-download-link"
-          }), render(() => jsxs("div", {
+          }), jsxs("div", {
             class: "btn-group",
-            children: [render(() => jsxs(Button, {
+            children: [render_default(() => jsxs(Button, {
               class: clsx_default("ffe-sc-alert", {
                 "ffe-active": hasAlert()
               }),
@@ -2847,11 +2898,11 @@ ${content}
                 alertOffset.set((po) => prev ? po - 1 : po + 1);
                 return !prev;
               }),
-              children: [jsx(bell_default, {}), render(() => jsx("span", {
+              children: [jsx(bell_default, {}), jsx("span", {
                 class: "ffe-sc-follow-count",
-                children: ((story.follows ?? 0) + alertOffset()).toLocaleString("en")
-              }))]
-            })), render(() => jsx(Button, {
+                children: render_default(() => ((story.follows ?? 0) + alertOffset()).toLocaleString("en"))
+              })]
+            })), render_default(() => jsx(Button, {
               class: clsx_default("ffe-sc-favorite icon-heart", {
                 "ffe-active": isFavorite()
               }),
@@ -2860,28 +2911,28 @@ ${content}
                 favoriteOffset.set((po) => prev ? po - 1 : po + 1);
                 return !prev;
               }),
-              children: render(() => jsx("span", {
+              children: jsx("span", {
                 class: "ffe-sc-follow-count",
-                children: ((story.favorites ?? 0) + favoriteOffset()).toLocaleString("en")
-              }))
+                children: render_default(() => ((story.favorites ?? 0) + favoriteOffset()).toLocaleString("en"))
+              })
             }))]
-          }))]
-        }))]
-      })), render(() => jsxs("div", {
+          })]
+        })]
+      }), jsxs("div", {
         class: "ffe-sc-tags",
         children: [story.language && jsx("span", {
           class: "ffe-sc-tag ffe-sc-tag-language",
           children: story.language
-        }), story.universes && story.universes.map((universe) => jsx("span", {
+        }), render_default(() => story.universes && story.universes.map((universe) => jsx("span", {
           class: "ffe-sc-tag ffe-sc-tag-universe",
           children: universe
-        })), story.genre && story.genre.map((genre) => jsx("span", {
+        }))), render_default(() => story.genre && story.genre.map((genre) => jsx("span", {
           class: "ffe-sc-tag ffe-sc-tag-genre",
           children: genre
-        })), story.characters && story.characters.length > 0 && story.characters.map((pairing) => pairing.length === 1 ? jsx("span", {
+        }))), render_default(() => story.characters && story.characters.length > 0 && story.characters.map((pairing) => pairing.length === 1 ? jsx("span", {
           class: "ffe-sc-tag ffe-sc-tag-character",
           children: pairing
-        }) : render(() => jsx("span", {
+        }) : jsx("span", {
           class: "ffe-sc-tag ffe-sc-tag-ship",
           children: pairing.map((character) => jsx("span", {
             class: "ffe-sc-tag-character",
@@ -2897,7 +2948,7 @@ ${content}
             children: ["Reviews:\xA0", story.reviews]
           })
         })]
-      })), story.imageUrl && jsx("div", {
+      }), story.imageUrl && jsx("div", {
         class: "ffe-sc-image",
         children: jsx("img", {
           src: story.imageUrl,
@@ -2906,38 +2957,38 @@ ${content}
       }), jsx("div", {
         class: "ffe-sc-description",
         children: story.description
-      }), render(() => jsxs("div", {
+      }), jsxs("div", {
         class: "ffe-sc-footer",
-        children: [story.words != null && render(() => jsxs("div", {
+        children: [story.words != null && jsxs("div", {
           class: "ffe-sc-footer-words",
-          children: [render(() => jsx("strong", {
+          children: [render_default(() => jsx("strong", {
             children: story.words.toLocaleString("en")
           })), " words"]
-        })), story.status === "Complete" ? jsx("span", {
+        }), story.status === "Complete" ? jsx("span", {
           class: "ffe-sc-footer-info ffe-sc-footer-complete",
           children: "Complete"
         }) : jsx("span", {
           class: "ffe-sc-footer-info ffe-sc-footer-incomplete",
           children: "Incomplete"
-        }), story.published && render(() => jsxs("span", {
+        }), story.published && jsxs("span", {
           class: "ffe-sc-footer-info",
           children: [jsx("strong", {
             children: "Published:\xA0"
-          }), render(() => jsx("time", {
-            datetime: toDate(story.published).toISOString(),
-            children: toDate(story.published).toLocaleDateString("en")
-          }))]
-        })), story.updated && render(() => jsxs("span", {
+          }), jsx("time", {
+            dateTime: compute(() => toDate(story.published).toISOString()),
+            children: render_default(() => toDate(story.published).toLocaleDateString("en"))
+          })]
+        }), story.updated && jsxs("span", {
           class: "ffe-sc-footer-info",
           children: [jsx("strong", {
             children: "Updated:\xA0"
-          }), render(() => jsx("time", {
-            datetime: toDate(story.updated).toISOString(),
-            children: toDate(story.updated).toLocaleDateString("en")
-          }))]
-        }))]
-      }))]
-    }));
+          }), jsx("time", {
+            dateTime: compute(() => toDate(story.updated).toISOString()),
+            children: render_default(() => toDate(story.updated).toLocaleDateString("en"))
+          })]
+        })]
+      })]
+    });
     return element;
   }
 
@@ -3547,26 +3598,81 @@ ${content}
 
   // gm-css:src/theme.css
   GM_addStyle(`:root {
-  --ffe-primary-color: #333399;
-  --ffe-on-primary-color: #fff;
-  --ffe-alert-color: #60cf23;
-  --ffe-favorite-color: #ffb400;
-  --ffe-language-tag-color: #a151bd;
-  --ffe-on-language-tag-color: #fff;
-  --ffe-universe-tag-color: #44b7b7;
-  --ffe-on-universe-tag-color: #fff;
-  --ffe-genre-tag-color: #4f91d6;
-  --ffe-on-genre-tag-color: #fff;
-  --ffe-character-tag-color: #23b974;
-  --ffe-on-character-tag-color: #fff;
-  --ffe-incomplete-tag-color: #f7a616;
-  --ffe-on-incomplete-tag-color: #fff;
-  --ffe-complete-tag-color: #63bd40;
-  --ffe-on-complete-tag-color: #fff;
+  --ffe-primary-color-lightness: 39.1%;
+  --ffe-primary-color-chroma: 0.162;
+  --ffe-primary-color-hue: 275.91;
+  --ffe-primary-color: oklch(var(--ffe-primary-color-lightness) var(--ffe-primary-color-chroma) var(--ffe-primary-color-hue));
+  --ffe-on-primary-color: oklch(100% 0 0);
+
+  --ffe-alert-color-lightness: 75.93%;
+  --ffe-alert-color-chroma: 0.221;
+  --ffe-alert-color-hue: 137.66;
+  --ffe-alert-color: oklch(var(--ffe-alert-color-lightness) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
+
+  --ffe-favorite-color-lightness: 81.97%;
+  --ffe-favorite-color-chroma: 0.1706020418716201;
+  --ffe-favorite-color-hue: 78.46575923690708;
+  --ffe-favorite-color: oklch(var(--ffe-favorite-color-lightness) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
+
+  --ffe-language-tag-color-lightness: 57.67%;
+  --ffe-language-tag-color-chroma: 0.175;
+  --ffe-language-tag-color-hue: 316.51;
+  --ffe-language-tag-color: oklch(var(--ffe-language-tag-color-lightness) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
+  --ffe-on-language-tag-color: oklch(100% 0 0);
+
+  --ffe-universe-tag-color-lightness: 71.57%;
+  --ffe-universe-tag-color-chroma: 0.102;
+  --ffe-universe-tag-color-hue: 195.12;
+  --ffe-universe-tag-color: oklch(var(--ffe-universe-tag-color-lightness) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
+  --ffe-on-universe-tag-color: oklch(100% 0 0);
+
+  --ffe-genre-tag-color-lightness: 64.37%;
+  --ffe-genre-tag-color-chroma: 0.124;
+  --ffe-genre-tag-color-hue: 251.25;
+  --ffe-genre-tag-color: oklch(var(--ffe-genre-tag-color-lightness) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
+  --ffe-on-genre-tag-color: oklch(100% 0 0);
+
+  --ffe-character-tag-color-lightness: 69.51%;
+  --ffe-character-tag-color-chroma: 0.157;
+  --ffe-character-tag-color-hue: 156.89;
+  --ffe-character-tag-color: oklch(var(--ffe-character-tag-color-lightness) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
+  --ffe-on-character-tag-color: oklch(100% 0 0);
+
+  --ffe-incomplete-tag-color-lightness: 78.55%;
+  --ffe-incomplete-tag-color-chroma: 0.163;
+  --ffe-incomplete-tag-color-hue: 73.2;
+  --ffe-incomplete-tag-color: oklch(var(--ffe-incomplete-tag-color-lightness) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
+  --ffe-on-incomplete-tag-color: oklch(100% 0 0);
+
+  --ffe-complete-tag-color-lightness: 71.67%;
+  --ffe-complete-tag-color-chroma: 0.183;
+  --ffe-complete-tag-color-hue: 138.2;
+  --ffe-complete-tag-color: oklch(var(--ffe-complete-tag-color-lightness) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+  --ffe-on-complete-tag-color: oklch(100% 0 0);
+
+  --ffe-rating-k-color-lightness: 78.32%;
+  --ffe-rating-k-color-chroma: 0.172;
+  --ffe-rating-k-color-hue: 131.18;
+  --ffe-rating-k-color: oklch(var(--ffe-rating-k-color-lightness) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
+
+  --ffe-rating-t-color-lightness: 88.88%;
+  --ffe-rating-t-color-chroma: 0.1827405123650646;
+  --ffe-rating-t-color-hue: 95.76038031927554;
+  --ffe-rating-t-color: oklch(var(--ffe-rating-t-color-lightness) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
+
+  --ffe-rating-m-color-lightness: 54.81%;
+  --ffe-rating-m-color-chroma: 0.17;
+  --ffe-rating-m-color-hue: 29.63;
+  --ffe-rating-m-color: oklch(var(--ffe-rating-m-color-lightness) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
 
   --ffe-background-color: #e4e3d5;
   --ffe-panel-color: #f6f7ee;
   --ffe-paper-color: #fff;
+
+  --ffe-button-background: linear-gradient(to bottom, #fff, #e6e6e6);
+  --ffe-button-background-color: #e6e6e6;
+  --ffe-button-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .05);
+  --ffe-button-hover-color: #e6e6e6;
 
   --ffe-divider-color: #cdcdcd;
   --ffe-weak-divider-color: rgba(0, 0, 0, 0.15);
@@ -3577,19 +3683,40 @@ ${content}
   --ffe-on-button-color: #555;
   --ffe-on-button-color-faint: #999;
   --ffe-link-color: #0f37a0;
+  --ffe-on-panel-link-color: #0f37a0;
 }
 
 html[data-theme="dark"] {
-  --ffe-background-color: #666666;
+  --ffe-alert-color: oklch(calc(var(--ffe-alert-color-lightness) * 0.9) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
+  --ffe-favorite-color: oklch(calc(var(--ffe-favorite-color-lightness) * 0.9) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
+  --ffe-language-tag-color: oklch(calc(var(--ffe-language-tag-color-lightness) * 0.5) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
+  --ffe-universe-tag-color: oklch(calc(var(--ffe-universe-tag-color-lightness) * 0.5) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
+  --ffe-genre-tag-color: oklch(calc(var(--ffe-genre-tag-color-lightness) * 0.5) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
+  --ffe-character-tag-color: oklch(calc(var(--ffe-character-tag-color-lightness) * 0.5) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
+  --ffe-incomplete-tag-color: oklch(calc(var(--ffe-incomplete-tag-color-lightness) * 0.7) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
+  --ffe-complete-tag-color: oklch(calc(var(--ffe-complete-tag-color-lightness) * 0.7) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+
+  --ffe-rating-k-color: oklch(calc(var(--ffe-rating-k-color-lightness) * 0.7) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
+  --ffe-rating-t-color: oklch(calc(var(--ffe-rating-t-color-lightness) * 0.7) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
+  --ffe-rating-m-color: oklch(calc(var(--ffe-rating-m-color-lightness) * 0.7) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
+
+  --ffe-background-color: #111;
   --ffe-panel-color: #515151;
   --ffe-paper-color: #333333;
+
+  --ffe-button-background: linear-gradient(to bottom, #888, #5d5d5d);
+  --ffe-button-background-color: #5d5d5d;
+  --ffe-button-inset-shadow: none;
+  --ffe-button-hover-color: #5d5d5d;
 
   --ffe-divider-color: #000;
   --ffe-weak-divider-color: rgba(255, 255, 255, 0.15);
 
   --ffe-on-panel-color: #fff;
   --ffe-on-paper-color: #ddd;
+  --ffe-on-button-color: #fff;
   --ffe-link-color: #7397f2;
+  --ffe-on-panel-link-color: #b9ceff;
 }
 `);
 
@@ -3603,6 +3730,10 @@ a:visited {
 
 .zui a {
   color: var(--ffe-on-panel-color);
+}
+
+.caret {
+  border-top-color: currentColor;
 }
 
 html ul.topnav li a {
@@ -3623,6 +3754,24 @@ body,
 
 .btn {
   color: var(--ffe-on-button-color);
+  background-color: var(--ffe-button-background-color);
+  background-image: var(--ffe-button-background);
+  box-shadow: var(--ffe-button-inset-shadow);
+}
+
+.btn:not(:disabled):not(.disabled):hover {
+    color: var(--ffe-on-button-color);
+    background-color: var(--ffe-button-hover-color);
+  }
+
+[data-theme="dark"] .btn {
+    border: none;
+    text-shadow: none;
+  }
+
+[data-theme="dark"] .btn-group > .btn + .btn {
+  margin-left: 0;
+  border-left: 1px solid var(--ffe-divider-color);
 }
 
 #content_parent {
@@ -3637,6 +3786,10 @@ body,
 
 #content_wrapper_inner {
   border-color: var(--ffe-divider-color);
+}
+
+#p_footer a {
+  color: var(--ffe-on-panel-link-color);
 }
 `);
 
