@@ -1,6 +1,6 @@
-import { environment, Page } from "../util/environment";
-import type Enhancer from "./Enhancer";
-import ChapterListComponent from "../components/ChapterList/ChapterList";
+import { environment, Page } from "../../util/environment";
+import type Enhancer from "../Enhancer";
+import ChapterListComponent from "../../components/ChapterList/ChapterList";
 
 export default class ChapterList implements Enhancer {
   public canEnhance(type: Page): boolean {

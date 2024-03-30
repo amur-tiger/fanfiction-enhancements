@@ -1,5 +1,5 @@
-import type Enhancer from "./Enhancer";
-import { Page } from "../util/environment";
+import type Enhancer from "../Enhancer";
+import { Page } from "../../util/environment";
 
 export default class SaveListSettings implements Enhancer {
   public canEnhance(type: Page): boolean {

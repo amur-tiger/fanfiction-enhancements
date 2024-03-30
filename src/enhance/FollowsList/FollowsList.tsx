@@ -1,8 +1,8 @@
 import { parseFollows } from "ffn-parser";
-import type Enhancer from "./Enhancer";
-import { Page } from "../util/environment";
-import ChapterList from "../components/ChapterList/ChapterList";
-import StoryCard from "../components/StoryCard/StoryCard";
+import type Enhancer from "../Enhancer";
+import { Page } from "../../util/environment";
+import ChapterList from "../../components/ChapterList/ChapterList";
+import StoryCard from "../../components/StoryCard/StoryCard";
 import "./FollowsList.css";
 
 export default class FollowsList implements Enhancer {

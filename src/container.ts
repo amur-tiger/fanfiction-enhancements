@@ -1,10 +1,10 @@
-import MenuBar from "./enhance/MenuBar";
-import FollowsList from "./enhance/FollowsList";
-import StoryList from "./enhance/StoryList";
-import StoryProfile from "./enhance/StoryProfile";
-import ChapterList from "./enhance/ChapterList";
-import SaveListSettings from "./enhance/SaveListSettings";
-import StoryText from "./enhance/StoryText";
+import MenuBar from "./enhance/MenuBar/MenuBar";
+import FollowsList from "./enhance/FollowsList/FollowsList";
+import StoryList from "./enhance/StoryList/StoryList";
+import StoryProfile from "./enhance/StoryProfile/StoryProfile";
+import ChapterList from "./enhance/ChapterList/ChapterList";
+import SaveListSettings from "./enhance/SaveListSettings/SaveListSettings";
+import StoryText from "./enhance/StoryText/StoryText";
 import type Enhancer from "./enhance/Enhancer";
 
 export default class Container {

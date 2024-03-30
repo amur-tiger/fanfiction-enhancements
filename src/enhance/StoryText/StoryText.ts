@@ -1,8 +1,8 @@
 import { parseStory } from "ffn-parser";
-import type Enhancer from "./Enhancer";
-import { environment, Page } from "../util/environment";
-import getChapterRead from "../api/chapter-read";
-import { uploadMetadata } from "../sync/sync";
+import type Enhancer from "../Enhancer";
+import { environment, Page } from "../../util/environment";
+import getChapterRead from "../../api/chapter-read";
+import { uploadMetadata } from "../../sync/sync";
 import "./StoryText.css";
 
 export default class StoryText implements Enhancer {
