@@ -1,8 +1,12 @@
-import { environment } from "../util/environment";
-import type Enhancer from "./Enhancer";
-import ChapterListComponent from "../components/ChapterList/ChapterList";
+import { environment, Page } from "../../util/environment";
+import type Enhancer from "../Enhancer";
+import ChapterListComponent from "../../components/ChapterList/ChapterList";
 
 export default class ChapterList implements Enhancer {
+  public canEnhance(type: Page): boolean {
+    return type === Page.Story;
+  }
+
   public async enhance(): Promise<void> {
     const contentWrapper = document.getElementById("content_wrapper_inner");
     if (!contentWrapper || !environment.currentStoryId) {

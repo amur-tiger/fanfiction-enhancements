@@ -1,11 +1,15 @@
-import { environment } from "../util/environment";
+import { environment } from "../../util/environment";
 import clsx from "clsx";
-import type Enhancer from "./Enhancer";
-import { getAuthorizedSignal, removeSyncToken, startSyncAuthorization } from "../sync/auth";
-import BellIcon from "../assets/bell.svg";
+import type Enhancer from "../Enhancer";
+import { getAuthorizedSignal, removeSyncToken, startSyncAuthorization } from "../../sync/auth";
+import BellIcon from "../../assets/bell.svg";
 import "./MenuBar.css";
 
 export default class MenuBar implements Enhancer {
+  public canEnhance(): boolean {
+    return true;
+  }
+
   public async enhance(): Promise<void> {
     if (!environment.currentUserName) {
       return;
