@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## unreleased
+
+* Fixed: Added automatic re-authentication for sync with Google
+
 ## 0.8.1
 
 * Changed: Some improvements to dark mode ([#101](https://github.com/amur-tiger/fanfiction-enhancements/issues/101))

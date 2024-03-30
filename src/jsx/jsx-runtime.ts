@@ -111,7 +111,6 @@ function applyAttribute(element: Element, key: string, value: unknown) {
     }
   } else if (isSignal(value)) {
     effect(() => {
-      console.log("signal %s = %o", key, value());
       applyAttribute(element, key, value());
     });
   } else if (typeof value === "boolean") {
