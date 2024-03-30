@@ -4,6 +4,7 @@
 
 * Fixed: Added automatic re-authentication for sync with Google
 * Fixed: Download progress not showing
+* Fixed: Chapter list collapsed miscalculation
 
 ## 0.8.1
 
