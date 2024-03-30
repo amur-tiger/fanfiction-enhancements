@@ -54,9 +54,18 @@ export async function removeSyncToken() {
 
 /**
  * Redirects to Google to authenticate the userscript and grant access to settings.
+ * @param silent
  */
-export async function startSyncAuthorization(): Promise<void> {
-  const token = await new Promise<string>((resolve, reject) => {
+export async function startSyncAuthorization(silent = false): Promise<void> {
+  const scope = "https://www.googleapis.com/auth/drive.appdata";
+  const token = await (silent ? getTokenWithRequest(scope) : getTokenWithAuthWindow(scope));
+
+  console.info("Authenticated successfully.");
+  await GM.setValue(BEARER_TOKEN_KEY, token);
+}
+
+function getTokenWithAuthWindow(scope: string) {
+  return new Promise<string>((resolve, reject) => {
     unsafeWindow.ffeOAuth2Callback = (callbackToken) => {
       clearInterval(handle);
       if (!callbackToken) {
@@ -66,9 +75,8 @@ export async function startSyncAuthorization(): Promise<void> {
       }
     };
 
-    const scopes = "https://www.googleapis.com/auth/drive.appdata";
     const popup = xwindow(
-      `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
+      `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
       670,
       720,
     );
@@ -82,9 +90,45 @@ export async function startSyncAuthorization(): Promise<void> {
       }
     }, 1000);
   });
+}
 
-  console.info("Authenticated successfully.");
-  await GM.setValue(BEARER_TOKEN_KEY, token);
+async function getTokenWithRequest(scope: string) {
+  const response = await new Promise<GM.Response<unknown>>((resolve, reject) => {
+    GM.xmlHttpRequest({
+      method: "GET",
+      url: `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
+      responseType: "blob",
+
+      onabort() {
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+
+      onerror() {
+        reject(new TypeError("Network request failed"));
+      },
+
+      onload(response) {
+        resolve(response);
+      },
+
+      ontimeout() {
+        reject(new TypeError("Network request timed out"));
+      },
+    });
+  });
+
+  if (!response.finalUrl) {
+    throw new TypeError("Silent authentication was rejected.");
+  }
+
+  const finalUrl = new URL(response.finalUrl);
+  const args = new URLSearchParams(finalUrl.hash.substring(1));
+  const token = args.get("access_token");
+  if (!token) {
+    throw new TypeError("Silent authentication was rejected.");
+  }
+
+  return token;
 }
 
 if (environment.currentPageType === Page.OAuth2) {
