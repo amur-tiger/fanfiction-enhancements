@@ -1,4 +1,4 @@
-.storytext p {
+:global .storytext p {
   color: var(--ffe-on-paper-color);
   text-align: justify;
 }

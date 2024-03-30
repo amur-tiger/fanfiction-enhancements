@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## unreleased
+
+* Fixed: Dark mode support for popups and modals ([#109](https://github.com/amur-tiger/fanfiction-enhancements/issues/109))
+
 ## 0.8.2
 
 * Fixed: Added automatic re-authentication for sync with Google

@@ -6,7 +6,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "K" }) as HTMLAnchorElement;
 
     expect(element.href).toBe("https://www.fictionratings.com/");
-    expect(element.className).toContain("ffe-rating");
     expect(element.rel).toBe("noreferrer");
     expect(element.target).toBe("rating");
   });
@@ -15,7 +14,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "not a rating" }) as HTMLAnchorElement;
 
     expect(element.textContent).toBe("?");
-    expect(element.className).toBe("ffe-rating");
     expect(element.title).toBe("No Rating Available");
   });
 
@@ -23,7 +21,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "K" }) as HTMLAnchorElement;
 
     expect(element.textContent).toBe("K");
-    expect(element.className).toBe("ffe-rating ffe-rating-k");
     expect(element.title).toBe("General Audience (5+)");
   });
 
@@ -31,7 +28,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "K+" }) as HTMLAnchorElement;
 
     expect(element.textContent).toBe("K+");
-    expect(element.className).toBe("ffe-rating ffe-rating-kp");
     expect(element.title).toBe("Young Children (9+)");
   });
 
@@ -39,7 +35,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "T" }) as HTMLAnchorElement;
 
     expect(element.textContent).toBe("T");
-    expect(element.className).toBe("ffe-rating ffe-rating-t");
     expect(element.title).toBe("Teens (13+)");
   });
 
@@ -47,7 +42,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "M" }) as HTMLAnchorElement;
 
     expect(element.textContent).toBe("M");
-    expect(element.className).toBe("ffe-rating ffe-rating-m");
     expect(element.title).toBe("Teens (16+)");
   });
 
@@ -55,7 +49,6 @@ describe("Rating Component", () => {
     const element = Rating({ rating: "MA" }) as HTMLAnchorElement;
 
     expect(element.textContent).toBe("MA");
-    expect(element.className).toBe("ffe-rating ffe-rating-ma");
     expect(element.title).toBe("Mature (18+)");
   });
 });

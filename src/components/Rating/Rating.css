@@ -1,4 +1,4 @@
-.ffe-rating {
+.rating {
   background: gray;
   padding: 3px 5px;
   color: #fff !important;
@@ -7,22 +7,22 @@
   border-radius: 4px;
   margin-right: 5px;
   vertical-align: 2px;
+
+  &:hover {
+    border-bottom-color: transparent;
+  }
 }
 
-.ffe-rating:hover {
-  border-bottom-color: transparent;
-}
-
-.ffe-rating-k,
-.ffe-rating-kp {
+.rating-k,
+.rating-kp {
   background: var(--ffe-rating-k-color);
 }
 
-.ffe-rating-t,
-.ffe-rating-m {
+.rating-t,
+.rating-m {
   background: var(--ffe-rating-t-color);
 }
 
-.ffe-rating-ma {
+.rating-ma {
   background: var(--ffe-rating-m-color);
 }

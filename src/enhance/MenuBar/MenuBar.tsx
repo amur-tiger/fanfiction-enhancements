@@ -3,7 +3,7 @@ import clsx from "clsx";
 import type Enhancer from "../Enhancer";
 import { getAuthorizedSignal, removeSyncToken, startSyncAuthorization } from "../../sync/auth";
 import BellIcon from "../../assets/bell.svg";
-import "./MenuBar.css";
+import classes from "./MenuBar.css";
 
 export default class MenuBar implements Enhancer {
   public canEnhance(): boolean {
@@ -29,7 +29,7 @@ export default class MenuBar implements Enhancer {
 
     parent.insertBefore(
       <a
-        class="ffe-mb-theme ffe-mb-icon icon-tl-contrast"
+        class={clsx(classes.icon, "icon-tl-contrast")}
         title="Toggle Light/Dark Theme"
         href="#"
         onClick={(event: MouseEvent) => {
@@ -45,25 +45,25 @@ export default class MenuBar implements Enhancer {
       ref,
     );
 
-    parent.insertBefore(<span class="ffe-mb-separator" />, ref);
+    parent.insertBefore(<span class={classes.separator} />, ref);
 
     parent.insertBefore(
-      <a class="ffe-mb-alerts ffe-mb-icon ffe-mb-bell" title="Go to Story Alerts" href="/alert/story.php">
+      <a class={clsx(classes.icon, classes.bell)} title="Go to Story Alerts" href="/alert/story.php">
         <BellIcon />
       </a>,
       ref,
     );
 
     parent.insertBefore(
-      <a class="ffe-mb-favorites ffe-mb-icon icon-heart" title="Go to Story Favorites" href="/favorites/story.php" />,
+      <a class={clsx(classes.icon, "icon-heart")} title="Go to Story Favorites" href="/favorites/story.php" />,
       ref,
     );
 
     const isAuthorized = getAuthorizedSignal();
     parent.insertBefore(
       <a
-        class={clsx("ffe-mb-icon icon-mpl2-sync", {
-          "ffe-mb-checked": isAuthorized(),
+        class={clsx(classes.icon, "icon-mpl2-sync", {
+          [classes.checked]: isAuthorized(),
         })}
         title={isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"}
         href="#"
@@ -81,6 +81,6 @@ export default class MenuBar implements Enhancer {
       ref,
     );
 
-    parent.insertBefore(<span class="ffe-mb-separator" />, ref);
+    parent.insertBefore(<span class={classes.separator} />, ref);
   }
 }

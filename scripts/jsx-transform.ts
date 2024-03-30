@@ -126,7 +126,7 @@ function babelTransform(): PluginObj {
           hasJsx = true;
         } else if (isReactiveCall(p.node)) {
           p.skip();
-        } else {
+        } else if (p.node.arguments.length === 0) {
           p.stop();
           hasCall = true;
         }

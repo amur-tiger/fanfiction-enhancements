@@ -2,7 +2,7 @@ import { parseStoryList } from "ffn-parser";
 import type Enhancer from "../Enhancer";
 import { Page } from "../../util/environment";
 import StoryCard from "../../components/StoryCard/StoryCard";
-import "./StoryList.css";
+import classes from "./StoryList.css";
 
 export default class StoryList implements Enhancer {
   public canEnhance(type: Page): boolean {
@@ -21,15 +21,15 @@ export default class StoryList implements Enhancer {
     }
 
     const container = document.createElement("ul");
-    container.classList.add("ffe-story-list", "maxwidth");
+    container.classList.add(classes.container, "maxwidth");
     cw.parentElement?.insertBefore(container, null);
 
     for (const followedStory of list) {
       const item = document.createElement("li");
-      item.classList.add("ffe-story-item");
+      item.classList.add(classes.item);
       container.appendChild(item);
 
-      const card = <StoryCard storyId={followedStory.id} />;
+      const card = <StoryCard class={classes.storyCard} storyId={followedStory.id} />;
       item.appendChild(card);
     }
 

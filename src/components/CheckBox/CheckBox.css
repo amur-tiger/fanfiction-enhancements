@@ -1,4 +1,4 @@
-.ffe-checkbox {
+.checkbox {
   align-items: center;
   display: flex;
   flex-flow: column;
@@ -6,33 +6,34 @@
   height: 2em;
   justify-content: center;
   margin-right: 18px;
+
+  label {
+    background-color: #bbb;
+    border-radius: 4px;
+    height: 16px;
+    width: 16px;
+
+    &:hover {
+      background-color: #888;
+    }
+  }
+
+  input:checked ~ label {
+    background-color: var(--ffe-link-color);
+
+    &:before {
+      color: white;
+      content: "✓";
+      display: block;
+      font-size: 1.2em;
+      margin-top: -3px;
+      padding-right: 2px;
+      text-align: right;
+    }
+  }
+
+  & input {
+    display: none;
+  }
 }
 
-.ffe-checkbox label {
-  background-color: #bbb;
-  border-radius: 4px;
-  height: 16px;
-  width: 16px;
-}
-
-.ffe-checkbox label:hover {
-  background-color: #888;
-}
-
-.ffe-checkbox input:checked ~ label {
-  background-color: var(--ffe-link-color);
-}
-
-.ffe-checkbox input:checked ~ label:before {
-  color: white;
-  content: "✓";
-  display: block;
-  font-size: 1.2em;
-  margin-top: -3px;
-  padding-right: 2px;
-  text-align: right;
-}
-
-.ffe-checkbox input {
-  display: none;
-}
