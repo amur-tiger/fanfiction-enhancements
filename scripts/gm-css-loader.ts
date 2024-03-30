@@ -4,6 +4,7 @@ import type { Plugin } from "esbuild";
 import postcss from "postcss";
 import autoprefixer from "autoprefixer";
 import postcssNested from "postcss-nested";
+import postcssModules from "postcss-modules";
 
 export default function gmCssLoader(): Plugin {
   return {
@@ -28,13 +29,27 @@ export default function gmCssLoader(): Plugin {
           };
         }
 
-        const transformed = await postcss([autoprefixer, postcssNested]).process(content, {
+        let names = {};
+        const transformed = await postcss([
+          postcssModules({
+            localsConvention: "dashesOnly",
+            generateScopedName: "ffe-[local]_[hash:base64:5]",
+            getJSON(cssFileName, json, outputFileName) {
+              names = json;
+            },
+          }),
+          autoprefixer,
+          postcssNested,
+        ]).process(content, {
           map: false,
           from: args.path,
         });
 
         return {
-          contents: `GM_addStyle(\`${transformed.css.replace(/`/g, "\\`")}\`)`,
+          contents: `
+            GM_addStyle(\`${transformed.css.replace(/`/g, "\\`")}\`);
+            export default ${JSON.stringify(names)};
+          `,
           loader: "js",
         };
       });

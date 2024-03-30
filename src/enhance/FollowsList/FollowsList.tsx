@@ -3,7 +3,7 @@ import type Enhancer from "../Enhancer";
 import { Page } from "../../util/environment";
 import ChapterList from "../../components/ChapterList/ChapterList";
 import StoryCard from "../../components/StoryCard/StoryCard";
-import "./FollowsList.css";
+import classes from "./FollowsList.css";
 
 export default class FollowsList implements Enhancer {
   public canEnhance(type: Page): boolean {
@@ -16,8 +16,7 @@ export default class FollowsList implements Enhancer {
       return;
     }
 
-    const container = document.createElement("ul");
-    container.classList.add("ffe-follows-list");
+    const container = <ul class={classes.list} />;
 
     const table = document.getElementById("gui_table1i")?.parentElement;
     if (!table) {
@@ -27,14 +26,13 @@ export default class FollowsList implements Enhancer {
     table.parentElement?.insertBefore(container, table);
 
     for (const followedStory of list) {
-      const item = document.createElement("li");
-      item.classList.add("ffe-follows-item");
+      const item = <li class={classes.item} />;
       container.appendChild(item);
 
-      const card = <StoryCard storyId={followedStory.id} />;
+      const card = <StoryCard class={classes.storyCard} storyId={followedStory.id} />;
       item.appendChild(card);
 
-      const chapterList = <ChapterList storyId={followedStory.id} />;
+      const chapterList = <ChapterList class={classes.chapterList} storyId={followedStory.id} />;
       item.appendChild(chapterList);
     }
 

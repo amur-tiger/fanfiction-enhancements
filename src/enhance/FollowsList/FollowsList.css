@@ -1,13 +1,13 @@
-.ffe-follows-list {
+.list {
   list-style: none;
   margin: 0;
 }
 
-.ffe-follows-item {
+.item {
   margin-bottom: 8px;
 }
 
-.ffe-follows-item .ffe-sc {
+.story-card {
   border-left: 1px solid var(--ffe-divider-color);
   border-top: 1px solid var(--ffe-divider-color);
   border-top-left-radius: 4px;
@@ -15,7 +15,7 @@
   padding-top: 5px;
 }
 
-.ffe-follows-item .ffe-cl-container {
+.chapterList {
   border-left: 1px solid var(--ffe-divider-color);
   margin-bottom: 20px;
   padding: 10px 0 0 0;

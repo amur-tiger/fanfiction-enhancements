@@ -1,7 +1,6 @@
 import { environment, Page } from "../../util/environment";
 import type Enhancer from "../Enhancer";
 import StoryCard from "../../components/StoryCard/StoryCard";
-import "./StoryProfile.css";
 
 export default class StoryProfile implements Enhancer {
   public canEnhance(type: Page): boolean {

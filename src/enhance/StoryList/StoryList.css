@@ -1,17 +1,13 @@
-.ffe-story-list {
+.container {
   list-style: none;
   margin: 0 auto;
 }
 
-.ffe-story-item {
+.item {
   margin: 10px 0;
 }
 
-.ffe-story-item .ffe-sc {
+.story-card {
   border: 1px solid var(--ffe-divider-color);
   padding: 5px 0.5em;
-}
-
-.ffe-story-item .ffe-sc-footer {
-  margin-top: 1em;
 }

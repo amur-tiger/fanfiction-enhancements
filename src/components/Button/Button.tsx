@@ -1,5 +1,4 @@
 import clsx from "clsx";
-
 import "./Button.css";
 
 export interface ButtonProps {

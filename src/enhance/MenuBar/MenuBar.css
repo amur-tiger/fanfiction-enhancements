@@ -1,8 +1,8 @@
-.ffe-mb-separator:before {
+.separator:before {
   content: " | ";
 }
 
-.ffe-mb-checked {
+.checked {
   position: relative;
 
   &:after {
@@ -20,7 +20,7 @@
   }
 }
 
-.ffe-mb-icon {
+.icon {
   display: inline-block;
   line-height: 2em;
   margin-top: -0.5em;
@@ -33,7 +33,7 @@
   }
 }
 
-.ffe-mb-bell svg {
+.bell svg {
   fill: currentColor;
   height: 19px;
   transform: translateY(4px);
