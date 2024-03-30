@@ -30,6 +30,7 @@ const header = `// ==UserScript==
 // @grant        GM_removeValueChangeListener
 // @connect      self
 // @connect      fanfiction.net
+// @connect      accounts.google.com
 // ==/UserScript==
 `;
 

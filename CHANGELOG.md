@@ -1,5 +1,11 @@
 # FanFiction Enhancements
 
+## 0.8.2
+
+* Fixed: Added automatic re-authentication for sync with Google
+* Fixed: Download progress not showing
+* Fixed: Chapter list collapsed miscalculation
+
 ## 0.8.1
 
 * Changed: Some improvements to dark mode ([#101](https://github.com/amur-tiger/fanfiction-enhancements/issues/101))

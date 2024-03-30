@@ -1,5 +1,5 @@
 import type { drive_v3 } from "@googleapis/drive/build/v3";
-import { getSyncToken, removeSyncToken } from "./auth";
+import { getSyncToken, startSyncAuthorization } from "./auth";
 
 async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const token = await getSyncToken();
@@ -12,8 +12,23 @@ async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   });
 
   if (response.status === 401) {
-    console.warn("Sync token invalid, deleting it");
-    await removeSyncToken();
+    console.warn("Sync token invalid, re-authenticating");
+
+    try {
+      await startSyncAuthorization(true);
+    } catch (ex) {
+      console.warn("Silent re-authentication failed");
+      await startSyncAuthorization();
+    }
+
+    const nextToken = await getSyncToken();
+    return fetch(input, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        Authorization: `Bearer ${nextToken}`,
+      },
+    });
   }
 
   return response;
