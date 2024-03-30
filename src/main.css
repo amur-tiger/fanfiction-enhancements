@@ -14,6 +14,32 @@
     border-top-color: currentColor;
   }
 
+  .dropdown-menu {
+    color: var(--ffe-on-paper-color);
+    background-color: var(--ffe-paper-color);
+
+    & > li > a {
+      color: var(--ffe-on-paper-color);
+    }
+
+    .divider {
+      background-color: transparent;
+      border-color: var(--ffe-divider-color);
+    }
+  }
+
+  .modal {
+    color: var(--ffe-on-paper-color);
+    background-color: var(--ffe-paper-color);
+  }
+
+  .modal-footer {
+    color: var(--ffe-on-panel-color);
+    background-color: var(--ffe-panel-color);
+    border-top: 1px solid var(--ffe-divider-color);
+    box-shadow: none;
+  }
+
   html ul.topnav li a {
     color: var(--ffe-on-paper-color);
   }
