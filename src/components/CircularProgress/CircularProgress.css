@@ -4,10 +4,12 @@
 }
 
 .ffe-cp-circle-background {
+  fill: none;
   stroke: var(--ffe-on-button-color-faint);
 }
 
 .ffe-cp-circle-foreground {
   transform: rotate(-90deg);
+  fill: none;
   stroke: var(--ffe-primary-color);
 }
