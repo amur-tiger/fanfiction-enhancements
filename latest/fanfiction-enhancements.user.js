@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.8.1+24.0be3b64
+// @version      0.8.2+25.89e11a1
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2024, Arne 'TigeR' Linck
@@ -22,6 +22,7 @@
 // @grant        GM_removeValueChangeListener
 // @connect      self
 // @connect      fanfiction.net
+// @connect      accounts.google.com
 // ==/UserScript==
 
 "use strict";
@@ -956,8 +957,14 @@
   async function removeSyncToken() {
     await GM.deleteValue(BEARER_TOKEN_KEY);
   }
-  async function startSyncAuthorization() {
-    const token2 = await new Promise((resolve, reject) => {
+  async function startSyncAuthorization(silent = false) {
+    const scope = "https://www.googleapis.com/auth/drive.appdata";
+    const token2 = await (silent ? getTokenWithRequest(scope) : getTokenWithAuthWindow(scope));
+    console.info("Authenticated successfully.");
+    await GM.setValue(BEARER_TOKEN_KEY, token2);
+  }
+  function getTokenWithAuthWindow(scope) {
+    return new Promise((resolve, reject) => {
       unsafeWindow.ffeOAuth2Callback = (callbackToken) => {
         clearInterval(handle);
         if (!callbackToken) {
@@ -966,9 +973,8 @@
           resolve(callbackToken);
         }
       };
-      const scopes = "https://www.googleapis.com/auth/drive.appdata";
       const popup = xwindow(
-        `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
+        `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
         670,
         720
       );
@@ -979,8 +985,37 @@
         }
       }, 1e3);
     });
-    console.info("Authenticated successfully.");
-    await GM.setValue(BEARER_TOKEN_KEY, token2);
+  }
+  async function getTokenWithRequest(scope) {
+    const response = await new Promise((resolve, reject) => {
+      GM.xmlHttpRequest({
+        method: "GET",
+        url: `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
+        responseType: "blob",
+        onabort() {
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        onerror() {
+          reject(new TypeError("Network request failed"));
+        },
+        onload(response2) {
+          resolve(response2);
+        },
+        ontimeout() {
+          reject(new TypeError("Network request timed out"));
+        }
+      });
+    });
+    if (!response.finalUrl) {
+      throw new TypeError("Silent authentication was rejected.");
+    }
+    const finalUrl = new URL(response.finalUrl);
+    const args = new URLSearchParams(finalUrl.hash.substring(1));
+    const token2 = args.get("access_token");
+    if (!token2) {
+      throw new TypeError("Silent authentication was rejected.");
+    }
+    return token2;
   }
   if (environment.currentPageType === 6 /* OAuth2 */) {
     const target = document.body.firstElementChild;
@@ -1097,7 +1132,6 @@
       }
     } else if (isSignal(value)) {
       effect(() => {
-        console.log("signal %s = %o", key, value());
         applyAttribute(element, key, value());
       });
     } else if (typeof value === "boolean") {
@@ -2093,6 +2127,12 @@
             }
             count += 1;
           }
+          if (count <= 1) {
+            return jsx(ChapterListEntry, {
+              storyId: story.id,
+              chapter: chapter2
+            });
+          }
           return jsx("li", {
             class: "ffe-cl-chapter ffe-cl-collapsed",
             children: jsxs("a", {
@@ -2112,11 +2152,18 @@
             }
             count += 1;
           }
+          count -= 2;
+          if (count <= 1) {
+            return jsx(ChapterListEntry, {
+              storyId: story.id,
+              chapter: chapter2
+            });
+          }
           return jsx("li", {
             class: "ffe-cl-chapter ffe-cl-collapsed",
             children: jsxs("a", {
               onClick: onShow,
-              children: ["Show ", count - 2, " hidden chapter", count !== 3 && "s"]
+              children: ["Show ", count, " hidden chapter", count !== 1 && "s"]
             })
           });
         }
@@ -2812,8 +2859,8 @@ ${content}
           cy: size / 2,
           r: (size - strokeWidth) / 2,
           "stroke-width": strokeWidth,
-          "stroke-dasharray": `${dash} ${circumference - dash}`,
-          style: `transform-origin: ${size / 2} ${size / 2}`
+          "transform-origin": `${size / 2} ${size / 2}`,
+          "stroke-dasharray": `${dash} ${circumference - dash}`
         })]
       })]
     });
@@ -3422,8 +3469,21 @@ ${content}
       }
     });
     if (response.status === 401) {
-      console.warn("Sync token invalid, deleting it");
-      await removeSyncToken();
+      console.warn("Sync token invalid, re-authenticating");
+      try {
+        await startSyncAuthorization(true);
+      } catch (ex) {
+        console.warn("Silent re-authentication failed");
+        await startSyncAuthorization();
+      }
+      const nextToken = await getSyncToken();
+      return fetch(input, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          Authorization: `Bearer ${nextToken}`
+        }
+      });
     }
     return response;
   }
