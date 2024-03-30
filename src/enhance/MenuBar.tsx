@@ -1,6 +1,5 @@
 import { environment } from "../util/environment";
 import clsx from "clsx";
-import render from "@jsx/render";
 import type Enhancer from "./Enhancer";
 import { getAuthorizedSignal, removeSyncToken, startSyncAuthorization } from "../sync/auth";
 import BellIcon from "../assets/bell.svg";
@@ -58,25 +57,23 @@ export default class MenuBar implements Enhancer {
 
     const isAuthorized = getAuthorizedSignal();
     parent.insertBefore(
-      render(() => (
-        <a
-          class={clsx("ffe-mb-icon icon-mpl2-sync", {
-            "ffe-mb-checked": isAuthorized(),
-          })}
-          title={isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"}
-          href="#"
-          onClick={async (event: MouseEvent) => {
-            event.preventDefault();
-            if (isAuthorized()) {
-              if (confirm("Stop sync with Google Drive?")) {
-                await removeSyncToken();
-              }
-            } else {
-              await startSyncAuthorization();
+      <a
+        class={clsx("ffe-mb-icon icon-mpl2-sync", {
+          "ffe-mb-checked": isAuthorized(),
+        })}
+        title={isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"}
+        href="#"
+        onClick={async (event: MouseEvent) => {
+          event.preventDefault();
+          if (isAuthorized()) {
+            if (confirm("Stop sync with Google Drive?")) {
+              await removeSyncToken();
             }
-          }}
-        />
-      )),
+          } else {
+            await startSyncAuthorization();
+          }
+        }}
+      />,
       ref,
     );
 

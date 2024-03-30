@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## 0.8.1
+
+* Changed: Some improvements to dark mode ([#101](https://github.com/amur-tiger/fanfiction-enhancements/issues/101))
+
 ## 0.8.0
 
 * Changed: Move alert and favorite count into their respective buttons ([#77](https://github.com/amur-tiger/fanfiction-enhancements/issues/77))
