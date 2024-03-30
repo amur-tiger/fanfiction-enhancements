@@ -1,6 +1,11 @@
 import type Enhancer from "./Enhancer";
+import { Page } from "../util/environment";
 
 export default class SaveListSettings implements Enhancer {
+  public canEnhance(type: Page): boolean {
+    return type === Page.StoryList || type === Page.UniverseList || type === Page.CommunityList;
+  }
+
   private getSort(): Promise<string> {
     return GM.getValue("list-sort", "1") as Promise<string>;
   }

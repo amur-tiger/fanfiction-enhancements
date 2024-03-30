@@ -4,6 +4,8 @@ import StoryList from "./enhance/StoryList";
 import StoryProfile from "./enhance/StoryProfile";
 import ChapterList from "./enhance/ChapterList";
 import SaveListSettings from "./enhance/SaveListSettings";
+import StoryText from "./enhance/StoryText";
+import type Enhancer from "./enhance/Enhancer";
 
 export default class Container {
   private menuBar?: MenuBar;
@@ -17,6 +19,8 @@ export default class Container {
   private chapterList?: ChapterList;
 
   private saveListSettings?: SaveListSettings;
+
+  private storyText?: StoryText;
 
   public getMenuBar(): MenuBar {
     if (!this.menuBar) {
@@ -64,6 +68,26 @@ export default class Container {
     }
 
     return this.saveListSettings;
+  }
+
+  public getStoryText(): StoryText {
+    if (!this.storyText) {
+      this.storyText = new StoryText();
+    }
+    return this.storyText;
+  }
+
+  public getEnhancer(): Enhancer[] {
+    // order is important for now
+    return [
+      this.getMenuBar(),
+      this.getFollowsList(),
+      this.getStoryListEnhancer(),
+      this.getSaveListSettings(),
+      this.getStoryProfile(),
+      this.getChapterList(),
+      this.getStoryText(),
+    ];
   }
 
   public getContainer(): Container {

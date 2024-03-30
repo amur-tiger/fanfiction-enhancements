@@ -6,6 +6,10 @@ import BellIcon from "../assets/bell.svg";
 import "./MenuBar.css";
 
 export default class MenuBar implements Enhancer {
+  public canEnhance(): boolean {
+    return true;
+  }
+
   public async enhance(): Promise<void> {
     if (!environment.currentUserName) {
       return;

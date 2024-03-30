@@ -1,9 +1,14 @@
 import { parseStoryList } from "ffn-parser";
 import type Enhancer from "./Enhancer";
+import { Page } from "../util/environment";
 import StoryCard from "../components/StoryCard/StoryCard";
 import "./StoryList.css";
 
 export default class StoryList implements Enhancer {
+  public canEnhance(type: Page): boolean {
+    return type === Page.StoryList;
+  }
+
   public async enhance(): Promise<void> {
     const list = await parseStoryList(document);
     if (!list) {
