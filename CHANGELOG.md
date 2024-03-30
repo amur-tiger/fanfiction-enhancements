@@ -3,6 +3,7 @@
 ## unreleased
 
 * Fixed: Added automatic re-authentication for sync with Google
+* Fixed: Download progress not showing
 
 ## 0.8.1
 

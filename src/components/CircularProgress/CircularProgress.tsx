@@ -29,8 +29,8 @@ export default function CircularProgress({ progress, size = 24 }: CircularProgre
           cy={size / 2}
           r={(size - strokeWidth) / 2}
           stroke-width={strokeWidth}
+          transform-origin={`${size / 2} ${size / 2}`}
           stroke-dasharray={`${dash} ${circumference - dash}`}
-          style={`transform-origin: ${size / 2} ${size / 2}`}
         />
       </svg>
     </span>
