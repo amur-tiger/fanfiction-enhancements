@@ -2,7 +2,7 @@
   background: gray;
   padding: 3px 5px;
   color: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--ffe-weak-divider-color);
   text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   margin-right: 5px;
@@ -10,22 +10,19 @@
 }
 
 .ffe-rating:hover {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+  border-bottom-color: transparent;
 }
 
 .ffe-rating-k,
 .ffe-rating-kp {
-  background: #78ac40;
-  box-shadow: 0 1px 0 #90ce4d inset;
+  background: var(--ffe-rating-k-color);
 }
 
 .ffe-rating-t,
 .ffe-rating-m {
-  background: #ffb400;
-  box-shadow: 0 1px 0 #ffd800 inset;
+  background: var(--ffe-rating-t-color);
 }
 
 .ffe-rating-ma {
-  background: #c03d2f;
-  box-shadow: 0 1px 0 #e64938 inset;
+  background: var(--ffe-rating-m-color);
 }

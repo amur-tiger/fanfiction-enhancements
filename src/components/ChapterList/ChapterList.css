@@ -18,7 +18,7 @@
 }
 
 .ffe-cl-chapter a {
-  color: var(--ffe-link-color);
+  color: var(--ffe-on-panel-link-color) !important;
 }
 
 .ffe-cl-words {
