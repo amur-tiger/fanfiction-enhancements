@@ -19,6 +19,10 @@ function hiddenChapterMapper(story: StoryData, isRead: (chapter: Chapter) => boo
           count += 1;
         }
 
+        if (count <= 1) {
+          return <ChapterListEntry storyId={story.id} chapter={chapter} />;
+        }
+
         return (
           <li class="ffe-cl-chapter ffe-cl-collapsed">
             <a onClick={onShow}>
@@ -41,10 +45,16 @@ function hiddenChapterMapper(story: StoryData, isRead: (chapter: Chapter) => boo
           count += 1;
         }
 
+        count -= 2;
+
+        if (count <= 1) {
+          return <ChapterListEntry storyId={story.id} chapter={chapter} />;
+        }
+
         return (
           <li class="ffe-cl-chapter ffe-cl-collapsed">
             <a onClick={onShow}>
-              Show {count - 2} hidden chapter{count !== 3 && "s"}
+              Show {count} hidden chapter{count !== 1 && "s"}
             </a>
           </li>
         );
