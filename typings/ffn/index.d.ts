@@ -103,12 +103,17 @@ interface FontasticCookie {
 declare let XCOOKIE: FontasticCookie;
 
 /**
- * Saves the XCOOKIE variable to the cookie "xcookie2", JSON-encoded. The cookie expires after 365 days.
+ * Reads the "xcookie2" cookie and decodes into the {@link XCOOKIE} variable.
  */
-declare function _fontastic_save(): void;
+declare function xcookie_read(): boolean;
 
 /**
- * Sets the theme to light or dark. Changes are saved using the _fontastic_save()-function.
+ * Saves the {@link XCOOKIE} variable to the cookie "xcookie2", JSON-encoded. The cookie expires after 365 days.
+ */
+declare function _fontastic_save(): true;
+
+/**
+ * Sets the theme to light or dark. Changes are saved using the {@link _fontastic_save}-function.
  * @param theme
  */
 declare function _fontastic_change_theme(theme: "light" | "dark"): void;

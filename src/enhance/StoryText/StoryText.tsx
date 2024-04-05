@@ -3,6 +3,7 @@ import type Enhancer from "../Enhancer";
 import { environment, Page } from "../../util/environment";
 import getChapterRead from "../../api/chapter-read";
 import { uploadMetadata } from "../../sync/sync";
+import StoryTextHeader from "../../components/StoryTextHeader/StoryTextHeader";
 import "./StoryText.css";
 
 export default class StoryText implements Enhancer {
@@ -26,6 +27,16 @@ export default class StoryText implements Enhancer {
 
     this.fixUserSelect(textContainer);
     await this.autoMarkRead();
+
+    const controls = document.querySelectorAll(".lc-wrapper")?.[1];
+    const chapterSelect = controls?.nextElementSibling;
+
+    if (controls && chapterSelect) {
+      const story = await parseStory();
+      const chapter = story?.chapters.find((chapter) => chapter.id === environment.currentChapterId);
+
+      controls.replaceWith(<StoryTextHeader title={chapter?.title}>{chapterSelect}</StoryTextHeader>);
+    }
   }
 
   private async autoMarkRead() {
