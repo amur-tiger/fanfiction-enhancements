@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.8.2+25.89e11a1
+// @version      0.8.3+26.224ba42
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2024, Arne 'TigeR' Linck
@@ -678,76 +678,6 @@
     }
   });
 
-  // src/main.ts
-  var import_ffn_parser5 = __toESM(require_lib(), 1);
-
-  // src/util/environment.ts
-  function getPage(location) {
-    if (location.pathname.indexOf("/u/") === 0) {
-      return 1 /* User */;
-    }
-    if (location.pathname.indexOf("/alert/story.php") === 0) {
-      return 2 /* Alerts */;
-    }
-    if (location.pathname.indexOf("/favorites/story.php") === 0) {
-      return 3 /* Favorites */;
-    }
-    if (location.pathname.match(/^\/s\/\d+\/?$/i)) {
-      return 4 /* Story */;
-    }
-    if (location.pathname.indexOf("/s/") === 0) {
-      return 5 /* Chapter */;
-    }
-    if (location.pathname.indexOf("/ffe-oauth2-return") === 0) {
-      return 6 /* OAuth2 */;
-    }
-    if (location.pathname.match(/^\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/.+$/i) || location.pathname.match(/^\/[^/]+[-_]Crossovers\//i) || location.pathname.indexOf("/community/") === 0) {
-      return 7 /* StoryList */;
-    }
-    if (location.pathname.match(/^\/(crossovers\/)?(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/?$/i) || location.pathname.match(/^\/crossovers\/(.*?)\/(\d+)\/?$/i)) {
-      return 8 /* UniverseList */;
-    }
-    if (location.pathname.match(/^\/communities\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv|general)\/([\w\d]+)/i)) {
-      return 9 /* CommunityList */;
-    }
-    return 0 /* Other */;
-  }
-  var environment = {
-    currentUserId: typeof userid === "undefined" ? void 0 : userid,
-    currentUserName: typeof XUNAME === "undefined" || XUNAME === false ? void 0 : XUNAME,
-    currentStoryId: typeof storyid === "undefined" ? void 0 : storyid,
-    currentStoryTitle: typeof title === "undefined" ? void 0 : decodeURIComponent(title),
-    currentStoryTextId: typeof storytextid === "undefined" ? void 0 : storytextid,
-    currentChapterId: typeof chapter === "undefined" ? void 0 : chapter,
-    currentPageType: getPage(window.location),
-    validRatings: typeof array_censors === "undefined" ? [] : array_censors.slice(1),
-    validGenres: typeof array_genres === "undefined" ? [] : array_genres.slice(1),
-    validLanguages: typeof array_languages === "undefined" ? [] : array_languages.slice(1),
-    validStatus: typeof array_status === "undefined" ? [] : array_status.slice(1)
-  };
-
-  // node_modules/clsx/dist/clsx.mjs
-  function r(e) {
-    var t, f, n = "";
-    if ("string" == typeof e || "number" == typeof e)
-      n += e;
-    else if ("object" == typeof e)
-      if (Array.isArray(e)) {
-        var o = e.length;
-        for (t = 0; t < o; t++)
-          e[t] && (f = r(e[t])) && (n && (n += " "), n += f);
-      } else
-        for (f in e)
-          e[f] && (n && (n += " "), n += f);
-    return n;
-  }
-  function clsx() {
-    for (var e, t, f = 0, n = "", o = arguments.length; f < o; f++)
-      (e = arguments[f]) && (t = r(e)) && (n && (n += " "), n += t);
-    return n;
-  }
-  var clsx_default = clsx;
-
   // src/signal/scope.ts
   var _Scope = class _Scope extends EventTarget {
     constructor(callback, options) {
@@ -929,160 +859,6 @@
     });
   }
 
-  // src/sync/auth.ts
-  var BEARER_TOKEN_KEY = "ffe-drive-token";
-  var REDIRECT_URI = "https://www.fanfiction.net/ffe-oauth2-return";
-  var CLIENT_ID = "19948706217-jsn5u8hqi959m0q2b3s65qh2f3h6pcu4.apps.googleusercontent.com";
-  async function isSyncAuthorized() {
-    return !!await GM.getValue(BEARER_TOKEN_KEY);
-  }
-  function getAuthorizedSignal() {
-    const signal = createSignal(false);
-    GM.getValue(BEARER_TOKEN_KEY).then((value) => signal.set(!!value, { isInternal: true }));
-    effect(() => {
-      const token2 = GM_addValueChangeListener(BEARER_TOKEN_KEY, (name, oldValue, newValue) => {
-        signal.set(!!newValue, { isInternal: true });
-      });
-      return () => GM_removeValueChangeListener(token2);
-    });
-    return signal;
-  }
-  async function getSyncToken() {
-    const token2 = await GM.getValue(BEARER_TOKEN_KEY);
-    if (!token2 || typeof token2 !== "string") {
-      throw new Error("Not logged in");
-    }
-    return token2;
-  }
-  async function removeSyncToken() {
-    await GM.deleteValue(BEARER_TOKEN_KEY);
-  }
-  async function startSyncAuthorization(silent = false) {
-    const scope = "https://www.googleapis.com/auth/drive.appdata";
-    const token2 = await (silent ? getTokenWithRequest(scope) : getTokenWithAuthWindow(scope));
-    console.info("Authenticated successfully.");
-    await GM.setValue(BEARER_TOKEN_KEY, token2);
-  }
-  function getTokenWithAuthWindow(scope) {
-    return new Promise((resolve, reject) => {
-      unsafeWindow.ffeOAuth2Callback = (callbackToken) => {
-        clearInterval(handle);
-        if (!callbackToken) {
-          reject(new Error("No token received."));
-        } else {
-          resolve(callbackToken);
-        }
-      };
-      const popup = xwindow(
-        `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
-        670,
-        720
-      );
-      const handle = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(handle);
-          reject(new Error("Authorization aborted by user"));
-        }
-      }, 1e3);
-    });
-  }
-  async function getTokenWithRequest(scope) {
-    const response = await new Promise((resolve, reject) => {
-      GM.xmlHttpRequest({
-        method: "GET",
-        url: `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
-        responseType: "blob",
-        onabort() {
-          reject(new DOMException("Aborted", "AbortError"));
-        },
-        onerror() {
-          reject(new TypeError("Network request failed"));
-        },
-        onload(response2) {
-          resolve(response2);
-        },
-        ontimeout() {
-          reject(new TypeError("Network request timed out"));
-        }
-      });
-    });
-    if (!response.finalUrl) {
-      throw new TypeError("Silent authentication was rejected.");
-    }
-    const finalUrl = new URL(response.finalUrl);
-    const args = new URLSearchParams(finalUrl.hash.substring(1));
-    const token2 = args.get("access_token");
-    if (!token2) {
-      throw new TypeError("Silent authentication was rejected.");
-    }
-    return token2;
-  }
-  if (environment.currentPageType === 6 /* OAuth2 */) {
-    const target = document.body.firstElementChild;
-    if (target) {
-      target.innerHTML = "<h2>Received oAuth2 token</h2>This page should close momentarily.";
-    }
-    const token2 = /[?&#]access_token=([^&#]*)/i.exec(window.location.hash)?.[1];
-    window.opener.ffeOAuth2Callback(token2);
-    window.close();
-  }
-
-  // svg:src/assets/bell.svg
-  var bell_default = (() => {
-    const parser = new DOMParser();
-    return () => {
-      const doc = parser.parseFromString(`<?xml version="1.0" encoding="utf-8" ?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-</svg>
-`, "image/svg+xml");
-      return doc.documentElement;
-    };
-  })();
-
-  // gm-css:src/enhance/MenuBar.css
-  GM_addStyle(`.ffe-mb-separator:before {
-  content: " | ";
-}
-
-.ffe-mb-checked {
-  position: relative;
-}
-
-.ffe-mb-checked:after {
-    background: green;
-    border-radius: 50%;
-    bottom: 2px;
-    color: #fff;
-    content: "\u2713";
-    font-size: 9px;
-    height: 12px;
-    line-height: 12px;
-    position: absolute;
-    right: -2px;
-    width: 12px;
-  }
-
-.ffe-mb-icon {
-  display: inline-block;
-  line-height: 2em;
-  margin-top: -0.5em;
-  text-align: center;
-  width: 2em;
-}
-
-.ffe-mb-icon:hover {
-    border-bottom: 0;
-    color: orange !important;
-  }
-
-.ffe-mb-bell svg {
-  fill: currentColor;
-  height: 19px;
-  transform: translateY(4px);
-}
-`);
-
   // src/jsx/jsx-runtime.ts
   function toChildArray(children) {
     if (children == null) {
@@ -1225,8 +1001,233 @@
   }
   var render_default = render;
 
-  // jsx:src/enhance/MenuBar.tsx
+  // src/util/environment.ts
+  function getPage(location) {
+    if (location.pathname.indexOf("/u/") === 0) {
+      return 1 /* User */;
+    }
+    if (location.pathname.indexOf("/alert/story.php") === 0) {
+      return 2 /* Alerts */;
+    }
+    if (location.pathname.indexOf("/favorites/story.php") === 0) {
+      return 3 /* Favorites */;
+    }
+    if (location.pathname.match(/^\/s\/\d+\/?$/i)) {
+      return 4 /* Story */;
+    }
+    if (location.pathname.indexOf("/s/") === 0) {
+      return 5 /* Chapter */;
+    }
+    if (location.pathname.indexOf("/ffe-oauth2-return") === 0) {
+      return 6 /* OAuth2 */;
+    }
+    if (location.pathname.match(/^\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/.+$/i) || location.pathname.match(/^\/[^/]+[-_]Crossovers\//i) || location.pathname.indexOf("/community/") === 0) {
+      return 7 /* StoryList */;
+    }
+    if (location.pathname.match(/^\/(crossovers\/)?(?:anime|book|cartoon|comic|game|misc|play|movie|tv)\/?$/i) || location.pathname.match(/^\/crossovers\/(.*?)\/(\d+)\/?$/i)) {
+      return 8 /* UniverseList */;
+    }
+    if (location.pathname.match(/^\/communities\/(?:anime|book|cartoon|comic|game|misc|play|movie|tv|general)\/([\w\d]+)/i)) {
+      return 9 /* CommunityList */;
+    }
+    return 0 /* Other */;
+  }
+  var environment = {
+    currentUserId: typeof userid === "undefined" ? void 0 : userid,
+    currentUserName: typeof XUNAME === "undefined" || XUNAME === false ? void 0 : XUNAME,
+    currentStoryId: typeof storyid === "undefined" ? void 0 : storyid,
+    currentStoryTitle: typeof title === "undefined" ? void 0 : decodeURIComponent(title),
+    currentStoryTextId: typeof storytextid === "undefined" ? void 0 : storytextid,
+    currentChapterId: typeof chapter === "undefined" ? void 0 : chapter,
+    currentPageType: getPage(window.location),
+    validRatings: typeof array_censors === "undefined" ? [] : array_censors.slice(1),
+    validGenres: typeof array_genres === "undefined" ? [] : array_genres.slice(1),
+    validLanguages: typeof array_languages === "undefined" ? [] : array_languages.slice(1),
+    validStatus: typeof array_status === "undefined" ? [] : array_status.slice(1)
+  };
+
+  // node_modules/clsx/dist/clsx.mjs
+  function r(e) {
+    var t, f, n = "";
+    if ("string" == typeof e || "number" == typeof e)
+      n += e;
+    else if ("object" == typeof e)
+      if (Array.isArray(e)) {
+        var o = e.length;
+        for (t = 0; t < o; t++)
+          e[t] && (f = r(e[t])) && (n && (n += " "), n += f);
+      } else
+        for (f in e)
+          e[f] && (n && (n += " "), n += f);
+    return n;
+  }
+  function clsx() {
+    for (var e, t, f = 0, n = "", o = arguments.length; f < o; f++)
+      (e = arguments[f]) && (t = r(e)) && (n && (n += " "), n += t);
+    return n;
+  }
+  var clsx_default = clsx;
+
+  // src/sync/auth.ts
+  var BEARER_TOKEN_KEY = "ffe-drive-token";
+  var REDIRECT_URI = "https://www.fanfiction.net/ffe-oauth2-return";
+  var CLIENT_ID = "19948706217-jsn5u8hqi959m0q2b3s65qh2f3h6pcu4.apps.googleusercontent.com";
+  async function isSyncAuthorized() {
+    return !!await GM.getValue(BEARER_TOKEN_KEY);
+  }
+  function getAuthorizedSignal() {
+    const signal = createSignal(false);
+    GM.getValue(BEARER_TOKEN_KEY).then((value) => signal.set(!!value, { isInternal: true }));
+    effect(() => {
+      const token2 = GM_addValueChangeListener(BEARER_TOKEN_KEY, (name, oldValue, newValue) => {
+        signal.set(!!newValue, { isInternal: true });
+      });
+      return () => GM_removeValueChangeListener(token2);
+    });
+    return signal;
+  }
+  async function getSyncToken() {
+    const token2 = await GM.getValue(BEARER_TOKEN_KEY);
+    if (!token2 || typeof token2 !== "string") {
+      throw new Error("Not logged in");
+    }
+    return token2;
+  }
+  async function removeSyncToken() {
+    await GM.deleteValue(BEARER_TOKEN_KEY);
+  }
+  async function startSyncAuthorization(silent = false) {
+    const scope = "https://www.googleapis.com/auth/drive.appdata";
+    const token2 = await (silent ? getTokenWithRequest(scope) : getTokenWithAuthWindow(scope));
+    console.info("Authenticated successfully.");
+    await GM.setValue(BEARER_TOKEN_KEY, token2);
+  }
+  function getTokenWithAuthWindow(scope) {
+    return new Promise((resolve, reject) => {
+      unsafeWindow.ffeOAuth2Callback = (callbackToken) => {
+        clearInterval(handle);
+        if (!callbackToken) {
+          reject(new Error("No token received."));
+        } else {
+          resolve(callbackToken);
+        }
+      };
+      const popup = xwindow(
+        `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
+        670,
+        720
+      );
+      const handle = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(handle);
+          reject(new Error("Authorization aborted by user"));
+        }
+      }, 1e3);
+    });
+  }
+  async function getTokenWithRequest(scope) {
+    const response = await new Promise((resolve, reject) => {
+      GM.xmlHttpRequest({
+        method: "GET",
+        url: `https://accounts.google.com/o/oauth2/auth?scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&client_id=${encodeURIComponent(CLIENT_ID)}`,
+        responseType: "blob",
+        onabort() {
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        onerror() {
+          reject(new TypeError("Network request failed"));
+        },
+        onload(response2) {
+          resolve(response2);
+        },
+        ontimeout() {
+          reject(new TypeError("Network request timed out"));
+        }
+      });
+    });
+    if (!response.finalUrl) {
+      throw new TypeError("Silent authentication was rejected.");
+    }
+    const finalUrl = new URL(response.finalUrl);
+    const args = new URLSearchParams(finalUrl.hash.substring(1));
+    const token2 = args.get("access_token");
+    if (!token2) {
+      throw new TypeError("Silent authentication was rejected.");
+    }
+    return token2;
+  }
+  if (environment.currentPageType === 6 /* OAuth2 */) {
+    const target = document.body.firstElementChild;
+    if (target) {
+      target.innerHTML = "<h2>Received oAuth2 token</h2>This page should close momentarily.";
+    }
+    const token2 = /[?&#]access_token=([^&#]*)/i.exec(window.location.hash)?.[1];
+    window.opener.ffeOAuth2Callback(token2);
+    window.close();
+  }
+
+  // svg:src/assets/bell.svg
+  var bell_default = (() => {
+    const parser = new DOMParser();
+    return () => {
+      const doc = parser.parseFromString(`<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+</svg>
+`, "image/svg+xml");
+      return doc.documentElement;
+    };
+  })();
+
+  // gm-css:src/enhance/MenuBar/MenuBar.css
+  GM_addStyle(`.ffe-separator_SCyNm:before {
+  content: " | ";
+}
+
+.ffe-checked_At8n0 {
+  position: relative;
+}
+
+.ffe-checked_At8n0:after {
+    background: green;
+    border-radius: 50%;
+    bottom: 2px;
+    color: #fff;
+    content: "\u2713";
+    font-size: 9px;
+    height: 12px;
+    line-height: 12px;
+    position: absolute;
+    right: -2px;
+    width: 12px;
+  }
+
+.ffe-icon_jfbjp {
+  display: inline-block;
+  line-height: 2em;
+  margin-top: -0.5em;
+  text-align: center;
+  width: 2em;
+}
+
+.ffe-icon_jfbjp:hover {
+    border-bottom: 0;
+    color: orange !important;
+  }
+
+.ffe-bell_P5jTu svg {
+  fill: currentColor;
+  height: 19px;
+  transform: translateY(4px);
+}
+`);
+  var MenuBar_default = { "separator": "ffe-separator_SCyNm", "checked": "ffe-checked_At8n0", "icon": "ffe-icon_jfbjp", "bell": "ffe-bell_P5jTu" };
+
+  // jsx:src/enhance/MenuBar/MenuBar.tsx
   var MenuBar = class {
+    canEnhance() {
+      return true;
+    }
     async enhance() {
       if (!environment.currentUserName) {
         return;
@@ -1242,7 +1243,7 @@
         document.documentElement.dataset.theme = XCOOKIE.read_theme;
       });
       parent.insertBefore(jsx("a", {
-        class: "ffe-mb-theme ffe-mb-icon icon-tl-contrast",
+        class: clsx_default(MenuBar_default.icon, "icon-tl-contrast"),
         title: "Toggle Light/Dark Theme",
         href: "#",
         onClick: (event) => {
@@ -1256,23 +1257,23 @@
         }
       }), ref);
       parent.insertBefore(jsx("span", {
-        class: "ffe-mb-separator"
+        class: MenuBar_default.separator
       }), ref);
       parent.insertBefore(jsx("a", {
-        class: "ffe-mb-alerts ffe-mb-icon ffe-mb-bell",
+        class: clsx_default(MenuBar_default.icon, MenuBar_default.bell),
         title: "Go to Story Alerts",
         href: "/alert/story.php",
-        children: jsx(bell_default, {})
+        children: render_default(() => jsx(bell_default, {}))
       }), ref);
       parent.insertBefore(jsx("a", {
-        class: "ffe-mb-favorites ffe-mb-icon icon-heart",
+        class: clsx_default(MenuBar_default.icon, "icon-heart"),
         title: "Go to Story Favorites",
         href: "/favorites/story.php"
       }), ref);
       const isAuthorized = getAuthorizedSignal();
       parent.insertBefore(jsx("a", {
-        class: compute(() => clsx_default("ffe-mb-icon icon-mpl2-sync", {
-          "ffe-mb-checked": isAuthorized()
+        class: compute(() => clsx_default(MenuBar_default.icon, "icon-mpl2-sync", {
+          [MenuBar_default.checked]: isAuthorized()
         })),
         title: compute(() => isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"),
         href: "#",
@@ -1288,18 +1289,28 @@
         }
       }), ref);
       parent.insertBefore(jsx("span", {
-        class: "ffe-mb-separator"
+        class: MenuBar_default.separator
       }), ref);
     }
   };
 
-  // jsx:src/enhance/FollowsList.tsx
+  // jsx:src/enhance/FollowsList/FollowsList.tsx
   var import_ffn_parser3 = __toESM(require_lib());
 
   // src/api/story.ts
   var import_ffn_parser2 = __toESM(require_lib(), 1);
 
   // src/utils.ts
+  function getCookie(name) {
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+      const c = ca[i].trimLeft();
+      if (c.indexOf(`${name}=`) === 0) {
+        return c.substring(name.length + 1, c.length);
+      }
+    }
+    return false;
+  }
   function parseGetParams(url) {
     try {
       const params = new URL(url).search.substr(1).split("&");
@@ -1869,7 +1880,7 @@
   }
 
   // gm-css:src/components/CheckBox/CheckBox.css
-  GM_addStyle(`.ffe-checkbox {
+  GM_addStyle(`.ffe-checkbox_4xe2v {
   align-items: center;
   display: flex;
   flex-flow: column;
@@ -1879,35 +1890,37 @@
   margin-right: 18px;
 }
 
-.ffe-checkbox label {
-  background-color: #bbb;
-  border-radius: 4px;
-  height: 16px;
-  width: 16px;
-}
+  .ffe-checkbox_4xe2v label {
+    background-color: #bbb;
+    border-radius: 4px;
+    height: 16px;
+    width: 16px;
+  }
 
-.ffe-checkbox label:hover {
-  background-color: #888;
-}
+  .ffe-checkbox_4xe2v label:hover {
+      background-color: #888;
+    }
 
-.ffe-checkbox input:checked ~ label {
-  background-color: var(--ffe-link-color);
-}
+  .ffe-checkbox_4xe2v input:checked ~ label {
+    background-color: var(--ffe-link-color);
+  }
 
-.ffe-checkbox input:checked ~ label:before {
-  color: white;
-  content: "\u2713";
-  display: block;
-  font-size: 1.2em;
-  margin-top: -3px;
-  padding-right: 2px;
-  text-align: right;
-}
+  .ffe-checkbox_4xe2v input:checked ~ label:before {
+      color: white;
+      content: "\u2713";
+      display: block;
+      font-size: 1.2em;
+      margin-top: -3px;
+      padding-right: 2px;
+      text-align: right;
+    }
 
-.ffe-checkbox input {
-  display: none;
-}
+  .ffe-checkbox_4xe2v input {
+    display: none;
+  }
+
 `);
+  var CheckBox_default = { "checkbox": "ffe-checkbox_4xe2v" };
 
   // jsx:src/components/CheckBox/CheckBox.tsx
   function CheckBox({
@@ -1916,7 +1929,7 @@
   }) {
     const id = `ffe-check-${parseInt(`${Math.random() * 1e8}`, 10)}`;
     return jsxs("span", {
-      class: "ffe-checkbox",
+      class: CheckBox_default.checkbox,
       children: [jsx("input", {
         type: "checkbox",
         id,
@@ -2039,6 +2052,54 @@
     updateWordCount();
   }
 
+  // gm-css:src/components/ChapterList/ChapterList.css
+  GM_addStyle(`.ffe-container_q0aV4 {
+  margin-bottom: 50px;
+  padding: 20px;
+}
+
+.ffe-list_ISvJ- {
+  border-top: 1px solid var(--ffe-divider-color);
+  list-style-type: none;
+  margin: 0;
+}
+
+.ffe-chapter_xB0Xp {
+  background-color: var(--ffe-panel-color);
+  border-bottom: 1px solid var(--ffe-divider-color);
+  font-size: 1.1em;
+  line-height: 2em;
+  padding: 4px 20px;
+}
+
+.ffe-chapter_xB0Xp a {
+    color: var(--ffe-on-panel-link-color) !important;
+  }
+
+.ffe-words_dxhNW {
+  color: var(--ffe-on-panel-color);
+  float: right;
+  font-size: 0.9em;
+}
+
+.ffe-estimate_ACRS4 {
+  color: var(--ffe-on-panel-color-faint);
+}
+
+.ffe-estimate_ACRS4:before {
+    content: "~";
+  }
+
+.ffe-collapsed_zrVoV {
+  text-align: center;
+}
+
+.ffe-collapsed_zrVoV a {
+    cursor: pointer;
+  }
+`);
+  var ChapterList_default = { "container": "ffe-container_q0aV4", "list": "ffe-list_ISvJ-", "chapter": "ffe-chapter_xB0Xp", "words": "ffe-words_dxhNW", "estimate": "ffe-estimate_ACRS4", "collapsed": "ffe-collapsed_zrVoV" };
+
   // jsx:src/components/ChapterList/ChapterListEntry.tsx
   function ChapterListEntry({
     storyId,
@@ -2047,19 +2108,18 @@
     const isRead = getChapterRead(storyId, chapter2.id);
     const words = getWordCount(storyId, chapter2.id);
     return jsxs("li", {
-      class: "ffe-cl-chapter",
+      class: ChapterList_default.chapter,
       children: [render_default(() => jsx(CheckBox, {
         checked: isRead(),
         onChange: isRead.set
       })), jsx("span", {
-        class: "ffe-cl-chapter-title",
         children: jsx("a", {
           href: `/s/${storyId}/${chapter2.id}`,
           children: chapter2.title
         })
       }), render_default(() => words() != null && jsxs("span", {
-        class: compute(() => clsx_default("ffe-cl-words", {
-          "ffe-cl-estimate": words()?.isEstimate
+        class: compute(() => clsx_default(ChapterList_default.words, {
+          [ChapterList_default.estimate]: words()?.isEstimate
         })),
         children: [jsx("b", {
           children: render_default(() => words()?.count.toLocaleString("en"))
@@ -2067,53 +2127,6 @@
       }))]
     });
   }
-
-  // gm-css:src/components/ChapterList/ChapterList.css
-  GM_addStyle(`.ffe-cl-container {
-  margin-bottom: 50px;
-  padding: 20px;
-}
-
-.ffe-cl ol {
-  border-top: 1px solid var(--ffe-divider-color);
-  list-style-type: none;
-  margin: 0;
-}
-
-.ffe-cl-chapter {
-  background-color: var(--ffe-panel-color);
-  border-bottom: 1px solid var(--ffe-divider-color);
-  font-size: 1.1em;
-  line-height: 2em;
-  padding: 4px 20px;
-}
-
-.ffe-cl-chapter a {
-  color: var(--ffe-on-panel-link-color) !important;
-}
-
-.ffe-cl-words {
-  color: var(--ffe-on-panel-color);
-  float: right;
-  font-size: 0.9em;
-}
-
-.ffe-cl-estimate {
-  color: var(--ffe-on-panel-color-faint);
-}
-
-.ffe-cl-estimate:before {
-    content: "~";
-  }
-
-.ffe-cl-collapsed {
-  text-align: center;
-}
-
-.ffe-cl-collapsed a {
-    cursor: pointer;
-  }
-`);
 
   // jsx:src/components/ChapterList/ChapterList.tsx
   function hiddenChapterMapper(story, isRead, onShow) {
@@ -2128,13 +2141,13 @@
             count += 1;
           }
           if (count <= 1) {
-            return jsx(ChapterListEntry, {
+            return render_default(() => jsx(ChapterListEntry, {
               storyId: story.id,
               chapter: chapter2
-            });
+            }));
           }
           return jsx("li", {
-            class: "ffe-cl-chapter ffe-cl-collapsed",
+            class: clsx_default(ChapterList_default.chapter, ChapterList_default.collapsed),
             children: jsxs("a", {
               onClick: onShow,
               children: ["Show ", count, " hidden chapter", count !== 1 && "s"]
@@ -2154,13 +2167,13 @@
           }
           count -= 2;
           if (count <= 1) {
-            return jsx(ChapterListEntry, {
+            return render_default(() => jsx(ChapterListEntry, {
               storyId: story.id,
               chapter: chapter2
-            });
+            }));
           }
           return jsx("li", {
-            class: "ffe-cl-chapter ffe-cl-collapsed",
+            class: clsx_default(ChapterList_default.chapter, ChapterList_default.collapsed),
             children: jsxs("a", {
               onClick: onShow,
               children: ["Show ", count, " hidden chapter", count !== 1 && "s"]
@@ -2171,34 +2184,34 @@
           return null;
         }
       }
-      return jsx(ChapterListEntry, {
+      return render_default(() => jsx(ChapterListEntry, {
         storyId: story.id,
         chapter: chapter2
-      });
+      }));
     };
   }
   function ChapterList({
+    class: className,
     storyId
   }) {
     const isExtended = createSignal(false);
     return render_default(() => {
-      const story = getStory(storyId)();
+      const storySignal = getStory(storyId);
+      const story = storySignal();
       if (!story) {
         return jsx("div", {
-          class: "ffe-cl-container"
+          class: clsx_default(ChapterList_default.container, className)
         });
       }
       const isReadMap = new Map(story.chapters?.map((chapter2) => [chapter2.id, getChapterRead(story.id, chapter2.id)]));
       return jsx("div", {
-        class: "ffe-cl-container",
-        children: jsx("div", {
-          class: "ffe-cl",
-          children: jsx("ol", {
-            children: render_default(() => isExtended() ? story.chapters?.map((chapter2) => jsx(ChapterListEntry, {
-              storyId: story.id,
-              chapter: chapter2
-            })) : story.chapters?.flatMap(hiddenChapterMapper(story, (chapter2) => isReadMap.get(chapter2.id)(), () => isExtended.set(true))))
-          })
+        class: clsx_default(ChapterList_default.container, className),
+        children: jsx("ol", {
+          class: ChapterList_default.list,
+          children: render_default(() => isExtended() ? story.chapters?.map((chapter2) => render_default(() => jsx(ChapterListEntry, {
+            storyId: story.id,
+            chapter: chapter2
+          }))) : story.chapters?.flatMap(hiddenChapterMapper(story, (chapter2) => isReadMap.get(chapter2.id)(), () => isExtended.set(true))))
         })
       });
     });
@@ -2223,9 +2236,9 @@
     children
   }) {
     return jsx("button", {
-      class: compute(() => clsx_default("btn", {
+      class: clsx_default("btn", {
         disabled
-      }, className)),
+      }, className),
       disabled,
       title: title2,
       onClick,
@@ -2234,7 +2247,7 @@
   }
 
   // gm-css:src/components/Rating/Rating.css
-  GM_addStyle(`.ffe-rating {
+  GM_addStyle(`.ffe-rating_-Szic {
   background: gray;
   padding: 3px 5px;
   color: #fff !important;
@@ -2245,45 +2258,46 @@
   vertical-align: 2px;
 }
 
-.ffe-rating:hover {
-  border-bottom-color: transparent;
-}
+  .ffe-rating_-Szic:hover {
+    border-bottom-color: transparent;
+  }
 
-.ffe-rating-k,
-.ffe-rating-kp {
+.ffe-rating-k_p9EAi,
+.ffe-rating-kp_oIQ7y {
   background: var(--ffe-rating-k-color);
 }
 
-.ffe-rating-t,
-.ffe-rating-m {
+.ffe-rating-t_7LxUa,
+.ffe-rating-m_uXnLp {
   background: var(--ffe-rating-t-color);
 }
 
-.ffe-rating-ma {
+.ffe-rating-ma_ERDHj {
   background: var(--ffe-rating-m-color);
 }
 `);
+  var Rating_default = { "rating": "ffe-rating_-Szic", "ratingK": "ffe-rating-k_p9EAi", "ratingKp": "ffe-rating-kp_oIQ7y", "ratingT": "ffe-rating-t_7LxUa", "ratingM": "ffe-rating-m_uXnLp", "ratingMa": "ffe-rating-ma_ERDHj" };
 
   // jsx:src/components/Rating/Rating.tsx
   var ratings = {
     K: {
-      class: "ffe-rating-k",
+      class: Rating_default.ratingK,
       title: "General Audience (5+)"
     },
     "K+": {
-      class: "ffe-rating-kp",
+      class: Rating_default.ratingKp,
       title: "Young Children (9+)"
     },
     T: {
-      class: "ffe-rating-t",
+      class: Rating_default.ratingT,
       title: "Teens (13+)"
     },
     M: {
-      class: "ffe-rating-m",
+      class: Rating_default.ratingM,
       title: "Teens (16+)"
     },
     MA: {
-      class: "ffe-rating-ma",
+      class: Rating_default.ratingMa,
       title: "Mature (18+)"
     }
   };
@@ -2292,7 +2306,7 @@
   }) {
     return jsx("a", {
       href: "https://www.fictionratings.com/",
-      class: compute(() => clsx_default("ffe-rating", ratings[rating ?? ""]?.class)),
+      class: clsx_default(Rating_default.rating, ratings[rating ?? ""]?.class),
       title: ratings[rating ?? ""]?.title ?? "No Rating Available",
       rel: "noreferrer",
       target: "rating",
@@ -2649,186 +2663,24 @@ ${content}
     updateFollows();
   }
 
-  // gm-css:src/components/StoryCard/StoryCard.css
-  GM_addStyle(`.ffe-sc {
-  background-color: var(--ffe-paper-color);
-}
-
-.ffe-sc-header {
-  border-bottom: 1px solid var(--ffe-divider-color);
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-}
-
-.ffe-sc-title {
-  color: var(--ffe-on-paper-color) !important;
-  font-size: 1.8em;
-}
-
-.ffe-sc-title:hover {
-    border-bottom: 0;
-    text-decoration: underline;
-  }
-
-
-.ffe-sc-by {
-  color: var(--ffe-on-paper-color);
-  padding: 0 0.5em;
-}
-
-.ffe-sc-author {
-  color: var(--ffe-link-color) !important;
-}
-
-.ffe-sc-mark {
-  float: right;
-}
-
-.ffe-sc-mark > * {
-    margin-right: 4px;
-  }
-
-.ffe-sc-alert:hover,
-.ffe-sc-alert.ffe-active {
-  color: var(--ffe-alert-color) !important;
-}
-
-.ffe-sc-favorite:hover,
-.ffe-sc-favorite.ffe-active {
-  color: var(--ffe-favorite-color) !important;
-}
-
-.ffe-sc-follow-count {
-  color: var(--ffe-on-button-color);
-  font-weight: bolder;
-  margin-left: 0.4em;
-}
-
-.ffe-sc-download-button {
-  display: inline-flex;
-  gap: 0.5rem;
-}
-
-.ffe-sc-tags {
-  border-bottom: 1px solid var(--ffe-divider-color);
-  display: flex;
-  flex-wrap: wrap;
-  line-height: 2em;
-  margin-bottom: 8px;
-}
-
-.ffe-sc-tag {
-  border: 1px solid var(--ffe-weak-divider-color);
-  border-radius: 4px;
-  color: var(--ffe-on-paper-color);
-  line-height: 16px;
-  margin-bottom: 8px;
-  margin-right: 5px;
-  padding: 3px 8px;
-}
-
-.ffe-sc-tag a {
-    color: var(--ffe-link-color);
-  }
-
-.ffe-sc-tag-language {
-  background-color: var(--ffe-language-tag-color);
-  color: var(--ffe-on-language-tag-color);
-}
-
-.ffe-sc-tag-universe {
-  background-color: var(--ffe-universe-tag-color);
-  color: var(--ffe-on-universe-tag-color);
-}
-
-.ffe-sc-tag-genre {
-  background-color: var(--ffe-genre-tag-color);
-  color: var(--ffe-on-genre-tag-color);
-}
-
-.ffe-sc-tag.ffe-sc-tag-character,
-.ffe-sc-tag.ffe-sc-tag-ship {
-  background-color: var(--ffe-character-tag-color);
-  color: var(--ffe-on-character-tag-color);
-}
-
-.ffe-sc-tag-ship .ffe-sc-tag-character:not(:first-child):before {
-  content: " + ";
-}
-
-.ffe-sc-image {
-  float: left;
-  border: 1px solid var(--ffe-divider-color);
-  border-radius: 3px;
-  padding: 3px;
-  margin-right: 8px;
-  margin-bottom: 8px;
-}
-
-.ffe-sc-description {
-  color: var(--ffe-on-paper-color);
-  font-family: "Open Sans", sans-serif;
-  font-size: 1.1em;
-  line-height: 1.4em;
-}
-
-.ffe-sc-footer {
-  clear: left;
-  background: var(--ffe-panel-color);
-  border-bottom: 1px solid var(--ffe-divider-color);
-  border-top: 1px solid var(--ffe-divider-color);
-  color: var(--ffe-on-panel-color);
-  font-size: 0.9em;
-  margin-left: -0.5em;
-  margin-right: -0.5em;
-  margin-top: 1em;
-  padding: 10px 0.5em;
-}
-
-.ffe-sc-footer-info {
-  background: var(--ffe-paper-color);
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
-  color: var(--ffe-on-paper-color);
-  line-height: 16px;
-  margin-top: -5px;
-  margin-right: 5px;
-  padding: 3px 8px;
-}
-
-.ffe-sc-footer-incomplete {
-  background: var(--ffe-incomplete-tag-color);
-  color: var(--ffe-on-incomplete-tag-color);
-}
-
-.ffe-sc-footer-complete {
-  background: var(--ffe-complete-tag-color);
-  color: var(--ffe-on-complete-tag-color);
-}
-
-.ffe-sc-footer-words {
-  color: var(--ffe-on-panel-color);
-  float: right;
-}
-`);
-
   // gm-css:src/components/CircularProgress/CircularProgress.css
-  GM_addStyle(`.ffe-cp-progress {
+  GM_addStyle(`.ffe-progress_BTGWA {
   visibility: hidden;
   position: absolute;
 }
 
-.ffe-cp-circle-background {
+.ffe-circle-background_7ZBf2 {
   fill: none;
   stroke: var(--ffe-on-button-color-faint);
 }
 
-.ffe-cp-circle-foreground {
+.ffe-circle-foreground_aq6Ch {
   transform: rotate(-90deg);
   fill: none;
   stroke: var(--ffe-primary-color);
 }
 `);
+  var CircularProgress_default = { "progress": "ffe-progress_BTGWA", "circleBackground": "ffe-circle-background_7ZBf2", "circleForeground": "ffe-circle-foreground_aq6Ch" };
 
   // jsx:src/components/CircularProgress/CircularProgress.tsx
   function CircularProgress({
@@ -2841,20 +2693,20 @@ ${content}
     return jsxs("span", {
       style: `height: ${size}px;`,
       children: [jsx("progress", {
-        class: "ffe-cp-progress",
+        class: CircularProgress_default.progress,
         value: progress
       }), jsxs("svg", {
         width: size,
         height: size,
         viewBox: `0 0 ${size} ${size}`,
         children: [jsx("circle", {
-          class: "ffe-cp-circle-background",
+          class: CircularProgress_default.circleBackground,
           cx: size / 2,
           cy: size / 2,
           r: (size - strokeWidth) / 2,
           "stroke-width": strokeWidth
         }), jsx("circle", {
-          class: "ffe-cp-circle-foreground",
+          class: CircularProgress_default.circleForeground,
           cx: size / 2,
           cy: size / 2,
           r: (size - strokeWidth) / 2,
@@ -2866,14 +2718,180 @@ ${content}
     });
   }
 
+  // gm-css:src/components/StoryCard/StoryCard.css
+  GM_addStyle(`.ffe-container_TV1gX {
+  background-color: var(--ffe-paper-color);
+}
+
+.ffe-header_BbejX {
+  border-bottom: 1px solid var(--ffe-divider-color);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.ffe-title_iXSH7 {
+  color: var(--ffe-on-paper-color) !important;
+  font-size: 1.8em;
+}
+
+.ffe-title_iXSH7:hover {
+    border-bottom: 0;
+    text-decoration: underline;
+  }
+
+
+.ffe-by_YlLGj {
+  color: var(--ffe-on-paper-color);
+  padding: 0 0.5em;
+}
+
+.ffe-author_fvDto {
+  color: var(--ffe-link-color) !important;
+}
+
+.ffe-mark_LbIkN {
+  float: right;
+}
+
+.ffe-mark_LbIkN > * {
+    margin-right: 4px;
+  }
+
+.ffe-alert_xwUmx:hover,
+.ffe-alert_xwUmx.ffe-active_i3wGV {
+  color: var(--ffe-alert-color) !important;
+}
+
+.ffe-favorite_ODl41:hover,
+.ffe-favorite_ODl41.ffe-active_i3wGV {
+  color: var(--ffe-favorite-color) !important;
+}
+
+.ffe-follow-count_ZZNPb {
+  color: var(--ffe-on-button-color);
+  font-weight: bolder;
+  margin-left: 0.4em;
+}
+
+.ffe-download-button_W1YkF {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.ffe-tags_-hQ1N {
+  border-bottom: 1px solid var(--ffe-divider-color);
+  display: flex;
+  flex-wrap: wrap;
+  line-height: 2em;
+  margin-bottom: 8px;
+}
+
+.ffe-tag_MCrAu {
+  border: 1px solid var(--ffe-weak-divider-color);
+  border-radius: 4px;
+  color: var(--ffe-on-paper-color);
+  line-height: 16px;
+  margin-bottom: 8px;
+  margin-right: 5px;
+  padding: 3px 8px;
+}
+
+.ffe-tag_MCrAu a {
+    color: var(--ffe-link-color);
+  }
+
+.ffe-tag-language_ysFMU {
+  background-color: var(--ffe-language-tag-color);
+  color: var(--ffe-on-language-tag-color);
+}
+
+.ffe-tag-universe_QNjvU {
+  background-color: var(--ffe-universe-tag-color);
+  color: var(--ffe-on-universe-tag-color);
+}
+
+.ffe-tag-genre_jNSPi {
+  background-color: var(--ffe-genre-tag-color);
+  color: var(--ffe-on-genre-tag-color);
+}
+
+.ffe-tag_MCrAu.ffe-tag-character_Eex3Y,
+.ffe-tag_MCrAu.ffe-tag-ship_lqWAf {
+  background-color: var(--ffe-character-tag-color);
+  color: var(--ffe-on-character-tag-color);
+}
+
+.ffe-tag-ship_lqWAf .ffe-tag-character_Eex3Y:not(:first-child):before {
+  content: " + ";
+}
+
+.ffe-image_EcDjI {
+  float: left;
+  border: 1px solid var(--ffe-divider-color);
+  border-radius: 3px;
+  padding: 3px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.ffe-description_9AQkV {
+  color: var(--ffe-on-paper-color);
+  font-family: "Open Sans", sans-serif;
+  font-size: 1.1em;
+  line-height: 1.4em;
+}
+
+.ffe-footer_2SqSY {
+  clear: left;
+  background: var(--ffe-panel-color);
+  border-bottom: 1px solid var(--ffe-divider-color);
+  border-top: 1px solid var(--ffe-divider-color);
+  color: var(--ffe-on-panel-color);
+  font-size: 0.9em;
+  margin-left: -0.5em;
+  margin-right: -0.5em;
+  margin-top: 1em;
+  padding: 10px 0.5em;
+}
+
+.ffe-footer-info_kXrOX {
+  background: var(--ffe-paper-color);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  color: var(--ffe-on-paper-color);
+  line-height: 16px;
+  margin-top: -5px;
+  margin-right: 5px;
+  padding: 3px 8px;
+}
+
+.ffe-footer-incomplete_EbjUn {
+  background: var(--ffe-incomplete-tag-color);
+  color: var(--ffe-on-incomplete-tag-color);
+}
+
+.ffe-footer-complete_C4nja {
+  background: var(--ffe-complete-tag-color);
+  color: var(--ffe-on-complete-tag-color);
+}
+
+.ffe-footer-words_QzEEi {
+  color: var(--ffe-on-panel-color);
+  float: right;
+}
+`);
+  var StoryCard_default = { "container": "ffe-container_TV1gX", "header": "ffe-header_BbejX", "title": "ffe-title_iXSH7", "by": "ffe-by_YlLGj", "author": "ffe-author_fvDto", "mark": "ffe-mark_LbIkN", "alert": "ffe-alert_xwUmx", "active": "ffe-active_i3wGV", "favorite": "ffe-favorite_ODl41", "followCount": "ffe-follow-count_ZZNPb", "downloadButton": "ffe-download-button_W1YkF", "tags": "ffe-tags_-hQ1N", "tag": "ffe-tag_MCrAu", "tagLanguage": "ffe-tag-language_ysFMU", "tagUniverse": "ffe-tag-universe_QNjvU", "tagGenre": "ffe-tag-genre_jNSPi", "tagCharacter": "ffe-tag-character_Eex3Y", "tagShip": "ffe-tag-ship_lqWAf", "image": "ffe-image_EcDjI", "description": "ffe-description_9AQkV", "footer": "ffe-footer_2SqSY", "footerInfo": "ffe-footer-info_kXrOX", "footerIncomplete": "ffe-footer-incomplete_EbjUn", "footerComplete": "ffe-footer-complete_C4nja", "footerWords": "ffe-footer-words_QzEEi" };
+
   // jsx:src/components/StoryCard/StoryCard.tsx
   function StoryCard({
+    class: className,
     storyId
   }) {
-    const story = getStory(storyId)();
+    const storySignal = getStory(storyId);
+    const story = storySignal();
     if (!story) {
       return jsx("div", {
-        class: "ffe-sc",
+        class: clsx_default(StoryCard_default.container, className),
         children: "loading..."
       });
     }
@@ -2900,33 +2918,33 @@ ${content}
       }
     };
     const element = jsxs("div", {
-      class: "ffe-sc",
+      class: clsx_default(StoryCard_default.container, className),
       children: [jsxs("div", {
-        class: "ffe-sc-header",
-        children: [jsx(Rating, {
+        class: StoryCard_default.header,
+        children: [render_default(() => jsx(Rating, {
           rating: story.rating
-        }), jsx("a", {
+        })), jsx("a", {
           href: `/s/${story.id}`,
-          class: "ffe-sc-title",
+          class: StoryCard_default.title,
           children: story.title
         }), jsx("span", {
-          class: "ffe-sc-by",
+          class: StoryCard_default.by,
           children: "by"
         }), jsx("a", {
           href: `/u/${story.author.id}`,
-          class: "ffe-sc-author",
+          class: StoryCard_default.author,
           children: story.author.name
         }), jsxs("div", {
-          class: "ffe-sc-mark",
+          class: StoryCard_default.mark,
           children: [render_default(() => jsxs(Button, {
             onClick: handleDownloadClick,
             title: isDownloading() ? `Progress: ${Math.round((progress()?.progress ?? 0) * 100)}\u202F%` : "Download as ePub",
-            class: "ffe-sc-download-button",
+            class: StoryCard_default.downloadButton,
             disabled: isDownloading(),
-            children: [render_default(() => isDownloading() ? jsx(CircularProgress, {
+            children: [render_default(() => isDownloading() ? render_default(() => jsx(CircularProgress, {
               size: 20,
               progress: progress()?.progress
-            }) : jsx("span", {
+            })) : jsx("span", {
               class: "icon-arrow-down"
             })), render_default(() => isDownloading() && jsxs("span", {
               children: [render_default(() => Math.round((progress()?.progress ?? 0) * 100)), "\u202F", "%"]
@@ -2937,21 +2955,21 @@ ${content}
           }), jsxs("div", {
             class: "btn-group",
             children: [render_default(() => jsxs(Button, {
-              class: clsx_default("ffe-sc-alert", {
-                "ffe-active": hasAlert()
+              class: clsx_default(StoryCard_default.alert, {
+                [StoryCard_default.active]: hasAlert()
               }),
               title: "Toggle Story Alert",
               onClick: () => hasAlert.set((prev) => {
                 alertOffset.set((po) => prev ? po - 1 : po + 1);
                 return !prev;
               }),
-              children: [jsx(bell_default, {}), jsx("span", {
-                class: "ffe-sc-follow-count",
+              children: [render_default(() => jsx(bell_default, {})), jsx("span", {
+                class: StoryCard_default.followCount,
                 children: render_default(() => ((story.follows ?? 0) + alertOffset()).toLocaleString("en"))
               })]
             })), render_default(() => jsx(Button, {
-              class: clsx_default("ffe-sc-favorite icon-heart", {
-                "ffe-active": isFavorite()
+              class: clsx_default(StoryCard_default.favorite, "icon-heart", {
+                [StoryCard_default.active]: isFavorite()
               }),
               title: "Toggle Favorite",
               onClick: () => isFavorite.set((prev) => {
@@ -2959,79 +2977,79 @@ ${content}
                 return !prev;
               }),
               children: jsx("span", {
-                class: "ffe-sc-follow-count",
+                class: StoryCard_default.followCount,
                 children: render_default(() => ((story.favorites ?? 0) + favoriteOffset()).toLocaleString("en"))
               })
             }))]
           })]
         })]
       }), jsxs("div", {
-        class: "ffe-sc-tags",
+        class: StoryCard_default.tags,
         children: [story.language && jsx("span", {
-          class: "ffe-sc-tag ffe-sc-tag-language",
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagLanguage),
           children: story.language
-        }), render_default(() => story.universes && story.universes.map((universe) => jsx("span", {
-          class: "ffe-sc-tag ffe-sc-tag-universe",
+        }), story.universes && story.universes.map((universe) => jsx("span", {
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagUniverse),
           children: universe
-        }))), render_default(() => story.genre && story.genre.map((genre) => jsx("span", {
-          class: "ffe-sc-tag ffe-sc-tag-genre",
+        })), story.genre && story.genre.map((genre) => jsx("span", {
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagGenre),
           children: genre
-        }))), render_default(() => story.characters && story.characters.length > 0 && story.characters.map((pairing) => pairing.length === 1 ? jsx("span", {
-          class: "ffe-sc-tag ffe-sc-tag-character",
+        })), story.characters && story.characters.length > 0 && story.characters.map((pairing) => pairing.length === 1 ? jsx("span", {
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagCharacter),
           children: pairing
         }) : jsx("span", {
-          class: "ffe-sc-tag ffe-sc-tag-ship",
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagShip),
           children: pairing.map((character) => jsx("span", {
-            class: "ffe-sc-tag-character",
+            class: clsx_default(StoryCard_default.tagCharacter),
             children: character
           }))
-        }))), story.chapters && story.chapters.length > 0 && jsxs("span", {
-          class: "ffe-sc-tag ffe-sc-tag-chapters",
+        })), story.chapters && story.chapters.length > 0 && jsxs("span", {
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagChapters),
           children: ["Chapters:\xA0", story.chapters.length]
         }), story.reviews != null && jsx("span", {
-          class: "ffe-sc-tag ffe-sc-tag-reviews",
+          class: clsx_default(StoryCard_default.tag, StoryCard_default.tagReviews),
           children: jsxs("a", {
             href: `/r/${story.id}/`,
             children: ["Reviews:\xA0", story.reviews]
           })
         })]
       }), story.imageUrl && jsx("div", {
-        class: "ffe-sc-image",
+        class: StoryCard_default.image,
         children: jsx("img", {
           src: story.imageUrl,
           alt: "Story Cover"
         })
       }), jsx("div", {
-        class: "ffe-sc-description",
+        class: StoryCard_default.description,
         children: story.description
       }), jsxs("div", {
-        class: "ffe-sc-footer",
+        class: StoryCard_default.footer,
         children: [story.words != null && jsxs("div", {
-          class: "ffe-sc-footer-words",
-          children: [render_default(() => jsx("strong", {
+          class: StoryCard_default.footerWords,
+          children: [jsx("strong", {
             children: story.words.toLocaleString("en")
-          })), " words"]
+          }), " words"]
         }), story.status === "Complete" ? jsx("span", {
-          class: "ffe-sc-footer-info ffe-sc-footer-complete",
+          class: clsx_default(StoryCard_default.footerInfo, StoryCard_default.footerComplete),
           children: "Complete"
         }) : jsx("span", {
-          class: "ffe-sc-footer-info ffe-sc-footer-incomplete",
+          class: clsx_default(StoryCard_default.footerInfo, StoryCard_default.footerIncomplete),
           children: "Incomplete"
         }), story.published && jsxs("span", {
-          class: "ffe-sc-footer-info",
+          class: StoryCard_default.footerInfo,
           children: [jsx("strong", {
             children: "Published:\xA0"
           }), jsx("time", {
             dateTime: compute(() => toDate(story.published).toISOString()),
-            children: render_default(() => toDate(story.published).toLocaleDateString("en"))
+            children: toDate(story.published).toLocaleDateString("en")
           })]
         }), story.updated && jsxs("span", {
-          class: "ffe-sc-footer-info",
+          class: StoryCard_default.footerInfo,
           children: [jsx("strong", {
             children: "Updated:\xA0"
           }), jsx("time", {
             dateTime: compute(() => toDate(story.updated).toISOString()),
-            children: render_default(() => toDate(story.updated).toLocaleDateString("en"))
+            children: toDate(story.updated).toLocaleDateString("en")
           })]
         })]
       })]
@@ -3039,17 +3057,17 @@ ${content}
     return element;
   }
 
-  // gm-css:src/enhance/FollowsList.css
-  GM_addStyle(`.ffe-follows-list {
+  // gm-css:src/enhance/FollowsList/FollowsList.css
+  GM_addStyle(`.ffe-list_-LIhd {
   list-style: none;
   margin: 0;
 }
 
-.ffe-follows-item {
+.ffe-item_0EvmM {
   margin-bottom: 8px;
 }
 
-.ffe-follows-item .ffe-sc {
+.ffe-story-card_h-LAl {
   border-left: 1px solid var(--ffe-divider-color);
   border-top: 1px solid var(--ffe-divider-color);
   border-top-left-radius: 4px;
@@ -3057,69 +3075,77 @@ ${content}
   padding-top: 5px;
 }
 
-.ffe-follows-item .ffe-cl-container {
+.ffe-chapterList_nNQJU {
   border-left: 1px solid var(--ffe-divider-color);
   margin-bottom: 20px;
   padding: 10px 0 0 0;
 }
 `);
+  var FollowsList_default = { "list": "ffe-list_-LIhd", "item": "ffe-item_0EvmM", "storyCard": "ffe-story-card_h-LAl", "chapterList": "ffe-chapterList_nNQJU" };
 
-  // jsx:src/enhance/FollowsList.tsx
+  // jsx:src/enhance/FollowsList/FollowsList.tsx
   var FollowsList = class {
+    canEnhance(type) {
+      return type === 2 /* Alerts */ || type === 3 /* Favorites */;
+    }
     async enhance() {
       const list = await (0, import_ffn_parser3.parseFollows)(document);
       if (!list) {
         return;
       }
-      const container2 = document.createElement("ul");
-      container2.classList.add("ffe-follows-list");
+      const container2 = jsx("ul", {
+        class: FollowsList_default.list
+      });
       const table = document.getElementById("gui_table1i")?.parentElement;
       if (!table) {
         return;
       }
       table.parentElement?.insertBefore(container2, table);
       for (const followedStory of list) {
-        const item = document.createElement("li");
-        item.classList.add("ffe-follows-item");
+        const item = jsx("li", {
+          class: FollowsList_default.item
+        });
         container2.appendChild(item);
-        const card = jsx(StoryCard, {
+        const card = render_default(() => jsx(StoryCard, {
+          class: FollowsList_default.storyCard,
           storyId: followedStory.id
-        });
+        }));
         item.appendChild(card);
-        const chapterList = jsx(ChapterList, {
+        const chapterList = render_default(() => jsx(ChapterList, {
+          class: FollowsList_default.chapterList,
           storyId: followedStory.id
-        });
+        }));
         item.appendChild(chapterList);
       }
       table.parentElement?.removeChild(table);
     }
   };
 
-  // jsx:src/enhance/StoryList.tsx
+  // jsx:src/enhance/StoryList/StoryList.tsx
   var import_ffn_parser4 = __toESM(require_lib());
 
-  // gm-css:src/enhance/StoryList.css
-  GM_addStyle(`.ffe-story-list {
+  // gm-css:src/enhance/StoryList/StoryList.css
+  GM_addStyle(`.ffe-container_jV6Zk {
   list-style: none;
   margin: 0 auto;
 }
 
-.ffe-story-item {
+.ffe-item_Jqr5i {
   margin: 10px 0;
 }
 
-.ffe-story-item .ffe-sc {
+.ffe-story-card_M5lUN {
   border: 1px solid var(--ffe-divider-color);
   padding: 5px 0.5em;
 }
-
-.ffe-story-item .ffe-sc-footer {
-  margin-top: 1em;
-}
 `);
+  var StoryList_default = { "container": "ffe-container_jV6Zk", "item": "ffe-item_Jqr5i", "storyCard": "ffe-story-card_M5lUN" };
 
-  // jsx:src/enhance/StoryList.tsx
+  // jsx:src/enhance/StoryList/StoryList.tsx
   var StoryList = class {
+    canEnhance(type) {
+      return type === 7 /* StoryList */;
+    }
     async enhance() {
       const list = await (0, import_ffn_parser4.parseStoryList)(document);
       if (!list) {
@@ -3130,15 +3156,16 @@ ${content}
         return;
       }
       const container2 = document.createElement("ul");
-      container2.classList.add("ffe-story-list", "maxwidth");
+      container2.classList.add(StoryList_default.container, "maxwidth");
       cw.parentElement?.insertBefore(container2, null);
       for (const followedStory of list) {
         const item = document.createElement("li");
-        item.classList.add("ffe-story-item");
+        item.classList.add(StoryList_default.item);
         container2.appendChild(item);
-        const card = jsx(StoryCard, {
+        const card = render_default(() => jsx(StoryCard, {
+          class: StoryList_default.storyCard,
           storyId: followedStory.id
-        });
+        }));
         item.appendChild(card);
       }
       cw.querySelectorAll(".z-list").forEach((e) => e.parentElement?.removeChild(e));
@@ -3156,23 +3183,29 @@ ${content}
     }
   };
 
-  // jsx:src/enhance/StoryProfile.tsx
+  // jsx:src/enhance/StoryProfile/StoryProfile.tsx
   var StoryProfile = class {
+    canEnhance(type) {
+      return type === 4 /* Story */ || type === 5 /* Chapter */;
+    }
     async enhance() {
       const profile = document.getElementById("profile_top");
       if (!profile || !environment.currentStoryId) {
         return;
       }
-      const card = jsx(StoryCard, {
+      const card = render_default(() => jsx(StoryCard, {
         storyId: environment.currentStoryId
-      });
+      }));
       profile.parentElement?.insertBefore(card, profile);
       profile.style.display = "none";
     }
   };
 
-  // jsx:src/enhance/ChapterList.tsx
+  // jsx:src/enhance/ChapterList/ChapterList.tsx
   var ChapterList2 = class {
+    canEnhance(type) {
+      return type === 4 /* Story */;
+    }
     async enhance() {
       const contentWrapper = document.getElementById("content_wrapper_inner");
       if (!contentWrapper || !environment.currentStoryId) {
@@ -3183,15 +3216,18 @@ ${content}
       if (storyText) {
         contentWrapper.removeChild(storyText);
       }
-      const chapterList = jsx(ChapterList, {
+      const chapterList = render_default(() => jsx(ChapterList, {
         storyId: environment.currentStoryId
-      });
+      }));
       contentWrapper.insertBefore(chapterList, document.getElementById("review_success"));
     }
   };
 
-  // src/enhance/SaveListSettings.ts
+  // src/enhance/SaveListSettings/SaveListSettings.ts
   var SaveListSettings = class {
+    canEnhance(type) {
+      return type === 7 /* StoryList */ || type === 8 /* UniverseList */ || type === 9 /* CommunityList */;
+    }
     getSort() {
       return GM.getValue("list-sort", "1");
     }
@@ -3321,142 +3357,8 @@ ${content}
     }
   };
 
-  // src/container.ts
-  var Container = class {
-    constructor() {
-      __publicField(this, "menuBar");
-      __publicField(this, "followsList");
-      __publicField(this, "storyList");
-      __publicField(this, "storyProfile");
-      __publicField(this, "chapterList");
-      __publicField(this, "saveListSettings");
-    }
-    getMenuBar() {
-      if (!this.menuBar) {
-        this.menuBar = new MenuBar();
-      }
-      return this.menuBar;
-    }
-    getFollowsList() {
-      if (!this.followsList) {
-        this.followsList = new FollowsList();
-      }
-      return this.followsList;
-    }
-    getStoryListEnhancer() {
-      if (!this.storyList) {
-        this.storyList = new StoryList();
-      }
-      return this.storyList;
-    }
-    getStoryProfile() {
-      if (!this.storyProfile) {
-        this.storyProfile = new StoryProfile();
-      }
-      return this.storyProfile;
-    }
-    getChapterList() {
-      if (!this.chapterList) {
-        this.chapterList = new ChapterList2();
-      }
-      return this.chapterList;
-    }
-    getSaveListSettings() {
-      if (!this.saveListSettings) {
-        this.saveListSettings = new SaveListSettings();
-      }
-      return this.saveListSettings;
-    }
-    getContainer() {
-      return this;
-    }
-  };
-
-  // gm-css:src/enhance/StoryText.css
-  GM_addStyle(`.storytext p {
-  color: var(--ffe-on-paper-color);
-  text-align: justify;
-}
-`);
-
-  // src/enhance/StoryText.ts
-  var StoryText = class {
-    constructor() {
-      /**
-       * Not all selectable fonts exist on Google Fonts. Filter out
-       * fonts that do not exist, or Google will throw an error.
-       */
-      __publicField(this, "GOOGLE_FONTS_WHITELIST", ["Open Sans", "PT Sans", "Roboto", "Ubuntu"]);
-    }
-    async enhance() {
-      this.fixFontLink();
-      const textContainer = document.getElementById("storytextp");
-      if (!textContainer) {
-        throw new Error("Could not find text container element.");
-      }
-      this.fixUserSelect(textContainer);
-    }
-    fixFontLink() {
-      const replace = (link) => {
-        if (!link) {
-          const links = Array.from(document.head.querySelectorAll("link"));
-          link = links.find((l) => l.href.includes("fonts.googleapis.com"));
-        }
-        if (!link) {
-          return false;
-        }
-        const href = new URL(link.href);
-        const search = new URLSearchParams(href.search);
-        const families = search.get("family")?.split("|").filter((f) => this.GOOGLE_FONTS_WHITELIST.includes(f));
-        if (families) {
-          search.set("family", families.join("|"));
-        }
-        href.search = search.toString();
-        link.href = href.toString();
-        return true;
-      };
-      if (replace()) {
-        return;
-      }
-      const observer = new MutationObserver((list) => {
-        for (const record of list) {
-          if (record.type !== "childList") {
-            continue;
-          }
-          for (const node of Array.from(record.addedNodes)) {
-            if (!(node instanceof Element) || node.tagName !== "LINK") {
-              continue;
-            }
-            replace();
-            observer.disconnect();
-          }
-        }
-      });
-      observer.observe(document.head, { childList: true });
-    }
-    fixUserSelect(textContainer) {
-      const handle = setInterval(() => {
-        const rules = [
-          "userSelect",
-          "msUserSelect",
-          "mozUserSelect",
-          "khtmlUserSelect",
-          "webkitUserSelect",
-          "webkitTouchCallout"
-        ];
-        let isOk = true;
-        for (const rule of rules) {
-          if (textContainer.style[rule] !== "inherit") {
-            isOk = false;
-          }
-          textContainer.style[rule] = "inherit";
-        }
-        if (isOk) {
-          clearTimeout(handle);
-        }
-      }, 150);
-    }
-  };
+  // jsx:src/enhance/StoryText/StoryText.tsx
+  var import_ffn_parser5 = __toESM(require_lib());
 
   // src/sync/drive.ts
   async function authFetch(input, init) {
@@ -3656,201 +3558,703 @@ ${content}
     }
   }
 
-  // gm-css:src/theme.css
-  GM_addStyle(`:root {
-  --ffe-primary-color-lightness: 39.1%;
-  --ffe-primary-color-chroma: 0.162;
-  --ffe-primary-color-hue: 275.91;
-  --ffe-primary-color: oklch(var(--ffe-primary-color-lightness) var(--ffe-primary-color-chroma) var(--ffe-primary-color-hue));
-  --ffe-on-primary-color: oklch(100% 0 0);
+  // jsx:src/components/Modal/Modal.tsx
+  var persistentModalContainer = jsx("div", {
+    class: "modal fade hide"
+  });
+  document.body.append(persistentModalContainer);
+  function Modal({
+    open,
+    onClose,
+    backdrop = false,
+    children
+  }) {
+    $(persistentModalContainer).data({
+      backdrop
+    });
+    effect(() => {
+      if (children) {
+        persistentModalContainer.appendChild(render_default(() => jsx(Fragment, {
+          children
+        })));
+      }
+      return () => persistentModalContainer.replaceChildren();
+    });
+    if (onClose) {
+      effect(() => {
+        $(persistentModalContainer).on("hide", onClose);
+        return () => $(persistentModalContainer).off("hide");
+      });
+    }
+    if (open) {
+      $(persistentModalContainer).modal("show");
+    } else {
+      $(persistentModalContainer).modal("hide");
+    }
+    return null;
+  }
 
-  --ffe-alert-color-lightness: 75.93%;
-  --ffe-alert-color-chroma: 0.221;
-  --ffe-alert-color-hue: 137.66;
-  --ffe-alert-color: oklch(var(--ffe-alert-color-lightness) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
-
-  --ffe-favorite-color-lightness: 81.97%;
-  --ffe-favorite-color-chroma: 0.1706020418716201;
-  --ffe-favorite-color-hue: 78.46575923690708;
-  --ffe-favorite-color: oklch(var(--ffe-favorite-color-lightness) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
-
-  --ffe-language-tag-color-lightness: 57.67%;
-  --ffe-language-tag-color-chroma: 0.175;
-  --ffe-language-tag-color-hue: 316.51;
-  --ffe-language-tag-color: oklch(var(--ffe-language-tag-color-lightness) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
-  --ffe-on-language-tag-color: oklch(100% 0 0);
-
-  --ffe-universe-tag-color-lightness: 71.57%;
-  --ffe-universe-tag-color-chroma: 0.102;
-  --ffe-universe-tag-color-hue: 195.12;
-  --ffe-universe-tag-color: oklch(var(--ffe-universe-tag-color-lightness) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
-  --ffe-on-universe-tag-color: oklch(100% 0 0);
-
-  --ffe-genre-tag-color-lightness: 64.37%;
-  --ffe-genre-tag-color-chroma: 0.124;
-  --ffe-genre-tag-color-hue: 251.25;
-  --ffe-genre-tag-color: oklch(var(--ffe-genre-tag-color-lightness) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
-  --ffe-on-genre-tag-color: oklch(100% 0 0);
-
-  --ffe-character-tag-color-lightness: 69.51%;
-  --ffe-character-tag-color-chroma: 0.157;
-  --ffe-character-tag-color-hue: 156.89;
-  --ffe-character-tag-color: oklch(var(--ffe-character-tag-color-lightness) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
-  --ffe-on-character-tag-color: oklch(100% 0 0);
-
-  --ffe-incomplete-tag-color-lightness: 78.55%;
-  --ffe-incomplete-tag-color-chroma: 0.163;
-  --ffe-incomplete-tag-color-hue: 73.2;
-  --ffe-incomplete-tag-color: oklch(var(--ffe-incomplete-tag-color-lightness) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
-  --ffe-on-incomplete-tag-color: oklch(100% 0 0);
-
-  --ffe-complete-tag-color-lightness: 71.67%;
-  --ffe-complete-tag-color-chroma: 0.183;
-  --ffe-complete-tag-color-hue: 138.2;
-  --ffe-complete-tag-color: oklch(var(--ffe-complete-tag-color-lightness) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
-  --ffe-on-complete-tag-color: oklch(100% 0 0);
-
-  --ffe-rating-k-color-lightness: 78.32%;
-  --ffe-rating-k-color-chroma: 0.172;
-  --ffe-rating-k-color-hue: 131.18;
-  --ffe-rating-k-color: oklch(var(--ffe-rating-k-color-lightness) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
-
-  --ffe-rating-t-color-lightness: 88.88%;
-  --ffe-rating-t-color-chroma: 0.1827405123650646;
-  --ffe-rating-t-color-hue: 95.76038031927554;
-  --ffe-rating-t-color: oklch(var(--ffe-rating-t-color-lightness) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
-
-  --ffe-rating-m-color-lightness: 54.81%;
-  --ffe-rating-m-color-chroma: 0.17;
-  --ffe-rating-m-color-hue: 29.63;
-  --ffe-rating-m-color: oklch(var(--ffe-rating-m-color-lightness) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
-
-  --ffe-background-color: #e4e3d5;
-  --ffe-panel-color: #f6f7ee;
-  --ffe-paper-color: #fff;
-
-  --ffe-button-background: linear-gradient(to bottom, #fff, #e6e6e6);
-  --ffe-button-background-color: #e6e6e6;
-  --ffe-button-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .05);
-  --ffe-button-hover-color: #e6e6e6;
-
-  --ffe-divider-color: #cdcdcd;
-  --ffe-weak-divider-color: rgba(0, 0, 0, 0.15);
-
-  --ffe-on-panel-color: #555;
-  --ffe-on-panel-color-faint: #999;
-  --ffe-on-paper-color: #333;
-  --ffe-on-button-color: #555;
-  --ffe-on-button-color-faint: #999;
-  --ffe-link-color: #0f37a0;
-  --ffe-on-panel-link-color: #0f37a0;
+  // gm-css:src/components/StoryTextHeader/StoryTextHeader.css
+  GM_addStyle(`.ffe-header_tp1g1 {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 3rem;
+  border-bottom: 1px solid var(--ffe-divider-color);
 }
 
-html[data-theme="dark"] {
-  --ffe-alert-color: oklch(calc(var(--ffe-alert-color-lightness) * 0.9) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
-  --ffe-favorite-color: oklch(calc(var(--ffe-favorite-color-lightness) * 0.9) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
-  --ffe-language-tag-color: oklch(calc(var(--ffe-language-tag-color-lightness) * 0.5) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
-  --ffe-universe-tag-color: oklch(calc(var(--ffe-universe-tag-color-lightness) * 0.5) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
-  --ffe-genre-tag-color: oklch(calc(var(--ffe-genre-tag-color-lightness) * 0.5) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
-  --ffe-character-tag-color: oklch(calc(var(--ffe-character-tag-color-lightness) * 0.5) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
-  --ffe-incomplete-tag-color: oklch(calc(var(--ffe-incomplete-tag-color-lightness) * 0.7) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
-  --ffe-complete-tag-color: oklch(calc(var(--ffe-complete-tag-color-lightness) * 0.7) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+.ffe-caption_ATZ4P {
+  color: var(--ffe-on-paper-color);
+  font-size: 1.3rem;
+  font-weight: bolder;
+}
 
-  --ffe-rating-k-color: oklch(calc(var(--ffe-rating-k-color-lightness) * 0.7) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
-  --ffe-rating-t-color: oklch(calc(var(--ffe-rating-t-color-lightness) * 0.7) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
-  --ffe-rating-m-color: oklch(calc(var(--ffe-rating-m-color-lightness) * 0.7) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
+.ffe-setting_fQMMa {
+  padding: 12px;
+}
 
-  --ffe-background-color: #111;
-  --ffe-panel-color: #515151;
-  --ffe-paper-color: #333333;
+.ffe-setting_fQMMa:not(:last-child) {
+    border-bottom: 1px solid var(--ffe-divider-color);
+  }
 
-  --ffe-button-background: linear-gradient(to bottom, #888, #5d5d5d);
-  --ffe-button-background-color: #5d5d5d;
-  --ffe-button-inset-shadow: none;
-  --ffe-button-hover-color: #5d5d5d;
+.ffe-setting_fQMMa .ffe-line-label_f7Vto {
+    display: inline-block;
+    width: 120px;
+  }
 
-  --ffe-divider-color: #000;
-  --ffe-weak-divider-color: rgba(255, 255, 255, 0.15);
+.ffe-setting_fQMMa .ffe-line-value_6EGJD {
+    margin-left: 20px;
+  }
 
-  --ffe-on-panel-color: #fff;
-  --ffe-on-paper-color: #ddd;
-  --ffe-on-button-color: #fff;
-  --ffe-link-color: #7397f2;
-  --ffe-on-panel-link-color: #b9ceff;
+.ffe-setting_fQMMa label {
+    display: inline;
+  }
+
+.ffe-setting_fQMMa label:not(:first-of-type) {
+      margin-left: 20px;
+    }
+
+.ffe-setting_fQMMa label input[type="checkbox"] {
+      bottom: 0;
+      margin-right: 0.5em;
+    }
+
+.ffe-justify_hsDrb p {
+  text-align: justify;
+}
+
+.ffe-indent_0CSjp p {
+  text-indent: 2.5em;
+}
+
+.ffe-no-space_SvllC p {
+  margin: 0;
+}
+`);
+  var StoryTextHeader_default = { "header": "ffe-header_tp1g1", "caption": "ffe-caption_ATZ4P", "setting": "ffe-setting_fQMMa", "lineLabel": "ffe-line-label_f7Vto", "lineValue": "ffe-line-value_6EGJD", "justify": "ffe-justify_hsDrb", "indent": "ffe-indent_0CSjp", "noSpace": "ffe-no-space_SvllC" };
+
+  // jsx:src/components/StoryTextHeader/StoryTextHeader.tsx
+  function StoryTextHeader({
+    title: title2,
+    children
+  }) {
+    const isOpen = createSignal(false);
+    const fontFamily = createSignal(XCOOKIE.read_font);
+    const fontSize = createSignal(+XCOOKIE.read_font_size);
+    const lineHeight = createSignal(+XCOOKIE.read_line_height);
+    const width = createSignal(+XCOOKIE.read_width);
+    const paragraph = createSignal(XCOOKIE.read_paragraph);
+    const textAlign = createSignal(XCOOKIE.read_align);
+    effect(() => {
+      document.querySelector("#storytext").style.fontFamily = fontFamily();
+      XCOOKIE.read_font = fontFamily();
+      _fontastic_save();
+    });
+    effect(() => {
+      document.querySelector("#storytext").style.fontSize = `${fontSize()}em`;
+      XCOOKIE.read_font_size = fontSize();
+      _fontastic_save();
+    });
+    effect(() => {
+      document.querySelector("#storytext").style.lineHeight = `${lineHeight()}`;
+      XCOOKIE.read_line_height = lineHeight();
+      _fontastic_save();
+    });
+    effect(() => {
+      document.querySelector("#storytext").style.width = `${width()}%`;
+      XCOOKIE.read_width = width();
+      _fontastic_save();
+    });
+    effect(() => {
+      const text = document.querySelector("#storytext");
+      text.classList.toggle(StoryTextHeader_default.indent, paragraph() !== "space");
+      text.classList.toggle(StoryTextHeader_default.noSpace, paragraph() === "indent");
+      XCOOKIE.read_paragraph = paragraph();
+      _fontastic_save();
+    });
+    effect(() => {
+      document.querySelector("#storytext").classList.toggle(StoryTextHeader_default.justify, textAlign() === "justify");
+      XCOOKIE.read_align = textAlign();
+      _fontastic_save();
+    });
+    return jsxs("div", {
+      class: StoryTextHeader_default.header,
+      children: [jsx("div", {
+        children: jsx("button", {
+          class: "btn icon-tl-text",
+          onClick: () => isOpen.set(true),
+          children: "\xA0Formatting"
+        })
+      }), jsx("h2", {
+        class: StoryTextHeader_default.caption,
+        children: title2
+      }), jsx("div", {
+        children
+      }), render_default(() => jsxs(Modal, {
+        open: isOpen(),
+        onClose: () => isOpen.set(false),
+        children: [jsxs("div", {
+          class: "modal-header",
+          children: [jsx("span", {
+            class: "icon-tl-text"
+          }), "\xA0Formatting"]
+        }), jsxs("div", {
+          class: "modal-body",
+          children: [jsxs("div", {
+            class: StoryTextHeader_default.setting,
+            children: [jsx("span", {
+              class: StoryTextHeader_default.lineLabel,
+              children: "Font Family:"
+            }), jsxs("select", {
+              value: compute(() => fontFamily()),
+              onChange: (event) => fontFamily.set(event.target.value),
+              children: [jsxs("optgroup", {
+                label: "Serif",
+                children: [jsx("option", {
+                  value: "Georgia",
+                  children: "Georgia"
+                }), jsx("option", {
+                  value: "Palatino",
+                  children: "Palatino"
+                }), jsx("option", {
+                  value: "Times New Roman",
+                  children: "Times New Roman"
+                })]
+              }), jsxs("optgroup", {
+                label: "Sans-Serif",
+                children: [jsx("option", {
+                  value: "Arial",
+                  children: "Arial"
+                }), jsx("option", {
+                  value: "Droid Sans",
+                  children: "Droid Sans"
+                }), jsx("option", {
+                  value: "Helvetica",
+                  children: "Helvetica"
+                }), jsx("option", {
+                  value: "Open Sans",
+                  children: "Open Sans"
+                }), jsx("option", {
+                  value: "PT Sans",
+                  children: "PT Sans"
+                }), jsx("option", {
+                  value: "Roboto",
+                  children: "Roboto"
+                }), jsx("option", {
+                  value: "Ubuntu",
+                  children: "Ubuntu"
+                })]
+              })]
+            })]
+          }), jsxs("div", {
+            class: StoryTextHeader_default.setting,
+            children: [jsx("span", {
+              class: StoryTextHeader_default.lineLabel,
+              children: "Font Size:"
+            }), jsx("input", {
+              type: "range",
+              "aria-label": "Font Size",
+              value: compute(() => toPercent(fontSize(), 0.1, 3)),
+              onInput: (event) => fontSize.set(fromPercent(event, 0.1, 3))
+            }), jsxs("span", {
+              class: StoryTextHeader_default.lineValue,
+              children: [render_default(() => fontSize().toFixed(2)), "em"]
+            })]
+          }), jsxs("div", {
+            class: StoryTextHeader_default.setting,
+            children: [jsx("span", {
+              class: StoryTextHeader_default.lineLabel,
+              children: "Line Height:"
+            }), jsx("input", {
+              type: "range",
+              "aria-label": "Line Height",
+              value: compute(() => toPercent(lineHeight(), 1, 3)),
+              onInput: (event) => lineHeight.set(fromPercent(event, 1, 3))
+            }), jsx("span", {
+              class: StoryTextHeader_default.lineValue,
+              children: render_default(() => lineHeight().toFixed(2))
+            })]
+          }), jsxs("div", {
+            class: StoryTextHeader_default.setting,
+            children: [jsx("span", {
+              class: StoryTextHeader_default.lineLabel,
+              children: "Page Width:"
+            }), jsx("input", {
+              type: "range",
+              "aria-label": "Page Width",
+              value: compute(() => toPercent(width(), 10, 100)),
+              onInput: (event) => width.set(fromPercent(event, 10, 100))
+            }), jsxs("span", {
+              class: StoryTextHeader_default.lineValue,
+              children: [render_default(() => width().toFixed(2)), "%"]
+            })]
+          }), jsxs("div", {
+            class: StoryTextHeader_default.setting,
+            children: [jsx("span", {
+              class: StoryTextHeader_default.lineLabel,
+              children: "Paragraphs:"
+            }), jsxs("label", {
+              children: [jsx("input", {
+                type: "radio",
+                name: "paragraph",
+                checked: compute(() => paragraph() === "space"),
+                onChange: () => paragraph.set("space")
+              }), " ", "double spaced"]
+            }), jsxs("label", {
+              children: [jsx("input", {
+                type: "radio",
+                name: "paragraph",
+                checked: compute(() => paragraph() === "indent"),
+                onChange: () => paragraph.set("indent")
+              }), " ", "indented"]
+            }), jsxs("label", {
+              children: [jsx("input", {
+                type: "radio",
+                name: "paragraph",
+                checked: compute(() => paragraph() === "both"),
+                onChange: () => paragraph.set("both")
+              }), " ", "both"]
+            })]
+          }), jsxs("div", {
+            class: StoryTextHeader_default.setting,
+            children: [jsx("span", {
+              class: StoryTextHeader_default.lineLabel,
+              children: "Alignment"
+            }), jsxs("label", {
+              children: [jsx("input", {
+                type: "checkbox",
+                checked: compute(() => textAlign() === "justify"),
+                onChange: (event) => textAlign.set(event.target.checked ? "justify" : "start")
+              }), "Justified"]
+            })]
+          })]
+        }), jsx("div", {
+          class: "modal-footer",
+          children: jsx("button", {
+            class: "btn",
+            onClick: () => isOpen.set(false),
+            children: "Close"
+          })
+        })]
+      }))]
+    });
+  }
+  function toPercent(value, min = 0, max = 100) {
+    return `${(value - min) / (max - min) * 100}`;
+  }
+  function fromPercent(event, min = 0, max = 100) {
+    const value = event.target.value;
+    return +value * (max - min) / 100 + min;
+  }
+  if (true) {
+    try {
+      const xc = getCookie("xcookie2");
+      const data = JSON.parse(decodeURIComponent(xc));
+      XCOOKIE.read_align = ["start", "justify"].includes(data.read_align) ? data.read_align : "justify";
+      XCOOKIE.read_paragraph = ["space", "indent", "both"].includes(data.read_paragraph) ? data.read_paragraph : "space";
+    } catch (e) {
+      XCOOKIE.read_align = "justify";
+      XCOOKIE.read_paragraph = "space";
+    }
+  }
+
+  // gm-css:src/enhance/StoryText/StoryText.css
+  GM_addStyle(`.storytext {
+  color: var(--ffe-on-paper-color);
 }
 `);
 
+  // jsx:src/enhance/StoryText/StoryText.tsx
+  var StoryText = class {
+    constructor() {
+      /**
+       * Not all selectable fonts exist on Google Fonts. Filter out
+       * fonts that do not exist, or Google will throw an error.
+       */
+      __publicField(this, "GOOGLE_FONTS_WHITELIST", ["Open Sans", "PT Sans", "Roboto", "Ubuntu"]);
+    }
+    canEnhance(type) {
+      return type === 5 /* Chapter */;
+    }
+    async enhance() {
+      this.fixFontLink();
+      const textContainer = document.getElementById("storytextp");
+      if (!textContainer) {
+        throw new Error("Could not find text container element.");
+      }
+      this.fixUserSelect(textContainer);
+      await this.autoMarkRead();
+      const controls = document.querySelectorAll(".lc-wrapper")?.[1];
+      const chapterSelect = controls?.nextElementSibling;
+      if (controls && chapterSelect) {
+        const story = await (0, import_ffn_parser5.parseStory)();
+        const chapter2 = story?.chapters.find((chapter3) => chapter3.id === environment.currentChapterId);
+        controls.replaceWith(render_default(() => jsx(StoryTextHeader, {
+          title: chapter2?.title,
+          children: chapterSelect
+        })));
+      }
+    }
+    async autoMarkRead() {
+      const currentStory = await (0, import_ffn_parser5.parseStory)();
+      if (!currentStory || !environment.currentChapterId) {
+        return;
+      }
+      const isRead = getChapterRead(currentStory.id, environment.currentChapterId);
+      const markRead = async () => {
+        const amount = document.documentElement.scrollTop;
+        const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        if (amount / (max - 550) >= 1) {
+          window.removeEventListener("scroll", markRead);
+          console.log("Setting '%s' chapter '%s' to read", currentStory.title, currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title);
+          isRead.set(true);
+          await uploadMetadata();
+        }
+      };
+      window.addEventListener("scroll", markRead);
+    }
+    fixFontLink() {
+      const replace = (link) => {
+        if (!link) {
+          const links = Array.from(document.head.querySelectorAll("link"));
+          link = links.find((l) => l.href.includes("fonts.googleapis.com"));
+        }
+        if (!link) {
+          return false;
+        }
+        const href = new URL(link.href);
+        const search = new URLSearchParams(href.search);
+        const families = search.get("family")?.split("|").filter((f) => this.GOOGLE_FONTS_WHITELIST.includes(f));
+        if (families) {
+          search.set("family", families.join("|"));
+        }
+        href.search = search.toString();
+        link.href = href.toString();
+        return true;
+      };
+      if (replace()) {
+        return;
+      }
+      const observer = new MutationObserver((list) => {
+        for (const record of list) {
+          if (record.type !== "childList") {
+            continue;
+          }
+          for (const node of Array.from(record.addedNodes)) {
+            if (!(node instanceof Element) || node.tagName !== "LINK") {
+              continue;
+            }
+            replace();
+            observer.disconnect();
+          }
+        }
+      });
+      observer.observe(document.head, {
+        childList: true
+      });
+    }
+    fixUserSelect(textContainer) {
+      const handle = setInterval(() => {
+        const rules = ["userSelect", "msUserSelect", "mozUserSelect", "khtmlUserSelect", "webkitUserSelect", "webkitTouchCallout"];
+        let isOk = true;
+        for (const rule of rules) {
+          if (textContainer.style[rule] !== "inherit") {
+            isOk = false;
+          }
+          textContainer.style[rule] = "inherit";
+        }
+        if (isOk) {
+          clearTimeout(handle);
+        }
+      }, 150);
+    }
+  };
+
+  // src/container.ts
+  var Container = class {
+    constructor() {
+      __publicField(this, "menuBar");
+      __publicField(this, "followsList");
+      __publicField(this, "storyList");
+      __publicField(this, "storyProfile");
+      __publicField(this, "chapterList");
+      __publicField(this, "saveListSettings");
+      __publicField(this, "storyText");
+    }
+    getMenuBar() {
+      if (!this.menuBar) {
+        this.menuBar = new MenuBar();
+      }
+      return this.menuBar;
+    }
+    getFollowsList() {
+      if (!this.followsList) {
+        this.followsList = new FollowsList();
+      }
+      return this.followsList;
+    }
+    getStoryListEnhancer() {
+      if (!this.storyList) {
+        this.storyList = new StoryList();
+      }
+      return this.storyList;
+    }
+    getStoryProfile() {
+      if (!this.storyProfile) {
+        this.storyProfile = new StoryProfile();
+      }
+      return this.storyProfile;
+    }
+    getChapterList() {
+      if (!this.chapterList) {
+        this.chapterList = new ChapterList2();
+      }
+      return this.chapterList;
+    }
+    getSaveListSettings() {
+      if (!this.saveListSettings) {
+        this.saveListSettings = new SaveListSettings();
+      }
+      return this.saveListSettings;
+    }
+    getStoryText() {
+      if (!this.storyText) {
+        this.storyText = new StoryText();
+      }
+      return this.storyText;
+    }
+    getEnhancer() {
+      return [
+        this.getMenuBar(),
+        this.getFollowsList(),
+        this.getStoryListEnhancer(),
+        this.getSaveListSettings(),
+        this.getStoryProfile(),
+        this.getChapterList(),
+        this.getStoryText()
+      ];
+    }
+    getContainer() {
+      return this;
+    }
+  };
+
+  // gm-css:src/theme.css
+  GM_addStyle(`:root {
+    --ffe-primary-color-lightness: 39.1%;
+    --ffe-primary-color-chroma: 0.162;
+    --ffe-primary-color-hue: 275.91;
+    --ffe-primary-color: oklch(var(--ffe-primary-color-lightness) var(--ffe-primary-color-chroma) var(--ffe-primary-color-hue));
+    --ffe-on-primary-color: oklch(100% 0 0);
+
+    --ffe-alert-color-lightness: 75.93%;
+    --ffe-alert-color-chroma: 0.221;
+    --ffe-alert-color-hue: 137.66;
+    --ffe-alert-color: oklch(var(--ffe-alert-color-lightness) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
+
+    --ffe-favorite-color-lightness: 81.97%;
+    --ffe-favorite-color-chroma: 0.1706020418716201;
+    --ffe-favorite-color-hue: 78.46575923690708;
+    --ffe-favorite-color: oklch(var(--ffe-favorite-color-lightness) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
+
+    --ffe-language-tag-color-lightness: 57.67%;
+    --ffe-language-tag-color-chroma: 0.175;
+    --ffe-language-tag-color-hue: 316.51;
+    --ffe-language-tag-color: oklch(var(--ffe-language-tag-color-lightness) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
+    --ffe-on-language-tag-color: oklch(100% 0 0);
+
+    --ffe-universe-tag-color-lightness: 71.57%;
+    --ffe-universe-tag-color-chroma: 0.102;
+    --ffe-universe-tag-color-hue: 195.12;
+    --ffe-universe-tag-color: oklch(var(--ffe-universe-tag-color-lightness) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
+    --ffe-on-universe-tag-color: oklch(100% 0 0);
+
+    --ffe-genre-tag-color-lightness: 64.37%;
+    --ffe-genre-tag-color-chroma: 0.124;
+    --ffe-genre-tag-color-hue: 251.25;
+    --ffe-genre-tag-color: oklch(var(--ffe-genre-tag-color-lightness) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
+    --ffe-on-genre-tag-color: oklch(100% 0 0);
+
+    --ffe-character-tag-color-lightness: 69.51%;
+    --ffe-character-tag-color-chroma: 0.157;
+    --ffe-character-tag-color-hue: 156.89;
+    --ffe-character-tag-color: oklch(var(--ffe-character-tag-color-lightness) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
+    --ffe-on-character-tag-color: oklch(100% 0 0);
+
+    --ffe-incomplete-tag-color-lightness: 78.55%;
+    --ffe-incomplete-tag-color-chroma: 0.163;
+    --ffe-incomplete-tag-color-hue: 73.2;
+    --ffe-incomplete-tag-color: oklch(var(--ffe-incomplete-tag-color-lightness) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
+    --ffe-on-incomplete-tag-color: oklch(100% 0 0);
+
+    --ffe-complete-tag-color-lightness: 71.67%;
+    --ffe-complete-tag-color-chroma: 0.183;
+    --ffe-complete-tag-color-hue: 138.2;
+    --ffe-complete-tag-color: oklch(var(--ffe-complete-tag-color-lightness) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+    --ffe-on-complete-tag-color: oklch(100% 0 0);
+
+    --ffe-rating-k-color-lightness: 78.32%;
+    --ffe-rating-k-color-chroma: 0.172;
+    --ffe-rating-k-color-hue: 131.18;
+    --ffe-rating-k-color: oklch(var(--ffe-rating-k-color-lightness) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
+
+    --ffe-rating-t-color-lightness: 88.88%;
+    --ffe-rating-t-color-chroma: 0.1827405123650646;
+    --ffe-rating-t-color-hue: 95.76038031927554;
+    --ffe-rating-t-color: oklch(var(--ffe-rating-t-color-lightness) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
+
+    --ffe-rating-m-color-lightness: 54.81%;
+    --ffe-rating-m-color-chroma: 0.17;
+    --ffe-rating-m-color-hue: 29.63;
+    --ffe-rating-m-color: oklch(var(--ffe-rating-m-color-lightness) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
+
+    --ffe-background-color: #e4e3d5;
+    --ffe-panel-color: #f6f7ee;
+    --ffe-paper-color: #fff;
+
+    --ffe-button-background: linear-gradient(to bottom, #fff, #e6e6e6);
+    --ffe-button-background-color: #e6e6e6;
+    --ffe-button-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .05);
+    --ffe-button-hover-color: #e6e6e6;
+
+    --ffe-divider-color: #cdcdcd;
+    --ffe-weak-divider-color: rgba(0, 0, 0, 0.15);
+
+    --ffe-on-panel-color: #555;
+    --ffe-on-panel-color-faint: #999;
+    --ffe-on-paper-color: #333;
+    --ffe-on-button-color: #555;
+    --ffe-on-button-color-faint: #999;
+    --ffe-link-color: #0f37a0;
+    --ffe-on-panel-link-color: #0f37a0;
+  }
+  html[data-theme="dark"] {
+    --ffe-alert-color: oklch(calc(var(--ffe-alert-color-lightness) * 0.9) var(--ffe-alert-color-chroma) var(--ffe-alert-color-hue));
+    --ffe-favorite-color: oklch(calc(var(--ffe-favorite-color-lightness) * 0.9) var(--ffe-favorite-color-chroma) var(--ffe-favorite-color-hue));
+    --ffe-language-tag-color: oklch(calc(var(--ffe-language-tag-color-lightness) * 0.5) var(--ffe-language-tag-color-chroma) var(--ffe-language-tag-color-hue));
+    --ffe-universe-tag-color: oklch(calc(var(--ffe-universe-tag-color-lightness) * 0.5) var(--ffe-universe-tag-color-chroma) var(--ffe-universe-tag-color-hue));
+    --ffe-genre-tag-color: oklch(calc(var(--ffe-genre-tag-color-lightness) * 0.5) var(--ffe-genre-tag-color-chroma) var(--ffe-genre-tag-color-hue));
+    --ffe-character-tag-color: oklch(calc(var(--ffe-character-tag-color-lightness) * 0.5) var(--ffe-character-tag-color-chroma) var(--ffe-character-tag-color-hue));
+    --ffe-incomplete-tag-color: oklch(calc(var(--ffe-incomplete-tag-color-lightness) * 0.7) var(--ffe-incomplete-tag-color-chroma) var(--ffe-incomplete-tag-color-hue));
+    --ffe-complete-tag-color: oklch(calc(var(--ffe-complete-tag-color-lightness) * 0.7) var(--ffe-complete-tag-color-chroma) var(--ffe-complete-tag-color-hue));
+
+    --ffe-rating-k-color: oklch(calc(var(--ffe-rating-k-color-lightness) * 0.7) var(--ffe-rating-k-color-chroma) var(--ffe-rating-k-color-hue));
+    --ffe-rating-t-color: oklch(calc(var(--ffe-rating-t-color-lightness) * 0.7) var(--ffe-rating-t-color-chroma) var(--ffe-rating-t-color-hue));
+    --ffe-rating-m-color: oklch(calc(var(--ffe-rating-m-color-lightness) * 0.7) var(--ffe-rating-m-color-chroma) var(--ffe-rating-m-color-hue));
+
+    --ffe-background-color: #111;
+    --ffe-panel-color: #515151;
+    --ffe-paper-color: #333333;
+
+    --ffe-button-background: linear-gradient(to bottom, #888, #5d5d5d);
+    --ffe-button-background-color: #5d5d5d;
+    --ffe-button-inset-shadow: none;
+    --ffe-button-hover-color: #5d5d5d;
+
+    --ffe-divider-color: #000;
+    --ffe-weak-divider-color: rgba(255, 255, 255, 0.15);
+
+    --ffe-on-panel-color: #fff;
+    --ffe-on-paper-color: #ddd;
+    --ffe-on-button-color: #fff;
+    --ffe-link-color: #7397f2;
+    --ffe-on-panel-link-color: #b9ceff;
+  }
+`);
+
   // gm-css:src/main.css
-  GM_addStyle(`a,
-a:link,
-a:active,
-a:visited {
-  color: var(--ffe-link-color);
-}
-
-.zui a {
-  color: var(--ffe-on-panel-color);
-}
-
-.caret {
-  border-top-color: currentColor;
-}
-
-html ul.topnav li a {
-  color: var(--ffe-on-paper-color);
-}
-
-html ul.topnav li.active a {
-  color: #000;
-}
-
-body,
-.zmenu,
-.tcat {
-  background-color: var(--ffe-panel-color) !important;
-  border-color: var(--ffe-divider-color);
-  color: var(--ffe-on-panel-color);
-}
-
-.btn {
-  color: var(--ffe-on-button-color);
-  background-color: var(--ffe-button-background-color);
-  background-image: var(--ffe-button-background);
-  box-shadow: var(--ffe-button-inset-shadow);
-}
-
-.btn:not(:disabled):not(.disabled):hover {
+  GM_addStyle(`a, a:link, a:active, a:visited {
+    color: var(--ffe-link-color);
+  }
+  .zui a {
+    color: var(--ffe-on-panel-color);
+  }
+  .caret {
+    border-top-color: currentColor;
+  }
+  .dropdown-menu {
+    color: var(--ffe-on-paper-color);
+    background-color: var(--ffe-paper-color);
+  }
+  .dropdown-menu > li > a {
+      color: var(--ffe-on-paper-color);
+    }
+  .dropdown-menu .divider {
+      background-color: transparent;
+      border-color: var(--ffe-divider-color);
+    }
+  .modal {
+    color: var(--ffe-on-paper-color);
+    background-color: var(--ffe-paper-color);
+  }
+  .modal-footer {
+    color: var(--ffe-on-panel-color);
+    background-color: var(--ffe-panel-color);
+    border-top: 1px solid var(--ffe-divider-color);
+    box-shadow: none;
+  }
+  html ul.topnav li a {
+    color: var(--ffe-on-paper-color);
+  }
+  html ul.topnav li.active a {
+    color: #000;
+  }
+  body, .zmenu, .tcat {
+    background-color: var(--ffe-panel-color) !important;
+    border-color: var(--ffe-divider-color);
+    color: var(--ffe-on-panel-color);
+  }
+  .btn {
     color: var(--ffe-on-button-color);
-    background-color: var(--ffe-button-hover-color);
+    background-color: var(--ffe-button-background-color);
+    background-image: var(--ffe-button-background);
+    box-shadow: var(--ffe-button-inset-shadow);
   }
-
-[data-theme="dark"] .btn {
-    border: none;
-    text-shadow: none;
+  .btn:not(:disabled):not(.disabled):hover {
+      color: var(--ffe-on-button-color);
+      background-color: var(--ffe-button-hover-color);
+    }
+  [data-theme="dark"] .btn {
+      border: none;
+      text-shadow: none;
+    }
+  [data-theme="dark"] .btn-group > .btn + .btn {
+    margin-left: 0;
+    border-left: 1px solid var(--ffe-divider-color);
   }
-
-[data-theme="dark"] .btn-group > .btn + .btn {
-  margin-left: 0;
-  border-left: 1px solid var(--ffe-divider-color);
-}
-
-#content_parent {
-  background-color: var(--ffe-background-color) !important;
-}
-
-#content_wrapper,
-.lc {
-  background-color: var(--ffe-paper-color) !important;
-  color: var(--ffe-on-paper-color);
-}
-
-#content_wrapper_inner {
-  border-color: var(--ffe-divider-color);
-}
-
-#p_footer a {
-  color: var(--ffe-on-panel-link-color);
-}
+  #content_parent {
+    background-color: var(--ffe-background-color) !important;
+  }
+  #content_wrapper, .lc {
+    background-color: var(--ffe-paper-color) !important;
+    color: var(--ffe-on-paper-color);
+  }
+  #content_wrapper_inner {
+    border-color: var(--ffe-divider-color);
+  }
+  #p_footer a {
+    color: var(--ffe-on-panel-link-color);
+  }
 `);
 
   // src/main.ts
@@ -3861,69 +4265,12 @@ body,
       return;
     }
     syncChapterReadStatus().catch(console.error);
-    const menuBarEnhancer = container.getMenuBar();
-    await menuBarEnhancer.enhance();
-    if (environment.currentPageType === 2 /* Alerts */ || environment.currentPageType === 3 /* Favorites */) {
-      const followsListEnhancer = container.getFollowsList();
-      await followsListEnhancer.enhance();
-    }
-    if (environment.currentPageType === 7 /* StoryList */) {
-      const storyListEnhancer = container.getStoryListEnhancer();
-      await storyListEnhancer.enhance();
-      const saveListSettingsEnhancer = container.getSaveListSettings();
-      await saveListSettingsEnhancer.enhance();
-    }
-    if (environment.currentPageType === 8 /* UniverseList */ || environment.currentPageType === 9 /* CommunityList */) {
-      const saveListSettingsEnhancer = container.getSaveListSettings();
-      await saveListSettingsEnhancer.enhance();
-    }
-    if (environment.currentPageType === 4 /* Story */) {
-      const storyProfileEnhancer = container.getStoryProfile();
-      await storyProfileEnhancer.enhance();
-      const chapterListEnhancer = container.getChapterList();
-      await chapterListEnhancer.enhance();
-    }
-    if (environment.currentPageType === 5 /* Chapter */) {
-      const currentStory = await (0, import_ffn_parser5.parseStory)(document);
-      if (currentStory) {
-        const storyProfileEnhancer = container.getStoryProfile();
-        await storyProfileEnhancer.enhance();
-        const storyTextEnhancer = new StoryText();
-        await storyTextEnhancer.enhance();
-        if (environment.currentChapterId) {
-          const isRead = getChapterRead(currentStory.id, environment.currentChapterId);
-          const markRead = async () => {
-            const amount = document.documentElement.scrollTop;
-            const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            if (amount / (max - 550) >= 1) {
-              window.removeEventListener("scroll", markRead);
-              console.log(
-                "Setting '%s' chapter '%s' to read",
-                currentStory.title,
-                currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title
-              );
-              isRead.set(true);
-              await uploadMetadata();
-            }
-          };
-          window.addEventListener("scroll", markRead);
-        }
+    const enhancer = container.getEnhancer();
+    for (const e of enhancer) {
+      if (e.canEnhance(environment.currentPageType)) {
+        await e.enhance();
       }
     }
   }
-  async function migrate() {
-    const readListStr = await GM.getValue("ffe-cache-read");
-    if (!readListStr) {
-      return;
-    }
-    const readList = JSON.parse(readListStr);
-    for (const [storyId, story] of Object.entries(readList)) {
-      for (const [chapterId, chapter2] of Object.entries(story)) {
-        await GM.setValue(`ffe-story-${storyId}-chapter-${chapterId}-read`, chapter2);
-      }
-    }
-    await GM.deleteValue("ffe-cache-read");
-    await GM.deleteValue("ffe-cache-alerts");
-  }
-  migrate().then(main).catch(console.error);
+  main().catch(console.error);
 })();
