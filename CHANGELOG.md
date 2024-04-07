@@ -1,8 +1,10 @@
 # FanFiction Enhancements
 
-## unreleased
+## 0.8.3
 
+* Feature: Formatting dialog with more extensive options ([#79](https://github.com/amur-tiger/fanfiction-enhancements/issues/79))
 * Fixed: Dark mode support for popups and modals ([#109](https://github.com/amur-tiger/fanfiction-enhancements/issues/109))
+* Fixed: StoryCards not re-rendering when story updates
 
 ## 0.8.2
 
