@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { Plugin } from "esbuild";
-import babel, { type NodePath, type PluginObj } from "@babel/core";
+import babel, { type NodePath, type PluginObj, type PluginPass } from "@babel/core";
 import {
   type ArrayExpression,
   arrowFunctionExpression,
@@ -9,20 +9,19 @@ import {
   type CallExpression,
   type Expression,
   identifier,
+  type Identifier,
   importDeclaration,
   importDefaultSpecifier,
   importSpecifier,
   isArrayExpression,
   isCallExpression,
   isIdentifier,
-  isObjectExpression,
   isObjectProperty,
   isStringLiteral,
   type Node,
   type ObjectExpression,
   stringLiteral,
 } from "@babel/types";
-import type { Scope } from "@babel/traverse";
 // @ts-ignore
 import presetTypescript from "@babel/preset-typescript";
 // @ts-ignore
@@ -79,65 +78,66 @@ export default function jsxTransform(): Plugin {
 }
 
 function babelTransform(): PluginObj {
-  let renderVariableName = "";
-  let computeVariableName = "";
+  function isJsxCall(node: Node | null | undefined, pass: PluginPass): node is CallExpression {
+    const jsx = pass.get("@babel/plugin-react-jsx/id/jsx")();
+    const jsxs = pass.get("@babel/plugin-react-jsx/id/jsxs")();
 
-  function getRenderName(scope: Scope) {
-    if (!renderVariableName) {
-      renderVariableName = scope.generateUid("render");
+    if (!isIdentifier(jsx) || !isIdentifier(jsxs)) {
+      throw new TypeError("Could not determine jsx imported name.");
     }
-    return renderVariableName;
+
+    return isCallExpression(node) && (isIdentifier(node.callee, jsx) || isIdentifier(node.callee, jsxs));
   }
 
-  function getComputeName(scope: Scope) {
-    if (!computeVariableName) {
-      computeVariableName = scope.generateUid("compute");
+  function hasSignalCall(path: NodePath, pass: PluginPass): boolean {
+    const options = {
+      pass,
+      hasCall: false,
+    };
+
+    path.traverse(
+      {
+        FunctionExpression(p) {
+          p.skip();
+        },
+
+        ArrowFunctionExpression(p) {
+          p.skip();
+        },
+
+        CallExpression(p, options) {
+          if (isJsxCall(p.node, options.pass) && !isStringLiteral(p.node.arguments[0])) {
+            p.skip();
+          } else if (p.node.arguments.length === 0) {
+            options.hasCall = true;
+            p.stop();
+          }
+        },
+      },
+      options,
+    );
+
+    return options.hasCall;
+  }
+
+  function isWrapped(path: NodePath, pass: PluginPass) {
+    if (path.parentPath == null || !path.parentPath.isArrowFunctionExpression()) {
+      return false;
     }
-    return computeVariableName;
+
+    const render = pass.get("ffe-transform/imports/render");
+    const compute = pass.get("ffe-transform/imports/compute");
+    const call = path.parentPath.parentPath.node;
+
+    return isCallExpression(call) && (isIdentifier(call.callee, render) || isIdentifier(call.callee, compute));
   }
 
-  function isJsxCall(node: Node | null | undefined) {
-    return (
-      isCallExpression(node) &&
-      (isIdentifier(node.callee, { name: "_jsx" }) || isIdentifier(node.callee, { name: "_jsxs" }))
-    );
-  }
+  function wrapCall(path: NodePath<Expression>, func: Identifier, pass: PluginPass) {
+    if (isWrapped(path, pass)) {
+      return;
+    }
 
-  function isReactiveCall(node: CallExpression) {
-    return (
-      (isIdentifier(node.callee, { name: renderVariableName }) ||
-        isIdentifier(node.callee, { name: computeVariableName })) &&
-      node.arguments.length === 1
-    );
-  }
-
-  function hasSignalCall(path: NodePath, withJsx = false): boolean {
-    let hasCall = false;
-    let hasJsx = false;
-
-    path.traverse({
-      ArrowFunctionExpression(p) {
-        p.skip();
-      },
-
-      CallExpression(p) {
-        if (isJsxCall(p.node)) {
-          p.skip();
-          hasJsx = true;
-        } else if (isReactiveCall(p.node)) {
-          p.skip();
-        } else if (p.node.arguments.length === 0) {
-          p.stop();
-          hasCall = true;
-        }
-      },
-    });
-
-    return withJsx ? hasCall && hasJsx : hasCall;
-  }
-
-  function wrapCall(path: NodePath<Expression>, func: string) {
-    path.replaceWith(callExpression(identifier(func), [arrowFunctionExpression([], path.node)]));
+    path.replaceWith(callExpression(func, [arrowFunctionExpression([], path.node)]));
     path.skip();
   }
 
@@ -154,36 +154,35 @@ function babelTransform(): PluginObj {
     },
 
     visitor: {
-      Program: {
-        exit(path) {
-          if (renderVariableName) {
-            path.node.body.push(
-              importDeclaration([importDefaultSpecifier(identifier(renderVariableName))], stringLiteral("@jsx/render")),
-            );
-          }
-          if (computeVariableName) {
-            path.node.body.push(
-              importDeclaration(
-                [importSpecifier(identifier(computeVariableName), identifier("compute"))],
-                stringLiteral("@jsx/render"),
-              ),
-            );
-          }
-        },
+      Program(path, pass) {
+        const render = identifier(path.scope.generateUid("render"));
+        pass.set("ffe-transform/imports/render", render);
+
+        const compute = identifier(path.scope.generateUid("compute"));
+        pass.set("ffe-transform/imports/compute", compute);
+
+        path.node.body.unshift(
+          importDeclaration(
+            [importDefaultSpecifier(render), importSpecifier(compute, identifier("compute"))],
+            stringLiteral("@jsx/render"),
+          ),
+        );
       },
 
       CallExpression: {
-        exit(path) {
-          if (!(isJsxCall(path.node) && isObjectExpression(path.node.arguments[1])) || isReactiveCall(path.node)) {
-            // skip if not jsx()-call, skip if jsx()-call was already wrapped
+        exit(path, pass) {
+          if (!isJsxCall(path.node, pass)) {
+            // this call is not jsx or already wrapped
             return;
           }
 
+          const isComponent = !isStringLiteral(path.node.arguments[0]);
           const props = path.get("arguments")[1] as NodePath<ObjectExpression>;
+
           for (const prop of props.get("properties")) {
             if (
               !isObjectProperty(prop.node) ||
-              (isCallExpression(prop.node.value) && isIdentifier(prop.node.value.callee, { name: computeVariableName }))
+              (isCallExpression(prop.node.value) && isJsxCall(prop.node.value.callee, pass))
             ) {
               continue;
             }
@@ -197,21 +196,24 @@ function babelTransform(): PluginObj {
               // wrap each reactive child
               if (isArrayExpression(value.node)) {
                 for (const item of (value as NodePath<ArrayExpression>).get("elements")) {
-                  if (hasSignalCall(item as NodePath<Expression>)) {
-                    wrapCall(item as NodePath<Expression>, getRenderName(item.scope));
+                  if (hasSignalCall(item as NodePath<Expression>, pass)) {
+                    wrapCall(item as NodePath<Expression>, pass.get("ffe-transform/imports/render"), pass);
                   }
                 }
               } else {
-                if (hasSignalCall(value)) {
-                  wrapCall(value as NodePath<Expression>, getRenderName(value.scope));
+                if (hasSignalCall(value, pass)) {
+                  wrapCall(value as NodePath<Expression>, pass.get("ffe-transform/imports/render"), pass);
                 }
               }
-            } else if (isStringLiteral(path.node.arguments[0])) {
+            } else if (!isComponent && hasSignalCall(prop, pass)) {
               // for intrinsic elements, wrap attributes (components have to be re-rendered whole)
-              if (hasSignalCall(prop)) {
-                wrapCall(value as NodePath<Expression>, getComputeName(value.scope));
-              }
+              wrapCall(value as NodePath<Expression>, pass.get("ffe-transform/imports/compute"), pass);
             }
+          }
+
+          if (isComponent) {
+            // always wrap components
+            wrapCall(path, pass.get("ffe-transform/imports/render"), pass);
           }
         },
       },

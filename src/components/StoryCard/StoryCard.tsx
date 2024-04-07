@@ -17,7 +17,9 @@ export interface StoryCardProps {
 }
 
 export default function StoryCard({ class: className, storyId }: StoryCardProps) {
-  const story = getStory(storyId)();
+  const storySignal = getStory(storyId);
+  const story = storySignal();
+
   if (!story) {
     return <div class={clsx(classes.container, className)}>loading...</div>;
   }
