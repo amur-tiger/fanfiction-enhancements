@@ -1,4 +1,4 @@
-export const enum Page {
+export enum Page {
   Other,
   User,
   Alerts,

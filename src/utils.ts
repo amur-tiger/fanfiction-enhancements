@@ -67,7 +67,7 @@ export function ptToEm(pt: string | undefined, base?: number): string | boolean 
  * @param {string} name
  * @returns {string | boolean}
  */
-export function getCookie(name: string): string | boolean {
+export function getCookie(name: string): string | false {
   const ca = document.cookie.split(";");
   for (let i = 0; i < ca.length; i++) {
     const c = ca[i].trimLeft();

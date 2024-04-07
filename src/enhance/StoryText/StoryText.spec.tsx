@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { timeout } from "../utils";
+import { timeout } from "../../utils";
 import StoryText from "./StoryText";
 
 describe("Story Text", () => {

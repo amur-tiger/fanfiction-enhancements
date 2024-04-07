@@ -8,17 +8,20 @@ import Epub, { type CreateProgress } from "../../util/epub";
 import { getStoryAlert, getStoryFavorite } from "../../api/follows";
 import { toDate } from "../../utils";
 import BellIcon from "../../assets/bell.svg";
-import "./StoryCard.css";
 import CircularProgress from "../CircularProgress/CircularProgress";
+import classes from "./StoryCard.css";
 
 export interface StoryCardProps {
+  class?: string;
   storyId: number;
 }
 
-export default function StoryCard({ storyId }: StoryCardProps) {
-  const story = getStory(storyId)();
+export default function StoryCard({ class: className, storyId }: StoryCardProps) {
+  const storySignal = getStory(storyId);
+  const story = storySignal();
+
   if (!story) {
-    return <div class="ffe-sc">loading...</div>;
+    return <div class={clsx(classes.container, className)}>loading...</div>;
   }
 
   const isDownloading = createSignal(false);
@@ -52,24 +55,24 @@ export default function StoryCard({ storyId }: StoryCardProps) {
   };
 
   const element = (
-    <div class="ffe-sc">
-      <div class="ffe-sc-header">
+    <div class={clsx(classes.container, className)}>
+      <div class={classes.header}>
         <Rating rating={story.rating} />
-        <a href={`/s/${story.id}`} class="ffe-sc-title">
+        <a href={`/s/${story.id}`} class={classes.title}>
           {story.title}
         </a>
-        <span class="ffe-sc-by">by</span>
-        <a href={`/u/${story.author.id}`} class="ffe-sc-author">
+        <span class={classes.by}>by</span>
+        <a href={`/u/${story.author.id}`} class={classes.author}>
           {story.author.name}
         </a>
 
-        <div class="ffe-sc-mark">
+        <div class={classes.mark}>
           <Button
             onClick={handleDownloadClick}
             title={
               isDownloading() ? `Progress: ${Math.round((progress()?.progress ?? 0) * 100)}\u202f%` : "Download as ePub"
             }
-            class="ffe-sc-download-button"
+            class={classes.downloadButton}
             disabled={isDownloading()}
           >
             {isDownloading() ? (
@@ -88,7 +91,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
 
           <div class="btn-group">
             <Button
-              class={clsx("ffe-sc-alert", { "ffe-active": hasAlert() })}
+              class={clsx(classes.alert, { [classes.active]: hasAlert() })}
               title="Toggle Story Alert"
               onClick={() =>
                 hasAlert.set((prev) => {
@@ -98,10 +101,10 @@ export default function StoryCard({ storyId }: StoryCardProps) {
               }
             >
               <BellIcon />
-              <span class="ffe-sc-follow-count">{((story.follows ?? 0) + alertOffset()).toLocaleString("en")}</span>
+              <span class={classes.followCount}>{((story.follows ?? 0) + alertOffset()).toLocaleString("en")}</span>
             </Button>
             <Button
-              class={clsx("ffe-sc-favorite icon-heart", { "ffe-active": isFavorite() })}
+              class={clsx(classes.favorite, "icon-heart", { [classes.active]: isFavorite() })}
               title="Toggle Favorite"
               onClick={() =>
                 isFavorite.set((prev) => {
@@ -110,7 +113,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
                 })
               }
             >
-              <span class="ffe-sc-follow-count">
+              <span class={classes.followCount}>
                 {((story.favorites ?? 0) + favoriteOffset()).toLocaleString("en")}
               </span>
             </Button>
@@ -118,62 +121,62 @@ export default function StoryCard({ storyId }: StoryCardProps) {
         </div>
       </div>
 
-      <div class="ffe-sc-tags">
-        {story.language && <span class="ffe-sc-tag ffe-sc-tag-language">{story.language}</span>}
+      <div class={classes.tags}>
+        {story.language && <span class={clsx(classes.tag, classes.tagLanguage)}>{story.language}</span>}
 
         {story.universes &&
-          story.universes.map((universe) => <span class="ffe-sc-tag ffe-sc-tag-universe">{universe}</span>)}
+          story.universes.map((universe) => <span class={clsx(classes.tag, classes.tagUniverse)}>{universe}</span>)}
 
-        {story.genre && story.genre.map((genre) => <span class="ffe-sc-tag ffe-sc-tag-genre">{genre}</span>)}
+        {story.genre && story.genre.map((genre) => <span class={clsx(classes.tag, classes.tagGenre)}>{genre}</span>)}
 
         {story.characters &&
           story.characters.length > 0 &&
           story.characters.map((pairing) =>
             pairing.length === 1 ? (
-              <span class="ffe-sc-tag ffe-sc-tag-character">{pairing}</span>
+              <span class={clsx(classes.tag, classes.tagCharacter)}>{pairing}</span>
             ) : (
-              <span class="ffe-sc-tag ffe-sc-tag-ship">
+              <span class={clsx(classes.tag, classes.tagShip)}>
                 {pairing.map((character) => (
-                  <span class="ffe-sc-tag-character">{character}</span>
+                  <span class={clsx(classes.tagCharacter)}>{character}</span>
                 ))}
               </span>
             ),
           )}
 
         {story.chapters && story.chapters.length > 0 && (
-          <span class="ffe-sc-tag ffe-sc-tag-chapters">Chapters:&nbsp;{story.chapters.length}</span>
+          <span class={clsx(classes.tag, classes.tagChapters)}>Chapters:&nbsp;{story.chapters.length}</span>
         )}
 
         {story.reviews != null && (
-          <span class="ffe-sc-tag ffe-sc-tag-reviews">
+          <span class={clsx(classes.tag, classes.tagReviews)}>
             <a href={`/r/${story.id}/`}>Reviews:&nbsp;{story.reviews}</a>
           </span>
         )}
       </div>
 
       {story.imageUrl && (
-        <div class="ffe-sc-image">
+        <div class={classes.image}>
           <img src={story.imageUrl} alt="Story Cover" />
         </div>
       )}
 
-      <div class="ffe-sc-description">{story.description}</div>
+      <div class={classes.description}>{story.description}</div>
 
-      <div class="ffe-sc-footer">
+      <div class={classes.footer}>
         {story.words != null && (
-          <div class="ffe-sc-footer-words">
+          <div class={classes.footerWords}>
             <strong>{story.words.toLocaleString("en")}</strong> words
           </div>
         )}
 
         {story.status === "Complete" ? (
-          <span class="ffe-sc-footer-info ffe-sc-footer-complete">Complete</span>
+          <span class={clsx(classes.footerInfo, classes.footerComplete)}>Complete</span>
         ) : (
-          <span class="ffe-sc-footer-info ffe-sc-footer-incomplete">Incomplete</span>
+          <span class={clsx(classes.footerInfo, classes.footerIncomplete)}>Incomplete</span>
         )}
 
         {story.published && (
-          <span class="ffe-sc-footer-info">
+          <span class={classes.footerInfo}>
             <strong>Published:&nbsp;</strong>
             <time dateTime={toDate(story.published).toISOString()}>
               {toDate(story.published).toLocaleDateString("en")}
@@ -182,7 +185,7 @@ export default function StoryCard({ storyId }: StoryCardProps) {
         )}
 
         {story.updated && (
-          <span class="ffe-sc-footer-info">
+          <span class={classes.footerInfo}>
             <strong>Updated:&nbsp;</strong>
             <time dateTime={toDate(story.updated).toISOString()}>{toDate(story.updated).toLocaleDateString("en")}</time>
           </span>

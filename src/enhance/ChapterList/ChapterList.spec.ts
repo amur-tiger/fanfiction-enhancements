@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Chapter, Story } from "ffn-parser";
-import { environment } from "../util/environment";
+import { environment } from "../../util/environment";
 import ChapterList from "./ChapterList";
 
 vi.mock("../util/environment");

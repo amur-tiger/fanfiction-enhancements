@@ -1,4 +1,4 @@
-import "./CheckBox.css";
+import classes from "./CheckBox.css";
 
 export interface CheckBoxProps {
   checked?: boolean;
@@ -9,7 +9,7 @@ export default function CheckBox({ checked, onChange }: CheckBoxProps) {
   const id = `ffe-check-${parseInt(`${Math.random() * 100000000}`, 10)}`;
 
   return (
-    <span class="ffe-checkbox">
+    <span class={classes.checkbox}>
       <input
         type="checkbox"
         id={id}

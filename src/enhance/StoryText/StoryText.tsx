@@ -1,5 +1,9 @@
-import type Enhancer from "./Enhancer";
-
+import { parseStory } from "ffn-parser";
+import type Enhancer from "../Enhancer";
+import { environment, Page } from "../../util/environment";
+import getChapterRead from "../../api/chapter-read";
+import { uploadMetadata } from "../../sync/sync";
+import StoryTextHeader from "../../components/StoryTextHeader/StoryTextHeader";
 import "./StoryText.css";
 
 export default class StoryText implements Enhancer {
@@ -8,6 +12,10 @@ export default class StoryText implements Enhancer {
    * fonts that do not exist, or Google will throw an error.
    */
   private readonly GOOGLE_FONTS_WHITELIST = ["Open Sans", "PT Sans", "Roboto", "Ubuntu"];
+
+  public canEnhance(type: Page): boolean {
+    return type === Page.Chapter;
+  }
 
   public async enhance(): Promise<void> {
     this.fixFontLink();
@@ -18,6 +26,42 @@ export default class StoryText implements Enhancer {
     }
 
     this.fixUserSelect(textContainer);
+    await this.autoMarkRead();
+
+    const controls = document.querySelectorAll(".lc-wrapper")?.[1];
+    const chapterSelect = controls?.nextElementSibling;
+
+    if (controls && chapterSelect) {
+      const story = await parseStory();
+      const chapter = story?.chapters.find((chapter) => chapter.id === environment.currentChapterId);
+
+      controls.replaceWith(<StoryTextHeader title={chapter?.title}>{chapterSelect}</StoryTextHeader>);
+    }
+  }
+
+  private async autoMarkRead() {
+    const currentStory = await parseStory();
+    if (!currentStory || !environment.currentChapterId) {
+      return;
+    }
+
+    const isRead = getChapterRead(currentStory.id, environment.currentChapterId);
+    const markRead = async () => {
+      const amount = document.documentElement.scrollTop;
+      const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+
+      if (amount / (max - 550) >= 1) {
+        window.removeEventListener("scroll", markRead);
+        console.log(
+          "Setting '%s' chapter '%s' to read",
+          currentStory.title,
+          currentStory.chapters.find((c) => c.id === environment.currentChapterId)?.title,
+        );
+        isRead.set(true);
+        await uploadMetadata();
+      }
+    };
+    window.addEventListener("scroll", markRead);
   }
 
   private fixFontLink() {
