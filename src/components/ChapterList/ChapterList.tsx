@@ -79,7 +79,9 @@ export default function ChapterList({ class: className, storyId }: ChapterListPr
   const isExtended = createSignal(false);
 
   return render(() => {
-    const story = getStory(storyId)();
+    const storySignal = getStory(storyId);
+    const story = storySignal();
+
     if (!story) {
       return <div class={clsx(classes.container, className)} />;
     }
