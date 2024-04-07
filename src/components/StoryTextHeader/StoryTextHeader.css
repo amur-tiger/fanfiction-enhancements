@@ -1,0 +1,55 @@
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 3rem;
+  border-bottom: 1px solid var(--ffe-divider-color);
+}
+
+.caption {
+  color: var(--ffe-on-paper-color);
+  font-size: 1.3rem;
+  font-weight: bolder;
+}
+
+.setting {
+  padding: 12px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--ffe-divider-color);
+  }
+
+  .line-label {
+    display: inline-block;
+    width: 120px;
+  }
+
+  .line-value {
+    margin-left: 20px;
+  }
+
+  label {
+    display: inline;
+
+    &:not(:first-of-type) {
+      margin-left: 20px;
+    }
+
+    input[type="checkbox"] {
+      bottom: 0;
+      margin-right: 0.5em;
+    }
+  }
+}
+
+.justify p {
+  text-align: justify;
+}
+
+.indent p {
+  text-indent: 2.5em;
+}
+
+.no-space p {
+  margin: 0;
+}

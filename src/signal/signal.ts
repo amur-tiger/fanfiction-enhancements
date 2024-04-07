@@ -70,8 +70,8 @@ interface SignalOptions<T> {
 }
 
 export function createSignal<T>(): Signal<T | undefined>;
-export function createSignal<T>(value: T, options?: SignalOptions<T>): Signal<T>;
 export function createSignal<T>(value: PromiseLike<T>, options?: SignalOptions<T>): Signal<T | undefined>;
+export function createSignal<T>(value: T, options?: SignalOptions<T>): Signal<T>;
 
 export function createSignal<T>(value?: SignalInit<T>, options?: SignalOptions<T>): Signal<T> {
   const equals = options?.equals ?? ((previous, next) => previous === next);
