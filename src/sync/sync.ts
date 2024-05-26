@@ -2,6 +2,7 @@ import { createFile, getFileContents, getFiles, updateFile } from "./drive";
 import { tryParse } from "../utils";
 import { isSyncAuthorized } from "./auth";
 import { type ChapterReadMetadata, getChapterReadMetadata, type IsRead } from "../api/chapter-read";
+import { createSignal, type ReadonlySignal } from "../signal/signal";
 
 async function getFile<T>(name: string): Promise<T | undefined>;
 async function getFile<T>(name: string, fallback: T): Promise<T>;
@@ -34,6 +35,11 @@ async function writeFile(name: string, content: unknown) {
 
 const readFileName = "ffe-chapter-read.json";
 let token: ReturnType<typeof setTimeout> | null = null;
+const isSynchronizingSignal = createSignal(false);
+
+export function getIsSynchronizingSignal(): ReadonlySignal<boolean> {
+  return isSynchronizingSignal;
+}
 
 /**
  * Deferred upload via setTimeout may not trigger when value was
@@ -55,7 +61,12 @@ export async function uploadMetadata() {
   await metadata.isInitialized();
 
   console.debug("[SYNC] Uploading changes to Drive");
-  await writeFile(readFileName, metadata.peek());
+  try {
+    isSynchronizingSignal.set(true);
+    await writeFile(readFileName, metadata.peek());
+  } finally {
+    isSynchronizingSignal.set(false);
+  }
 }
 
 /**
@@ -81,7 +92,13 @@ export async function syncChapterReadStatus() {
   });
 
   const localMetadata = localMetadataSignal.peek();
-  const remoteMetadata = await getFile<ChapterReadMetadata>(readFileName, { version: 1, stories: {} });
+  let remoteMetadata: ChapterReadMetadata;
+  try {
+    isSynchronizingSignal.set(true);
+    remoteMetadata = await getFile<ChapterReadMetadata>(readFileName, { version: 1, stories: {} });
+  } finally {
+    isSynchronizingSignal.set(false);
+  }
 
   const result = mergeStories(localMetadata.stories, remoteMetadata.stories);
   const mergedMetadata: ChapterReadMetadata = { version: 1, stories: result.merged! };
@@ -92,7 +109,12 @@ export async function syncChapterReadStatus() {
   }
   if (result.hasRemoteChanges) {
     console.debug("[SYNC] Uploading changes to Drive");
-    await writeFile(readFileName, mergedMetadata);
+    try {
+      isSynchronizingSignal.set(true);
+      await writeFile(readFileName, mergedMetadata);
+    } finally {
+      isSynchronizingSignal.set(false);
+    }
   }
 }
 
