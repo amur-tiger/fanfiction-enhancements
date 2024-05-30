@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.8.3+26.224ba42
+// @version      0.8.4+27.a7cfe75
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2024, Arne 'TigeR' Linck
@@ -1220,8 +1220,421 @@
   height: 19px;
   transform: translateY(4px);
 }
+
+@keyframes ffe-rotate_IcPib {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ffe-rotate_IcPib:before {
+  animation: ffe-rotate_IcPib 1s linear infinite;
+}
 `);
-  var MenuBar_default = { "separator": "ffe-separator_SCyNm", "checked": "ffe-checked_At8n0", "icon": "ffe-icon_jfbjp", "bell": "ffe-bell_P5jTu" };
+  var MenuBar_default = { "separator": "ffe-separator_SCyNm", "checked": "ffe-checked_At8n0", "icon": "ffe-icon_jfbjp", "bell": "ffe-bell_P5jTu", "rotate": "ffe-rotate_IcPib" };
+
+  // src/sync/drive.ts
+  async function authFetch(input, init) {
+    const token2 = await getSyncToken();
+    const response = await fetch(input, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        Authorization: `Bearer ${token2}`
+      }
+    });
+    if (response.status === 401) {
+      console.warn("Sync token invalid, re-authenticating");
+      try {
+        await startSyncAuthorization(true);
+      } catch (ex) {
+        console.warn("Silent re-authentication failed");
+        await startSyncAuthorization();
+      }
+      const nextToken = await getSyncToken();
+      return fetch(input, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          Authorization: `Bearer ${nextToken}`
+        }
+      });
+    }
+    return response;
+  }
+  async function getFiles(name) {
+    let url = "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder";
+    if (name) {
+      url += "&q=" + encodeURIComponent(`name='${name}'`);
+    }
+    const response = await authFetch(url);
+    return response.json();
+  }
+  async function getFileContents(id) {
+    const response = await authFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media`);
+    return response.text();
+  }
+  async function createFile(name, content) {
+    const data = new FormData();
+    data.set(
+      "metadata",
+      new Blob(
+        [
+          JSON.stringify({
+            name,
+            mimeType: "application/json",
+            parents: ["appDataFolder"]
+          })
+        ],
+        {
+          type: "application/json"
+        }
+      )
+    );
+    data.set(
+      "file",
+      new Blob([JSON.stringify(content)], {
+        type: "application/json"
+      })
+    );
+    const response = await authFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+      method: "POST",
+      body: data
+    });
+    return response.json();
+  }
+  async function updateFile(file, content) {
+    const response = await authFetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(file.id)}`, {
+      method: "PATCH",
+      body: new Blob([JSON.stringify(content)], {
+        type: "application/json"
+      })
+    });
+    return response.json();
+  }
+
+  // src/utils.ts
+  function getCookie(name) {
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+      const c = ca[i].trimLeft();
+      if (c.indexOf(`${name}=`) === 0) {
+        return c.substring(name.length + 1, c.length);
+      }
+    }
+    return false;
+  }
+  function parseGetParams(url) {
+    try {
+      const params = new URL(url).search.substr(1).split("&");
+      const result = {};
+      for (const param of params) {
+        const parts = param.split("=");
+        const key = decodeURIComponent(parts[0]);
+        result[key] = parts.length > 1 ? decodeURIComponent(parts[1]) : true;
+      }
+      return result;
+    } catch (e) {
+      console.error(e);
+      return {};
+    }
+  }
+  function tryParse(text, fallback) {
+    if (!text) {
+      return fallback;
+    }
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function toDate(date) {
+    if (date instanceof Date) {
+      return date;
+    }
+    return new Date(date);
+  }
+
+  // src/signal/view.ts
+  function view(signal, keyOrOptions, maybeEquals) {
+    const { get, set } = typeof keyOrOptions === "object" ? keyOrOptions : {
+      get: (value) => value[keyOrOptions],
+      set: (previous, value) => ({ ...previous, [keyOrOptions]: value })
+    };
+    const equals = (typeof keyOrOptions === "object" ? keyOrOptions.equals : maybeEquals) ?? ((a, b) => a === b);
+    const events = new EventTarget();
+    listen(signal, "change", (event) => {
+      const oldValue = get(event.oldValue);
+      const newValue = get(event.newValue);
+      if (!equals(oldValue, newValue)) {
+        events.dispatchEvent(new ChangeEvent(oldValue, newValue, event.isInternal));
+      }
+    });
+    const viewed = Object.assign(
+      function() {
+        Scope.getCurrent()?.register(viewed);
+        return get(signal.peek());
+      },
+      {
+        set(valueOrCallback, options) {
+          signal.set(
+            (previous) => set(
+              previous,
+              typeof valueOrCallback === "function" ? valueOrCallback(get(previous)) : valueOrCallback
+            ),
+            options
+          );
+        },
+        peek: () => get(signal.peek()),
+        isInitialized() {
+          return signal.isInitialized();
+        },
+        addEventListener(event, callback, options) {
+          events.addEventListener(event, callback, options);
+        },
+        removeEventListener(type, callback, options) {
+          events.removeEventListener(type, callback, options);
+        },
+        dispatchEvent(event) {
+          Object.defineProperty(event, "target", { value: viewed });
+          return events.dispatchEvent(event);
+        }
+      }
+    );
+    return viewed;
+  }
+  var view_default = view;
+
+  // src/api/chapter-read.ts
+  var chapterReadMetadata;
+  function getChapterReadMetadata() {
+    if (chapterReadMetadata == null) {
+      chapterReadMetadata = createSignal({ version: 1, stories: {} });
+      GM.getValue("ffe-chapter-read").then(
+        (value) => chapterReadMetadata.set(
+          tryParse(value, {
+            version: 1,
+            stories: {}
+          }),
+          {
+            isInternal: true
+          }
+        )
+      );
+      chapterReadMetadata.addEventListener("change", async (event) => {
+        if (event.isInternal) {
+          return;
+        }
+        await GM.setValue("ffe-chapter-read", JSON.stringify(event.newValue));
+      });
+      if (GM_addValueChangeListener != null) {
+        GM_addValueChangeListener("ffe-chapter-read", (name, oldValue, newValue) => {
+          const metadata = tryParse(newValue);
+          if (metadata != null) {
+            chapterReadMetadata.set(metadata, { isInternal: true });
+          }
+        });
+      }
+    }
+    return chapterReadMetadata;
+  }
+  function getChapterRead(storyId, chapterId) {
+    return view_default(getChapterReadMetadata(), {
+      get(value) {
+        return value.stories[storyId]?.[chapterId]?.read ?? false;
+      },
+      set(previous, value) {
+        return {
+          ...previous,
+          stories: {
+            ...previous.stories,
+            [storyId]: {
+              ...previous.stories[storyId],
+              [chapterId]: {
+                ...previous.stories[storyId]?.[chapterId],
+                read: value,
+                timestamp: Date.now()
+              }
+            }
+          }
+        };
+      }
+    });
+  }
+  async function migrateChapterRead() {
+    const metadata = tryParse(await GM.getValue("ffe-chapter-read"), {
+      version: 1,
+      stories: {}
+    });
+    let hasChanges = false;
+    const list = await GM.listValues();
+    for (const key of list) {
+      const match = /^ffe-story-(\d+)-chapter-(\d+)-read$/.exec(key);
+      if (match) {
+        const [, storyId, chapterId] = match;
+        metadata.stories[+storyId] ??= {};
+        const metadataChapter = metadata.stories[+storyId][+chapterId];
+        const oldTimestamp = await GM.getValue(`ffe-story-${storyId}-chapter-${chapterId}-read+timestamp`, 0);
+        if (metadataChapter == null || metadataChapter.timestamp < oldTimestamp) {
+          hasChanges = true;
+          metadata.stories[+storyId][+chapterId] = {
+            read: await GM.getValue(key, "") === "true",
+            timestamp: oldTimestamp
+          };
+        }
+        await GM.deleteValue(key);
+        await GM.deleteValue(key + "+timestamp");
+      }
+    }
+    if (hasChanges) {
+      await GM.setValue("ffe-chapter-read", JSON.stringify(metadata));
+    }
+  }
+  if (true) {
+    void migrateChapterRead();
+  }
+
+  // src/sync/sync.ts
+  async function getFile(name, fallback) {
+    const { files } = await getFiles(name);
+    const file = files?.find((file2) => file2.name === name);
+    if (!file?.id) {
+      return fallback;
+    }
+    return tryParse(await getFileContents(file.id), fallback);
+  }
+  async function writeFile(name, content) {
+    const { files } = await getFiles(name);
+    let file = files?.find((file2) => file2.name === name);
+    if (!file?.id) {
+      file = await createFile(name, content);
+      if (!file) {
+        throw new Error("Could not save file: Google did not provide metadata.");
+      }
+      return file;
+    }
+    return updateFile(file, content);
+  }
+  var readFileName = "ffe-chapter-read.json";
+  var token = null;
+  var isSynchronizingSignal = createSignal(false);
+  function getIsSynchronizingSignal() {
+    return isSynchronizingSignal;
+  }
+  async function uploadMetadata() {
+    if (!await isSyncAuthorized()) {
+      return;
+    }
+    if (token != null) {
+      clearTimeout(token);
+      token = null;
+    }
+    const metadata = getChapterReadMetadata();
+    await metadata.isInitialized();
+    console.debug("[SYNC] Uploading changes to Drive");
+    try {
+      isSynchronizingSignal.set(true);
+      await writeFile(readFileName, metadata.peek());
+    } finally {
+      isSynchronizingSignal.set(false);
+    }
+  }
+  async function syncChapterReadStatus() {
+    if (!await isSyncAuthorized()) {
+      return;
+    }
+    const localMetadataSignal = getChapterReadMetadata();
+    await localMetadataSignal.isInitialized();
+    localMetadataSignal.addEventListener("change", async (event) => {
+      if (event.isInternal) {
+        return;
+      }
+      if (token != null) {
+        clearTimeout(token);
+      }
+      token = setTimeout(uploadMetadata, 1500);
+    });
+    const localMetadata = localMetadataSignal.peek();
+    let remoteMetadata;
+    try {
+      isSynchronizingSignal.set(true);
+      remoteMetadata = await getFile(readFileName, { version: 1, stories: {} });
+    } finally {
+      isSynchronizingSignal.set(false);
+    }
+    const result = mergeStories(localMetadata.stories, remoteMetadata.stories);
+    const mergedMetadata = { version: 1, stories: result.merged };
+    if (result.hasLocalChanges) {
+      console.debug("[SYNC] Integrating remote data");
+      localMetadataSignal.set(mergedMetadata);
+    }
+    if (result.hasRemoteChanges) {
+      console.debug("[SYNC] Uploading changes to Drive");
+      try {
+        isSynchronizingSignal.set(true);
+        await writeFile(readFileName, mergedMetadata);
+      } finally {
+        isSynchronizingSignal.set(false);
+      }
+    }
+  }
+  function mergeStories(local, remote) {
+    return mergeRecord(local, remote, (localChapter, remoteChapter) => {
+      return mergeRecord(localChapter, remoteChapter, (localIsRead, remoteIsRead) => {
+        return mergeIsRead(localIsRead, remoteIsRead);
+      });
+    });
+  }
+  function mergeRecord(local, remote, mergeItem) {
+    let result = removeNull(local, remote);
+    if (result) {
+      return result;
+    }
+    result = {
+      merged: {},
+      hasLocalChanges: false,
+      hasRemoteChanges: false
+    };
+    const keys = /* @__PURE__ */ new Set([...Object.keys(local), ...Object.keys(remote)]);
+    for (const key of keys) {
+      const localItem = local[key];
+      const remoteItem = remote[key];
+      const itemResult = removeNull(localItem, remoteItem) ?? mergeItem(localItem, remoteItem);
+      result.merged[key] = itemResult.merged;
+      result.hasLocalChanges ||= itemResult.hasLocalChanges;
+      result.hasRemoteChanges ||= itemResult.hasRemoteChanges;
+    }
+    return result;
+  }
+  function mergeIsRead(local, remote) {
+    const result = removeNull(local, remote);
+    if (result) {
+      return result;
+    }
+    if (local.timestamp !== remote.timestamp || local.read !== remote.read) {
+      if (local.timestamp > remote.timestamp) {
+        return { merged: local, hasLocalChanges: false, hasRemoteChanges: true };
+      } else {
+        return { merged: remote, hasLocalChanges: true, hasRemoteChanges: false };
+      }
+    }
+    return { merged: local, hasLocalChanges: false, hasRemoteChanges: false };
+  }
+  function removeNull(local, remote) {
+    if (local == null) {
+      if (remote == null) {
+        return { merged: void 0, hasLocalChanges: false, hasRemoteChanges: false };
+      } else {
+        return { merged: remote, hasLocalChanges: true, hasRemoteChanges: false };
+      }
+    } else if (remote == null) {
+      return { merged: local, hasLocalChanges: false, hasRemoteChanges: true };
+    }
+  }
 
   // jsx:src/enhance/MenuBar/MenuBar.tsx
   var MenuBar = class {
@@ -1271,9 +1684,11 @@
         href: "/favorites/story.php"
       }), ref);
       const isAuthorized = getAuthorizedSignal();
+      const isSynchronizing = getIsSynchronizingSignal();
       parent.insertBefore(jsx("a", {
         class: compute(() => clsx_default(MenuBar_default.icon, "icon-mpl2-sync", {
-          [MenuBar_default.checked]: isAuthorized()
+          [MenuBar_default.checked]: isAuthorized(),
+          [MenuBar_default.rotate]: isSynchronizing()
         })),
         title: compute(() => isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"),
         href: "#",
@@ -1299,49 +1714,6 @@
 
   // src/api/story.ts
   var import_ffn_parser2 = __toESM(require_lib(), 1);
-
-  // src/utils.ts
-  function getCookie(name) {
-    const ca = document.cookie.split(";");
-    for (let i = 0; i < ca.length; i++) {
-      const c = ca[i].trimLeft();
-      if (c.indexOf(`${name}=`) === 0) {
-        return c.substring(name.length + 1, c.length);
-      }
-    }
-    return false;
-  }
-  function parseGetParams(url) {
-    try {
-      const params = new URL(url).search.substr(1).split("&");
-      const result = {};
-      for (const param of params) {
-        const parts = param.split("=");
-        const key = decodeURIComponent(parts[0]);
-        result[key] = parts.length > 1 ? decodeURIComponent(parts[1]) : true;
-      }
-      return result;
-    } catch (e) {
-      console.error(e);
-      return {};
-    }
-  }
-  function tryParse(text, fallback) {
-    if (!text) {
-      return fallback;
-    }
-    try {
-      return JSON.parse(text);
-    } catch (e) {
-      return fallback;
-    }
-  }
-  function toDate(date) {
-    if (date instanceof Date) {
-      return date;
-    }
-    return new Date(date);
-  }
 
   // src/api/Api.ts
   var import_ffn_parser = __toESM(require_lib(), 1);
@@ -1738,145 +2110,6 @@
   if (true) {
     migrateStoryData();
     updateStoryData();
-  }
-
-  // src/signal/view.ts
-  function view(signal, keyOrOptions, maybeEquals) {
-    const { get, set } = typeof keyOrOptions === "object" ? keyOrOptions : {
-      get: (value) => value[keyOrOptions],
-      set: (previous, value) => ({ ...previous, [keyOrOptions]: value })
-    };
-    const equals = (typeof keyOrOptions === "object" ? keyOrOptions.equals : maybeEquals) ?? ((a, b) => a === b);
-    const events = new EventTarget();
-    listen(signal, "change", (event) => {
-      const oldValue = get(event.oldValue);
-      const newValue = get(event.newValue);
-      if (!equals(oldValue, newValue)) {
-        events.dispatchEvent(new ChangeEvent(oldValue, newValue, event.isInternal));
-      }
-    });
-    const viewed = Object.assign(
-      function() {
-        Scope.getCurrent()?.register(viewed);
-        return get(signal.peek());
-      },
-      {
-        set(valueOrCallback, options) {
-          signal.set(
-            (previous) => set(
-              previous,
-              typeof valueOrCallback === "function" ? valueOrCallback(get(previous)) : valueOrCallback
-            ),
-            options
-          );
-        },
-        peek: () => get(signal.peek()),
-        isInitialized() {
-          return signal.isInitialized();
-        },
-        addEventListener(event, callback, options) {
-          events.addEventListener(event, callback, options);
-        },
-        removeEventListener(type, callback, options) {
-          events.removeEventListener(type, callback, options);
-        },
-        dispatchEvent(event) {
-          Object.defineProperty(event, "target", { value: viewed });
-          return events.dispatchEvent(event);
-        }
-      }
-    );
-    return viewed;
-  }
-  var view_default = view;
-
-  // src/api/chapter-read.ts
-  var chapterReadMetadata;
-  function getChapterReadMetadata() {
-    if (chapterReadMetadata == null) {
-      chapterReadMetadata = createSignal({ version: 1, stories: {} });
-      GM.getValue("ffe-chapter-read").then(
-        (value) => chapterReadMetadata.set(
-          tryParse(value, {
-            version: 1,
-            stories: {}
-          }),
-          {
-            isInternal: true
-          }
-        )
-      );
-      chapterReadMetadata.addEventListener("change", async (event) => {
-        if (event.isInternal) {
-          return;
-        }
-        await GM.setValue("ffe-chapter-read", JSON.stringify(event.newValue));
-      });
-      if (GM_addValueChangeListener != null) {
-        GM_addValueChangeListener("ffe-chapter-read", (name, oldValue, newValue) => {
-          const metadata = tryParse(newValue);
-          if (metadata != null) {
-            chapterReadMetadata.set(metadata, { isInternal: true });
-          }
-        });
-      }
-    }
-    return chapterReadMetadata;
-  }
-  function getChapterRead(storyId, chapterId) {
-    return view_default(getChapterReadMetadata(), {
-      get(value) {
-        return value.stories[storyId]?.[chapterId]?.read ?? false;
-      },
-      set(previous, value) {
-        return {
-          ...previous,
-          stories: {
-            ...previous.stories,
-            [storyId]: {
-              ...previous.stories[storyId],
-              [chapterId]: {
-                ...previous.stories[storyId]?.[chapterId],
-                read: value,
-                timestamp: Date.now()
-              }
-            }
-          }
-        };
-      }
-    });
-  }
-  async function migrateChapterRead() {
-    const metadata = tryParse(await GM.getValue("ffe-chapter-read"), {
-      version: 1,
-      stories: {}
-    });
-    let hasChanges = false;
-    const list = await GM.listValues();
-    for (const key of list) {
-      const match = /^ffe-story-(\d+)-chapter-(\d+)-read$/.exec(key);
-      if (match) {
-        const [, storyId, chapterId] = match;
-        metadata.stories[+storyId] ??= {};
-        const metadataChapter = metadata.stories[+storyId][+chapterId];
-        const oldTimestamp = await GM.getValue(`ffe-story-${storyId}-chapter-${chapterId}-read+timestamp`, 0);
-        if (metadataChapter == null || metadataChapter.timestamp < oldTimestamp) {
-          hasChanges = true;
-          metadata.stories[+storyId][+chapterId] = {
-            read: await GM.getValue(key, "") === "true",
-            timestamp: oldTimestamp
-          };
-        }
-        await GM.deleteValue(key);
-        await GM.deleteValue(key + "+timestamp");
-      }
-    }
-    if (hasChanges) {
-      await GM.setValue("ffe-chapter-read", JSON.stringify(metadata));
-    }
-  }
-  if (true) {
-    void migrateChapterRead();
   }
 
   // gm-css:src/components/CheckBox/CheckBox.css
@@ -3360,204 +3593,6 @@ ${content}
   // jsx:src/enhance/StoryText/StoryText.tsx
   var import_ffn_parser5 = __toESM(require_lib());
 
-  // src/sync/drive.ts
-  async function authFetch(input, init) {
-    const token2 = await getSyncToken();
-    const response = await fetch(input, {
-      ...init,
-      headers: {
-        ...init?.headers,
-        Authorization: `Bearer ${token2}`
-      }
-    });
-    if (response.status === 401) {
-      console.warn("Sync token invalid, re-authenticating");
-      try {
-        await startSyncAuthorization(true);
-      } catch (ex) {
-        console.warn("Silent re-authentication failed");
-        await startSyncAuthorization();
-      }
-      const nextToken = await getSyncToken();
-      return fetch(input, {
-        ...init,
-        headers: {
-          ...init?.headers,
-          Authorization: `Bearer ${nextToken}`
-        }
-      });
-    }
-    return response;
-  }
-  async function getFiles(name) {
-    let url = "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder";
-    if (name) {
-      url += "&q=" + encodeURIComponent(`name='${name}'`);
-    }
-    const response = await authFetch(url);
-    return response.json();
-  }
-  async function getFileContents(id) {
-    const response = await authFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media`);
-    return response.text();
-  }
-  async function createFile(name, content) {
-    const data = new FormData();
-    data.set(
-      "metadata",
-      new Blob(
-        [
-          JSON.stringify({
-            name,
-            mimeType: "application/json",
-            parents: ["appDataFolder"]
-          })
-        ],
-        {
-          type: "application/json"
-        }
-      )
-    );
-    data.set(
-      "file",
-      new Blob([JSON.stringify(content)], {
-        type: "application/json"
-      })
-    );
-    const response = await authFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-      method: "POST",
-      body: data
-    });
-    return response.json();
-  }
-  async function updateFile(file, content) {
-    const response = await authFetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(file.id)}`, {
-      method: "PATCH",
-      body: new Blob([JSON.stringify(content)], {
-        type: "application/json"
-      })
-    });
-    return response.json();
-  }
-
-  // src/sync/sync.ts
-  async function getFile(name, fallback) {
-    const { files } = await getFiles(name);
-    const file = files?.find((file2) => file2.name === name);
-    if (!file?.id) {
-      return fallback;
-    }
-    return tryParse(await getFileContents(file.id), fallback);
-  }
-  async function writeFile(name, content) {
-    const { files } = await getFiles(name);
-    let file = files?.find((file2) => file2.name === name);
-    if (!file?.id) {
-      file = await createFile(name, content);
-      if (!file) {
-        throw new Error("Could not save file: Google did not provide metadata.");
-      }
-      return file;
-    }
-    return updateFile(file, content);
-  }
-  var readFileName = "ffe-chapter-read.json";
-  var token = null;
-  async function uploadMetadata() {
-    if (!await isSyncAuthorized()) {
-      return;
-    }
-    if (token != null) {
-      clearTimeout(token);
-      token = null;
-    }
-    const metadata = getChapterReadMetadata();
-    await metadata.isInitialized();
-    console.debug("[SYNC] Uploading changes to Drive");
-    await writeFile(readFileName, metadata.peek());
-  }
-  async function syncChapterReadStatus() {
-    if (!await isSyncAuthorized()) {
-      return;
-    }
-    const localMetadataSignal = getChapterReadMetadata();
-    await localMetadataSignal.isInitialized();
-    localMetadataSignal.addEventListener("change", async (event) => {
-      if (event.isInternal) {
-        return;
-      }
-      if (token != null) {
-        clearTimeout(token);
-      }
-      token = setTimeout(uploadMetadata, 1500);
-    });
-    const localMetadata = localMetadataSignal.peek();
-    const remoteMetadata = await getFile(readFileName, { version: 1, stories: {} });
-    const result = mergeStories(localMetadata.stories, remoteMetadata.stories);
-    const mergedMetadata = { version: 1, stories: result.merged };
-    if (result.hasLocalChanges) {
-      console.debug("[SYNC] Integrating remote data");
-      localMetadataSignal.set(mergedMetadata);
-    }
-    if (result.hasRemoteChanges) {
-      console.debug("[SYNC] Uploading changes to Drive");
-      await writeFile(readFileName, mergedMetadata);
-    }
-  }
-  function mergeStories(local, remote) {
-    return mergeRecord(local, remote, (localChapter, remoteChapter) => {
-      return mergeRecord(localChapter, remoteChapter, (localIsRead, remoteIsRead) => {
-        return mergeIsRead(localIsRead, remoteIsRead);
-      });
-    });
-  }
-  function mergeRecord(local, remote, mergeItem) {
-    let result = removeNull(local, remote);
-    if (result) {
-      return result;
-    }
-    result = {
-      merged: {},
-      hasLocalChanges: false,
-      hasRemoteChanges: false
-    };
-    const keys = /* @__PURE__ */ new Set([...Object.keys(local), ...Object.keys(remote)]);
-    for (const key of keys) {
-      const localItem = local[key];
-      const remoteItem = remote[key];
-      const itemResult = removeNull(localItem, remoteItem) ?? mergeItem(localItem, remoteItem);
-      result.merged[key] = itemResult.merged;
-      result.hasLocalChanges ||= itemResult.hasLocalChanges;
-      result.hasRemoteChanges ||= itemResult.hasRemoteChanges;
-    }
-    return result;
-  }
-  function mergeIsRead(local, remote) {
-    const result = removeNull(local, remote);
-    if (result) {
-      return result;
-    }
-    if (local.timestamp !== remote.timestamp || local.read !== remote.read) {
-      if (local.timestamp > remote.timestamp) {
-        return { merged: local, hasLocalChanges: false, hasRemoteChanges: true };
-      } else {
-        return { merged: remote, hasLocalChanges: true, hasRemoteChanges: false };
-      }
-    }
-    return { merged: local, hasLocalChanges: false, hasRemoteChanges: false };
-  }
-  function removeNull(local, remote) {
-    if (local == null) {
-      if (remote == null) {
-        return { merged: void 0, hasLocalChanges: false, hasRemoteChanges: false };
-      } else {
-        return { merged: remote, hasLocalChanges: true, hasRemoteChanges: false };
-      }
-    } else if (remote == null) {
-      return { merged: local, hasLocalChanges: false, hasRemoteChanges: true };
-    }
-  }
-
   // jsx:src/components/Modal/Modal.tsx
   var persistentModalContainer = jsx("div", {
     class: "modal fade hide"
@@ -3597,16 +3632,20 @@ ${content}
   // gm-css:src/components/StoryTextHeader/StoryTextHeader.css
   GM_addStyle(`.ffe-header_tp1g1 {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  gap: 0.5rem;
   align-items: center;
-  height: 3rem;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--ffe-divider-color);
 }
 
 .ffe-caption_ATZ4P {
+  grid-column: span 2;
   color: var(--ffe-on-paper-color);
   font-size: 1.3rem;
   font-weight: bolder;
+  text-align: center;
 }
 
 .ffe-setting_fQMMa {
@@ -3643,7 +3682,7 @@ ${content}
   text-align: justify;
 }
 
-.ffe-indent_0CSjp p {
+.ffe-indent_0CSjp p:not([style*="text-align"]) {
   text-indent: 2.5em;
 }
 
@@ -3705,11 +3744,11 @@ ${content}
           onClick: () => isOpen.set(true),
           children: "\xA0Formatting"
         })
+      }), jsx("div", {
+        children
       }), jsx("h2", {
         class: StoryTextHeader_default.caption,
         children: title2
-      }), jsx("div", {
-        children
       }), render_default(() => jsxs(Modal, {
         open: isOpen(),
         onClose: () => isOpen.set(false),
