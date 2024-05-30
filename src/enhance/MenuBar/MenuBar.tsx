@@ -4,6 +4,7 @@ import type Enhancer from "../Enhancer";
 import { getAuthorizedSignal, removeSyncToken, startSyncAuthorization } from "../../sync/auth";
 import BellIcon from "../../assets/bell.svg";
 import classes from "./MenuBar.css";
+import { getIsSynchronizingSignal } from "../../sync/sync";
 
 export default class MenuBar implements Enhancer {
   public canEnhance(): boolean {
@@ -60,10 +61,13 @@ export default class MenuBar implements Enhancer {
     );
 
     const isAuthorized = getAuthorizedSignal();
+    const isSynchronizing = getIsSynchronizingSignal();
+
     parent.insertBefore(
       <a
         class={clsx(classes.icon, "icon-mpl2-sync", {
           [classes.checked]: isAuthorized(),
+          [classes.rotate]: isSynchronizing(),
         })}
         title={isAuthorized() ? "Disconnect from Google Drive" : "Connect to Google Drive"}
         href="#"

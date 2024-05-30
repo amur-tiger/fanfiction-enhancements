@@ -65,9 +65,9 @@ export default function StoryTextHeader({ title, children }: StoryTextHeaderProp
         </button>
       </div>
 
-      <h2 class={classes.caption}>{title}</h2>
-
       <div>{children}</div>
+
+      <h2 class={classes.caption}>{title}</h2>
 
       <Modal open={isOpen()} onClose={() => isOpen.set(false)}>
         <div class="modal-header">

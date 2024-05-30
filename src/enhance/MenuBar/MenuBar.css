@@ -38,3 +38,16 @@
   height: 19px;
   transform: translateY(4px);
 }
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotate:before {
+  animation: rotate 1s linear infinite;
+}
