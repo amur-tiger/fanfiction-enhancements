@@ -4,6 +4,7 @@
 
 * Feature: Add spin to sync icon when sync is in progress
 * Fixed: Do not indent centered paragraphs ([#122](https://github.com/amur-tiger/fanfiction-enhancements/issues/122))
+* Fixed: Restyle story text header to prevent chapter select breaking ([#117](https://github.com/amur-tiger/fanfiction-enhancements/issues/117))
 
 ## 0.8.3
 
