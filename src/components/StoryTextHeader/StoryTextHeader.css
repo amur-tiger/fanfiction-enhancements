@@ -46,7 +46,7 @@
   text-align: justify;
 }
 
-.indent p {
+.indent p:not([style*="text-align"]) {
   text-indent: 2.5em;
 }
 
