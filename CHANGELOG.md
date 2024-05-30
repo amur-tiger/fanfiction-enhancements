@@ -1,6 +1,6 @@
 # FanFiction Enhancements
 
-## unreleased
+## 0.8.4
 
 * Feature: Add spin to sync icon when sync is in progress
 * Fixed: Do not indent centered paragraphs ([#122](https://github.com/amur-tiger/fanfiction-enhancements/issues/122))
