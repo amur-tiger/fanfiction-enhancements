@@ -11,10 +11,8 @@ export default class FollowsList implements Enhancer {
   }
 
   public async enhance(): Promise<void> {
-    console.log("enhancing follows");
     const list = await parseFollows(document);
     if (!list) {
-      console.warn("no follows list found");
       return;
     }
 
