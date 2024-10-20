@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FanFiction Enhancements
 // @namespace    https://tiger.rocks/
-// @version      0.8.4+27.a7cfe75
+// @version      0.8.5+28.c339ecb
 // @description  FanFiction.net Enhancements
 // @author       Arne 'TigeR' Linck
 // @copyright    2018-2024, Arne 'TigeR' Linck
@@ -27,656 +27,12 @@
 
 "use strict";
 (() => {
-  var __create = Object.create;
   var __defProp = Object.defineProperty;
-  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-  var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __getProtoOf = Object.getPrototypeOf;
-  var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-  var __commonJS = (cb, mod) => function __require() {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-  };
-  var __copyProps = (to, from, except, desc) => {
-    if (from && typeof from === "object" || typeof from === "function") {
-      for (let key of __getOwnPropNames(from))
-        if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-    }
-    return to;
-  };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-    // If the importer is in node compatibility mode or this is not an ESM
-    // file that has been converted to a CommonJS file using a Babel-
-    // compatible transform (i.e. "__esModule" has not been set), then set
-    // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-    mod
-  ));
   var __publicField = (obj, key, value) => {
     __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
     return value;
   };
-
-  // node_modules/ffn-parser/lib/follows/parseFollows.js
-  var require_parseFollows = __commonJS({
-    "node_modules/ffn-parser/lib/follows/parseFollows.js"(exports) {
-      "use strict";
-      var __awaiter = exports && exports.__awaiter || function(thisArg, _arguments, P, generator) {
-        function adopt(value) {
-          return value instanceof P ? value : new P(function(resolve) {
-            resolve(value);
-          });
-        }
-        return new (P || (P = Promise))(function(resolve, reject) {
-          function fulfilled(value) {
-            try {
-              step(generator.next(value));
-            } catch (e) {
-              reject(e);
-            }
-          }
-          function rejected(value) {
-            try {
-              step(generator["throw"](value));
-            } catch (e) {
-              reject(e);
-            }
-          }
-          function step(result) {
-            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-          }
-          step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      function parseFollows4(document2, options) {
-        return __awaiter(this, void 0, void 0, function* () {
-          const doc = document2 !== null && document2 !== void 0 ? document2 : window.document;
-          const table = doc.querySelector("form #gui_table1i");
-          if (!table) {
-            return void 0;
-          }
-          const rows = table.querySelectorAll("tbody tr");
-          return Array.from(rows).filter((row) => row.children.length === 6 && row.querySelector("td") != null).map((row) => {
-            const storyAnchor = row.children[0].firstElementChild;
-            const userAnchor = row.children[1].firstElementChild;
-            return {
-              id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-              title: storyAnchor.textContent,
-              author: {
-                id: +userAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-                name: userAnchor.textContent
-              },
-              category: row.children[2].textContent,
-              updated: parseDate(row.children[3].textContent),
-              added: parseDate(row.children[4].textContent)
-            };
-          });
-        });
-      }
-      exports.default = parseFollows4;
-      function parseDate(date) {
-        const [month, day, year] = date.split("-");
-        return new Date(+year, +month - 1, +day, 0, 0, 0, 0);
-      }
-    }
-  });
-
-  // node_modules/ffn-parser/lib/follows/model/index.js
-  var require_model = __commonJS({
-    "node_modules/ffn-parser/lib/follows/model/index.js"(exports) {
-      "use strict";
-      Object.defineProperty(exports, "__esModule", { value: true });
-    }
-  });
-
-  // node_modules/ffn-parser/lib/follows/index.js
-  var require_follows = __commonJS({
-    "node_modules/ffn-parser/lib/follows/index.js"(exports) {
-      "use strict";
-      var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        Object.defineProperty(o, k2, { enumerable: true, get: function() {
-          return m[k];
-        } });
-      } : function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        o[k2] = m[k];
-      });
-      var __exportStar = exports && exports.__exportStar || function(m, exports2) {
-        for (var p in m)
-          if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
-            __createBinding(exports2, m, p);
-      };
-      var __importDefault = exports && exports.__importDefault || function(mod) {
-        return mod && mod.__esModule ? mod : { "default": mod };
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.parseFollows = void 0;
-      var parseFollows_1 = require_parseFollows();
-      Object.defineProperty(exports, "parseFollows", { enumerable: true, get: function() {
-        return __importDefault(parseFollows_1).default;
-      } });
-      __exportStar(require_parseFollows(), exports);
-      __exportStar(require_model(), exports);
-    }
-  });
-
-  // node_modules/ffn-parser/lib/story/parseStory.js
-  var require_parseStory = __commonJS({
-    "node_modules/ffn-parser/lib/story/parseStory.js"(exports) {
-      "use strict";
-      var __awaiter = exports && exports.__awaiter || function(thisArg, _arguments, P, generator) {
-        function adopt(value) {
-          return value instanceof P ? value : new P(function(resolve) {
-            resolve(value);
-          });
-        }
-        return new (P || (P = Promise))(function(resolve, reject) {
-          function fulfilled(value) {
-            try {
-              step(generator.next(value));
-            } catch (e) {
-              reject(e);
-            }
-          }
-          function rejected(value) {
-            try {
-              step(generator["throw"](value));
-            } catch (e) {
-              reject(e);
-            }
-          }
-          function step(result) {
-            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-          }
-          step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.parseChapters = exports.parseCharacters = exports.parseTags = exports.DEFAULT_GENRES = void 0;
-      exports.DEFAULT_GENRES = [
-        "General",
-        "Romance",
-        "Humor",
-        "Drama",
-        "Poetry",
-        "Action",
-        "Adventure",
-        "Mystery",
-        "Horror",
-        "Parody",
-        "Angst",
-        "Supernatural",
-        "Suspense",
-        "Sci-Fi",
-        "Fantasy",
-        "Spiritual",
-        "Tragedy",
-        "Western",
-        "Crime",
-        "Family",
-        "Hurt",
-        "Comfort",
-        "Friendship"
-      ];
-      function parseStory4(document2, options) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-          const doc = document2 !== null && document2 !== void 0 ? document2 : window.document;
-          const opts = Object.assign({ genres: exports.DEFAULT_GENRES, createTemplate() {
-            if ("createElement" in doc) {
-              return doc.createElement("template");
-            }
-            return window.document.createElement("template");
-          } }, options);
-          const profileElement = doc.getElementById("profile_top");
-          const chapterElement = doc.getElementById("chap_select");
-          const breadcrumbElement = doc.getElementById("pre_story_links");
-          if (!profileElement) {
-            return void 0;
-          }
-          let offset = 0;
-          const cover = profileElement.children[0].firstElementChild;
-          if (!cover || cover.nodeName !== "IMG") {
-            offset--;
-          }
-          const titleElement = profileElement.children[offset + 2];
-          const authorElement = profileElement.children[offset + 4];
-          const descriptionElement = profileElement.children[offset + 7];
-          const tagsElement = profileElement.children[offset + 8];
-          const resultMeta = parseTags(tagsElement, opts.genres, opts.createTemplate);
-          if (cover && cover.nodeName === "IMG") {
-            resultMeta.imageUrl = cover.src;
-            const oImage = doc.querySelector("#img_large img");
-            if (oImage && oImage.nodeName === "IMG") {
-              resultMeta.imageUrl = (_a = oImage.getAttribute("data-original")) !== null && _a !== void 0 ? _a : "";
-            }
-          }
-          if (breadcrumbElement) {
-            const universeLink = breadcrumbElement.querySelector("span :last-child");
-            if (!universeLink.textContent) {
-              resultMeta.universes = [];
-            } else {
-              resultMeta.universes = universeLink.href.includes("Crossovers") ? universeLink.textContent.substr(0, universeLink.textContent.length - 10).split(/\s+\+\s+/) : [universeLink.textContent];
-            }
-          }
-          if (titleElement.textContent) {
-            resultMeta.title = titleElement.textContent.trim();
-          }
-          if (authorElement.textContent) {
-            resultMeta.author.name = authorElement.textContent.trim();
-          }
-          const match = authorElement.href.match(/\/u\/(\d+)\//i);
-          if (match) {
-            resultMeta.author.id = +match[1];
-          }
-          if (descriptionElement.textContent) {
-            resultMeta.description = descriptionElement.textContent.trim();
-          }
-          resultMeta.chapters = chapterElement ? parseChapters(chapterElement, resultMeta.id) : [
-            {
-              storyId: resultMeta.id,
-              id: 1,
-              title: titleElement.textContent && titleElement.textContent.trim() || "Chapter 1"
-            }
-          ];
-          return resultMeta;
-        });
-      }
-      exports.default = parseStory4;
-      function parseTags(tagsElement, genres, createTemplate) {
-        var _a;
-        const result = {
-          id: 0,
-          title: "",
-          author: {
-            id: 0,
-            name: ""
-          },
-          description: "",
-          chapters: [],
-          imageUrl: void 0,
-          favorites: 0,
-          follows: 0,
-          reviews: 0,
-          genre: [],
-          characters: [],
-          language: "",
-          published: /* @__PURE__ */ new Date(),
-          updated: void 0,
-          rating: "K",
-          words: 0,
-          universes: [],
-          status: "Incomplete"
-        };
-        const tagsArray = tagsElement.innerHTML.split(/\s+-\s+/);
-        if (tagsArray[0] === "Crossover") {
-          tagsArray.shift();
-          const universes = tagsArray.shift();
-          if (universes) {
-            result.universes = universes.split(/\s+(?:&|&amp;)\s+/).map((u) => u.trim());
-          } else {
-            result.universes = [];
-          }
-        }
-        if (tagsArray[1].startsWith("Rated:")) {
-          result.universes = [tagsArray.shift().trim()];
-        }
-        while (result.universes.length > 2) {
-          const shortestIdx = result.universes.reduce((suIdx, universe, idx, arr) => arr[suIdx].length < universe.length ? suIdx : idx, 0);
-          if (shortestIdx === 0) {
-            const [removed] = result.universes.splice(1, 1);
-            result.universes[0] += ` & ${removed}`;
-          } else if (shortestIdx === result.universes.length - 1) {
-            const removed = result.universes.pop();
-            result.universes[result.universes.length - 1] += ` & ${removed}`;
-          } else {
-            if (result.universes[shortestIdx + 1].length < result.universes[shortestIdx - 1].length) {
-              const [removed] = result.universes.splice(shortestIdx + 1, 1);
-              result.universes[shortestIdx] += ` & ${removed}`;
-            } else {
-              const [removed] = result.universes.splice(shortestIdx, 1);
-              result.universes[shortestIdx - 1] += ` & ${removed}`;
-            }
-          }
-        }
-        const tempElement = createTemplate();
-        tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
-        result.rating = (_a = tempElement.content.firstElementChild ? tempElement.content.firstElementChild.textContent : tempElement.content.textContent) !== null && _a !== void 0 ? _a : "?";
-        result.language = tagsArray[1].trim();
-        result.genre = tagsArray[2].trim().split("/");
-        if (result.genre.some((g) => !genres.includes(g))) {
-          result.genre = [];
-          if (!/^\w+:/.test(tagsArray[2])) {
-            result.characters = parseCharacters(tagsArray[2]);
-          }
-        }
-        for (let i = 3; i < tagsArray.length; i++) {
-          const tagNameMatch = tagsArray[i].match(/^(\w+):/);
-          if (!tagNameMatch) {
-            if (tagsArray[i] === "Complete") {
-              result.status = tagsArray[i] === "Complete" ? "Complete" : "Incomplete";
-            } else {
-              result.characters = parseCharacters(tagsArray[i]);
-            }
-            continue;
-          }
-          const tagName = tagNameMatch[1].toLowerCase();
-          const match = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/);
-          const tagValue = match && match[1] || "";
-          switch (tagName) {
-            case "favs":
-              result.favorites = +tagValue.replace(/,/g, "");
-              break;
-            case "reviews":
-              if (tagValue.includes("<a")) {
-                const tempReviewsElement = createTemplate();
-                tempReviewsElement.innerHTML = tagValue;
-                if (tempReviewsElement.content.firstElementChild) {
-                  const element = tempReviewsElement.content.firstElementChild;
-                  if (element.textContent) {
-                    result.reviews = +element.textContent.replace(/,/g, "");
-                  } else {
-                    result.reviews = 0;
-                  }
-                } else {
-                  result.reviews = tempReviewsElement.textContent && +tempReviewsElement.textContent || 0;
-                }
-              } else {
-                result.reviews = +tagValue.replace(/,/g, "");
-              }
-              break;
-            case "published":
-            case "updated":
-              const tempTimeElement = createTemplate();
-              tempTimeElement.innerHTML = tagValue;
-              const child = tempTimeElement.content.firstElementChild;
-              if (child && child.hasAttribute("data-xutime")) {
-                result[tagName] = new Date(+child.getAttribute("data-xutime") * 1e3);
-              }
-              break;
-            case "chapters":
-              break;
-            default:
-              if (/^[0-9,.]*$/.test(tagValue)) {
-                result[tagName] = +tagValue.replace(/,/g, "");
-              } else {
-                result[tagName] = tagValue;
-              }
-              break;
-          }
-        }
-        return result;
-      }
-      exports.parseTags = parseTags;
-      function parseCharacters(tag) {
-        const result = [];
-        const pairings = tag.trim().split(/([\[\]])\s*/).filter((pairing) => pairing.length);
-        let inPairing = false;
-        for (const pairing of pairings) {
-          if (pairing == "[") {
-            inPairing = true;
-            continue;
-          }
-          if (pairing == "]") {
-            inPairing = false;
-            continue;
-          }
-          const characters = pairing.split(/,\s+/);
-          if (!inPairing || characters.length == 1) {
-            for (const character of characters) {
-              result.push([character]);
-            }
-          } else {
-            result.push(characters);
-          }
-        }
-        return result;
-      }
-      exports.parseCharacters = parseCharacters;
-      function parseChapters(selectElement, storyId) {
-        var _a;
-        const result = [];
-        for (let i = 0; i < selectElement.children.length; i++) {
-          const option = selectElement.children[i];
-          if (option.tagName !== "OPTION") {
-            continue;
-          }
-          let title2 = option.textContent;
-          if (title2 && /^\d+\. .+/.test(title2)) {
-            title2 = title2.substring(title2.indexOf(".") + 2);
-          }
-          if (!title2) {
-            title2 = `Chapter ${i + 1}`;
-          }
-          result.push({
-            storyId,
-            id: +((_a = option.getAttribute("value")) !== null && _a !== void 0 ? _a : 0),
-            title: title2
-          });
-        }
-        return result;
-      }
-      exports.parseChapters = parseChapters;
-    }
-  });
-
-  // node_modules/ffn-parser/lib/story/model/index.js
-  var require_model2 = __commonJS({
-    "node_modules/ffn-parser/lib/story/model/index.js"(exports) {
-      "use strict";
-      Object.defineProperty(exports, "__esModule", { value: true });
-    }
-  });
-
-  // node_modules/ffn-parser/lib/story/index.js
-  var require_story = __commonJS({
-    "node_modules/ffn-parser/lib/story/index.js"(exports) {
-      "use strict";
-      var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        Object.defineProperty(o, k2, { enumerable: true, get: function() {
-          return m[k];
-        } });
-      } : function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        o[k2] = m[k];
-      });
-      var __exportStar = exports && exports.__exportStar || function(m, exports2) {
-        for (var p in m)
-          if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
-            __createBinding(exports2, m, p);
-      };
-      var __importDefault = exports && exports.__importDefault || function(mod) {
-        return mod && mod.__esModule ? mod : { "default": mod };
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.parseStory = void 0;
-      var parseStory_1 = require_parseStory();
-      Object.defineProperty(exports, "parseStory", { enumerable: true, get: function() {
-        return __importDefault(parseStory_1).default;
-      } });
-      __exportStar(require_parseStory(), exports);
-      __exportStar(require_model2(), exports);
-    }
-  });
-
-  // node_modules/ffn-parser/lib/storyList/parseStoryList.js
-  var require_parseStoryList = __commonJS({
-    "node_modules/ffn-parser/lib/storyList/parseStoryList.js"(exports) {
-      "use strict";
-      var __awaiter = exports && exports.__awaiter || function(thisArg, _arguments, P, generator) {
-        function adopt(value) {
-          return value instanceof P ? value : new P(function(resolve) {
-            resolve(value);
-          });
-        }
-        return new (P || (P = Promise))(function(resolve, reject) {
-          function fulfilled(value) {
-            try {
-              step(generator.next(value));
-            } catch (e) {
-              reject(e);
-            }
-          }
-          function rejected(value) {
-            try {
-              step(generator["throw"](value));
-            } catch (e) {
-              reject(e);
-            }
-          }
-          function step(result) {
-            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-          }
-          step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      var story_1 = require_story();
-      function parseStoryList3(document2, options) {
-        return __awaiter(this, void 0, void 0, function* () {
-          const doc = document2 !== null && document2 !== void 0 ? document2 : window.document;
-          const opts = Object.assign({ genres: story_1.DEFAULT_GENRES, createTemplate() {
-            if ("createElement" in doc) {
-              return doc.createElement("template");
-            }
-            return window.document.createElement("template");
-          } }, options);
-          const universes = [];
-          const links = doc.querySelectorAll("#content_wrapper_inner > a");
-          if (links.length > 1) {
-            universes.push(links.item(0).textContent);
-            universes.push(links.item(1).textContent);
-          } else {
-            const container2 = doc.getElementById("content_wrapper_inner");
-            let text = "";
-            for (const node of Array.from(container2.childNodes)) {
-              if (node.nodeType === Node.TEXT_NODE) {
-                text += node.textContent;
-              }
-            }
-            universes.push(...text.split(/\n+/g).map((u) => u.trim()).filter((u) => u.length > 0 && u !== "Crossovers"));
-          }
-          const rows = doc.querySelectorAll(".z-list");
-          if (rows.length === 0) {
-            return void 0;
-          }
-          return Array.from(rows).map((row) => {
-            const storyAnchor = row.firstElementChild;
-            const authorAnchor = row.querySelector('a[href^="/u/"]');
-            const descriptionElement = row.querySelector(".z-indent");
-            const tagsElement = row.querySelector(".z-padtop2");
-            const meta = (0, story_1.parseTags)(tagsElement, opts.genres, opts.createTemplate);
-            const description = Array.from(descriptionElement.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE).map((node) => node.textContent).join(" ");
-            let imageUrl = void 0;
-            const imageElement = row.querySelector("img");
-            if (imageElement) {
-              imageUrl = imageElement.dataset["original"];
-            }
-            return {
-              id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
-              title: storyAnchor.textContent,
-              author: {
-                id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
-                name: authorAnchor.textContent
-              },
-              description,
-              imageUrl,
-              favorites: meta.favorites,
-              follows: meta.follows,
-              reviews: meta.reviews,
-              genre: meta.genre,
-              characters: meta.characters,
-              language: meta.language,
-              published: meta.published,
-              updated: meta.updated,
-              rating: meta.rating,
-              words: meta.words,
-              universes: meta.universes.length > 0 ? meta.universes : universes,
-              status: meta.status
-            };
-          });
-        });
-      }
-      exports.default = parseStoryList3;
-    }
-  });
-
-  // node_modules/ffn-parser/lib/storyList/model/index.js
-  var require_model3 = __commonJS({
-    "node_modules/ffn-parser/lib/storyList/model/index.js"(exports) {
-      "use strict";
-      Object.defineProperty(exports, "__esModule", { value: true });
-    }
-  });
-
-  // node_modules/ffn-parser/lib/storyList/index.js
-  var require_storyList = __commonJS({
-    "node_modules/ffn-parser/lib/storyList/index.js"(exports) {
-      "use strict";
-      var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        Object.defineProperty(o, k2, { enumerable: true, get: function() {
-          return m[k];
-        } });
-      } : function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        o[k2] = m[k];
-      });
-      var __exportStar = exports && exports.__exportStar || function(m, exports2) {
-        for (var p in m)
-          if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
-            __createBinding(exports2, m, p);
-      };
-      var __importDefault = exports && exports.__importDefault || function(mod) {
-        return mod && mod.__esModule ? mod : { "default": mod };
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.parseStoryList = void 0;
-      var parseStoryList_1 = require_parseStoryList();
-      Object.defineProperty(exports, "parseStoryList", { enumerable: true, get: function() {
-        return __importDefault(parseStoryList_1).default;
-      } });
-      __exportStar(require_parseStoryList(), exports);
-      __exportStar(require_model3(), exports);
-    }
-  });
-
-  // node_modules/ffn-parser/lib/index.js
-  var require_lib = __commonJS({
-    "node_modules/ffn-parser/lib/index.js"(exports) {
-      "use strict";
-      var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        Object.defineProperty(o, k2, { enumerable: true, get: function() {
-          return m[k];
-        } });
-      } : function(o, m, k, k2) {
-        if (k2 === void 0)
-          k2 = k;
-        o[k2] = m[k];
-      });
-      var __exportStar = exports && exports.__exportStar || function(m, exports2) {
-        for (var p in m)
-          if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
-            __createBinding(exports2, m, p);
-      };
-      Object.defineProperty(exports, "__esModule", { value: true });
-      __exportStar(require_follows(), exports);
-      __exportStar(require_story(), exports);
-      __exportStar(require_storyList(), exports);
-    }
-  });
 
   // src/signal/scope.ts
   var _Scope = class _Scope extends EventTarget {
@@ -1709,14 +1065,364 @@
     }
   };
 
-  // jsx:src/enhance/FollowsList/FollowsList.tsx
-  var import_ffn_parser3 = __toESM(require_lib());
+  // node_modules/ffn-parser/dist/follows/parseFollows.js
+  async function parseFollows(document2, options) {
+    const doc = document2 ?? window.document;
+    const table = doc.querySelector("form #gui_table1");
+    if (!table) {
+      return void 0;
+    }
+    const rows = table.querySelectorAll("tbody tr");
+    return Array.from(rows).filter((row) => row.children.length === 6 && row.querySelector("td") != null).map((row) => {
+      const storyAnchor = row.children[0].firstElementChild;
+      const userAnchor = row.children[1].firstElementChild;
+      return {
+        id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
+        title: storyAnchor.textContent,
+        author: {
+          id: +userAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
+          name: userAnchor.textContent
+        },
+        category: row.children[2].textContent,
+        updated: parseDate(row.children[3].textContent),
+        added: parseDate(row.children[4].textContent)
+      };
+    });
+  }
+  function parseDate(date) {
+    const [month, day, year] = date.split("-");
+    return new Date(+year, +month - 1, +day, 0, 0, 0, 0);
+  }
 
-  // src/api/story.ts
-  var import_ffn_parser2 = __toESM(require_lib(), 1);
+  // node_modules/ffn-parser/dist/story/parseStory.js
+  var DEFAULT_GENRES = [
+    "General",
+    "Romance",
+    "Humor",
+    "Drama",
+    "Poetry",
+    "Action",
+    "Adventure",
+    "Mystery",
+    "Horror",
+    "Parody",
+    "Angst",
+    "Supernatural",
+    "Suspense",
+    "Sci-Fi",
+    "Fantasy",
+    "Spiritual",
+    "Tragedy",
+    "Western",
+    "Crime",
+    "Family",
+    "Hurt",
+    "Comfort",
+    "Friendship"
+  ];
+  async function parseStory(document2, options) {
+    const doc = document2 ?? window.document;
+    const opts = {
+      genres: DEFAULT_GENRES,
+      createTemplate() {
+        if ("createElement" in doc) {
+          return doc.createElement("template");
+        }
+        return window.document.createElement("template");
+      },
+      ...options
+    };
+    const profileElement = doc.getElementById("profile_top");
+    const chapterElement = doc.getElementById("chap_select");
+    const breadcrumbElement = doc.getElementById("pre_story_links");
+    if (!profileElement) {
+      return void 0;
+    }
+    let offset = 0;
+    const cover = profileElement.children[0].firstElementChild;
+    if (!cover || cover.nodeName !== "IMG") {
+      offset--;
+    }
+    const titleElement = profileElement.children[offset + 2];
+    const authorElement = profileElement.children[offset + 4];
+    const descriptionElement = profileElement.children[offset + 7];
+    const tagsElement = profileElement.children[offset + 8];
+    const resultMeta = parseTags(tagsElement, opts.genres, opts.createTemplate);
+    if (cover && cover.nodeName === "IMG") {
+      resultMeta.imageUrl = cover.src;
+      const oImage = doc.querySelector("#img_large img");
+      if (oImage && oImage.nodeName === "IMG") {
+        resultMeta.imageUrl = oImage.getAttribute("data-original") ?? "";
+      }
+    }
+    if (breadcrumbElement) {
+      const universeLink = breadcrumbElement.querySelector("span :last-child");
+      if (!universeLink.textContent) {
+        resultMeta.universes = [];
+      } else {
+        resultMeta.universes = universeLink.href.includes("Crossovers") ? universeLink.textContent.substr(0, universeLink.textContent.length - 10).split(/\s+\+\s+/) : [universeLink.textContent];
+      }
+    }
+    if (titleElement.textContent) {
+      resultMeta.title = titleElement.textContent.trim();
+    }
+    if (authorElement.textContent) {
+      resultMeta.author.name = authorElement.textContent.trim();
+    }
+    const match = authorElement.href.match(/\/u\/(\d+)\//i);
+    if (match) {
+      resultMeta.author.id = +match[1];
+    }
+    if (descriptionElement.textContent) {
+      resultMeta.description = descriptionElement.textContent.trim();
+    }
+    resultMeta.chapters = chapterElement ? parseChapters(chapterElement, resultMeta.id) : [
+      {
+        storyId: resultMeta.id,
+        id: 1,
+        title: titleElement.textContent && titleElement.textContent.trim() || "Chapter 1"
+      }
+    ];
+    return resultMeta;
+  }
+  function parseTags(tagsElement, genres, createTemplate) {
+    const result = {
+      id: 0,
+      title: "",
+      author: {
+        id: 0,
+        name: ""
+      },
+      description: "",
+      chapters: [],
+      imageUrl: void 0,
+      favorites: 0,
+      follows: 0,
+      reviews: 0,
+      genre: [],
+      characters: [],
+      language: "",
+      published: /* @__PURE__ */ new Date(),
+      updated: void 0,
+      rating: "K",
+      words: 0,
+      universes: [],
+      status: "Incomplete"
+    };
+    const tagsArray = tagsElement.innerHTML.split(/\s+-\s+/);
+    if (tagsArray[0] === "Crossover") {
+      tagsArray.shift();
+      const universes = tagsArray.shift();
+      if (universes) {
+        result.universes = universes.split(/\s+(?:&|&amp;)\s+/).map((u) => u.trim());
+      } else {
+        result.universes = [];
+      }
+    }
+    if (tagsArray[1].startsWith("Rated:")) {
+      result.universes = [tagsArray.shift().trim()];
+    }
+    while (result.universes.length > 2) {
+      const shortestIdx = result.universes.reduce((suIdx, universe, idx, arr) => arr[suIdx].length < universe.length ? suIdx : idx, 0);
+      if (shortestIdx === 0) {
+        const [removed] = result.universes.splice(1, 1);
+        result.universes[0] += ` & ${removed}`;
+      } else if (shortestIdx === result.universes.length - 1) {
+        const removed = result.universes.pop();
+        result.universes[result.universes.length - 1] += ` & ${removed}`;
+      } else {
+        if (result.universes[shortestIdx + 1].length < result.universes[shortestIdx - 1].length) {
+          const [removed] = result.universes.splice(shortestIdx + 1, 1);
+          result.universes[shortestIdx] += ` & ${removed}`;
+        } else {
+          const [removed] = result.universes.splice(shortestIdx, 1);
+          result.universes[shortestIdx - 1] += ` & ${removed}`;
+        }
+      }
+    }
+    const tempElement = createTemplate();
+    tempElement.innerHTML = tagsArray[0].trim().substring(7).replace(/>.*?\s+(.*?)</, ">$1<");
+    result.rating = (tempElement.content.firstElementChild ? tempElement.content.firstElementChild.textContent : tempElement.content.textContent) ?? "?";
+    result.language = tagsArray[1].trim();
+    result.genre = tagsArray[2].trim().split("/");
+    if (result.genre.some((g) => !genres.includes(g))) {
+      result.genre = [];
+      if (!/^\w+:/.test(tagsArray[2])) {
+        result.characters = parseCharacters(tagsArray[2]);
+      }
+    }
+    for (let i = 3; i < tagsArray.length; i++) {
+      const tagNameMatch = tagsArray[i].match(/^(\w+):/);
+      if (!tagNameMatch) {
+        if (tagsArray[i] === "Complete") {
+          result.status = tagsArray[i] === "Complete" ? "Complete" : "Incomplete";
+        } else {
+          result.characters = parseCharacters(tagsArray[i]);
+        }
+        continue;
+      }
+      const tagName = tagNameMatch[1].toLowerCase();
+      const match = tagsArray[i].match(/^.*?:\s+([^]*?)\s*$/);
+      const tagValue = match && match[1] || "";
+      switch (tagName) {
+        case "favs":
+          result.favorites = +tagValue.replace(/,/g, "");
+          break;
+        case "reviews":
+          if (tagValue.includes("<a")) {
+            const tempReviewsElement = createTemplate();
+            tempReviewsElement.innerHTML = tagValue;
+            if (tempReviewsElement.content.firstElementChild) {
+              const element = tempReviewsElement.content.firstElementChild;
+              if (element.textContent) {
+                result.reviews = +element.textContent.replace(/,/g, "");
+              } else {
+                result.reviews = 0;
+              }
+            } else {
+              result.reviews = tempReviewsElement.textContent && +tempReviewsElement.textContent || 0;
+            }
+          } else {
+            result.reviews = +tagValue.replace(/,/g, "");
+          }
+          break;
+        case "published":
+        case "updated":
+          const tempTimeElement = createTemplate();
+          tempTimeElement.innerHTML = tagValue;
+          const child = tempTimeElement.content.firstElementChild;
+          if (child && child.hasAttribute("data-xutime")) {
+            result[tagName] = new Date(+child.getAttribute("data-xutime") * 1e3);
+          }
+          break;
+        case "chapters":
+          break;
+        default:
+          if (/^[0-9,.]*$/.test(tagValue)) {
+            result[tagName] = +tagValue.replace(/,/g, "");
+          } else {
+            result[tagName] = tagValue;
+          }
+          break;
+      }
+    }
+    return result;
+  }
+  function parseCharacters(tag) {
+    const result = [];
+    const pairings = tag.trim().split(/([\[\]])\s*/).filter((pairing) => pairing.length);
+    let inPairing = false;
+    for (const pairing of pairings) {
+      if (pairing == "[") {
+        inPairing = true;
+        continue;
+      }
+      if (pairing == "]") {
+        inPairing = false;
+        continue;
+      }
+      const characters = pairing.split(/,\s+/);
+      if (!inPairing || characters.length == 1) {
+        for (const character of characters) {
+          result.push([character]);
+        }
+      } else {
+        result.push(characters);
+      }
+    }
+    return result;
+  }
+  function parseChapters(selectElement, storyId) {
+    const result = [];
+    for (let i = 0; i < selectElement.children.length; i++) {
+      const option = selectElement.children[i];
+      if (option.tagName !== "OPTION") {
+        continue;
+      }
+      let title2 = option.textContent;
+      if (title2 && /^\d+\. .+/.test(title2)) {
+        title2 = title2.substring(title2.indexOf(".") + 2);
+      }
+      if (!title2) {
+        title2 = `Chapter ${i + 1}`;
+      }
+      result.push({
+        storyId,
+        id: +(option.getAttribute("value") ?? 0),
+        title: title2
+      });
+    }
+    return result;
+  }
 
-  // src/api/Api.ts
-  var import_ffn_parser = __toESM(require_lib(), 1);
+  // node_modules/ffn-parser/dist/storyList/parseStoryList.js
+  async function parseStoryList(document2, options) {
+    const doc = document2 ?? window.document;
+    const opts = {
+      genres: DEFAULT_GENRES,
+      createTemplate() {
+        if ("createElement" in doc) {
+          return doc.createElement("template");
+        }
+        return window.document.createElement("template");
+      },
+      ...options
+    };
+    const universes = [];
+    const links = doc.querySelectorAll("#content_wrapper_inner > a");
+    if (links.length > 1) {
+      universes.push(links.item(0).textContent);
+      universes.push(links.item(1).textContent);
+    } else {
+      const container2 = doc.getElementById("content_wrapper_inner");
+      let text = "";
+      for (const node of Array.from(container2.childNodes)) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += node.textContent;
+        }
+      }
+      universes.push(...text.split(/\n+/g).map((u) => u.trim()).filter((u) => u.length > 0 && u !== "Crossovers"));
+    }
+    const rows = doc.querySelectorAll(".z-list");
+    if (rows.length === 0) {
+      return void 0;
+    }
+    return Array.from(rows).map((row) => {
+      const storyAnchor = row.firstElementChild;
+      const authorAnchor = row.querySelector('a[href^="/u/"]');
+      const descriptionElement = row.querySelector(".z-indent");
+      const tagsElement = row.querySelector(".z-padtop2");
+      const meta = parseTags(tagsElement, opts.genres, opts.createTemplate);
+      const description = Array.from(descriptionElement.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE).map((node) => node.textContent).join(" ");
+      let imageUrl = void 0;
+      const imageElement = row.querySelector("img");
+      if (imageElement) {
+        imageUrl = imageElement.dataset["original"];
+      }
+      return {
+        id: +storyAnchor.href.match(/\/s\/(\d+)\/.*/i)[1],
+        title: storyAnchor.textContent,
+        author: {
+          id: +authorAnchor.href.match(/\/u\/(\d+)\/.*/i)[1],
+          name: authorAnchor.textContent
+        },
+        description,
+        imageUrl,
+        favorites: meta.favorites,
+        follows: meta.follows,
+        reviews: meta.reviews,
+        genre: meta.genre,
+        characters: meta.characters,
+        language: meta.language,
+        published: meta.published,
+        updated: meta.updated,
+        rating: meta.rating,
+        words: meta.words,
+        universes: meta.universes.length > 0 ? meta.universes : universes,
+        status: meta.status
+      };
+    });
+  }
 
   // src/api/throttled-fetch.ts
   function createTask(callback, data) {
@@ -1814,7 +1520,7 @@
           const result = [];
           await Promise.all(
             fragments.map(async (fragment) => {
-              const follows = await (0, import_ffn_parser.parseFollows)(fragment);
+              const follows = await parseFollows(fragment);
               if (follows) {
                 result.push(...follows);
               }
@@ -1835,7 +1541,7 @@
           const result = [];
           await Promise.all(
             fragments.map(async (fragment) => {
-              const follows = await (0, import_ffn_parser.parseFollows)(fragment);
+              const follows = await parseFollows(fragment);
               if (follows) {
                 result.push(...follows);
               }
@@ -1855,7 +1561,7 @@
         const body = await this.get(`/s/${id}`, 5 /* StoryData */);
         const template = document.createElement("template");
         template.innerHTML = body;
-        return (0, import_ffn_parser.parseStory)(template.content);
+        return parseStory(template.content);
       })();
       this.storyData.set(id, cached);
       return cached;
@@ -2038,7 +1744,7 @@
   }
   function updateStoryData() {
     if (environment.currentPageType === 2 /* Alerts */ || environment.currentPageType === 3 /* Favorites */) {
-      (0, import_ffn_parser2.parseFollows)().then((follows) => {
+      parseFollows().then((follows) => {
         if (!follows) {
           return;
         }
@@ -2062,7 +1768,7 @@
       });
     }
     if (environment.currentPageType === 7 /* StoryList */) {
-      (0, import_ffn_parser2.parseStoryList)().then((list) => {
+      parseStoryList().then((list) => {
         if (!list) {
           return;
         }
@@ -2084,7 +1790,7 @@
     }
   }
   if (environment.currentPageType === 4 /* Story */ || environment.currentPageType === 5 /* Chapter */) {
-    (0, import_ffn_parser2.parseStory)().then((story) => {
+    parseStory().then((story) => {
       if (story) {
         console.debug("Set story data for '%s' from story page.", story.title);
         setStoryCache(story.id, {
@@ -3322,14 +3028,14 @@ ${content}
       return type === 2 /* Alerts */ || type === 3 /* Favorites */;
     }
     async enhance() {
-      const list = await (0, import_ffn_parser3.parseFollows)(document);
+      const list = await parseFollows(document);
       if (!list) {
         return;
       }
       const container2 = jsx("ul", {
         class: FollowsList_default.list
       });
-      const table = document.getElementById("gui_table1i")?.parentElement;
+      const table = document.getElementById("gui_table1")?.parentElement;
       if (!table) {
         return;
       }
@@ -3354,9 +3060,6 @@ ${content}
     }
   };
 
-  // jsx:src/enhance/StoryList/StoryList.tsx
-  var import_ffn_parser4 = __toESM(require_lib());
-
   // gm-css:src/enhance/StoryList/StoryList.css
   GM_addStyle(`.ffe-container_jV6Zk {
   list-style: none;
@@ -3380,7 +3083,7 @@ ${content}
       return type === 7 /* StoryList */;
     }
     async enhance() {
-      const list = await (0, import_ffn_parser4.parseStoryList)(document);
+      const list = await parseStoryList(document);
       if (!list) {
         return;
       }
@@ -3589,9 +3292,6 @@ ${content}
       }
     }
   };
-
-  // jsx:src/enhance/StoryText/StoryText.tsx
-  var import_ffn_parser5 = __toESM(require_lib());
 
   // jsx:src/components/Modal/Modal.tsx
   var persistentModalContainer = jsx("div", {
@@ -3946,7 +3646,7 @@ ${content}
       const controls = document.querySelectorAll(".lc-wrapper")?.[1];
       const chapterSelect = controls?.nextElementSibling;
       if (controls && chapterSelect) {
-        const story = await (0, import_ffn_parser5.parseStory)();
+        const story = await parseStory();
         const chapter2 = story?.chapters.find((chapter3) => chapter3.id === environment.currentChapterId);
         controls.replaceWith(render_default(() => jsx(StoryTextHeader, {
           title: chapter2?.title,
@@ -3955,7 +3655,7 @@ ${content}
       }
     }
     async autoMarkRead() {
-      const currentStory = await (0, import_ffn_parser5.parseStory)();
+      const currentStory = await parseStory();
       if (!currentStory || !environment.currentChapterId) {
         return;
       }
