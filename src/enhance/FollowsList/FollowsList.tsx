@@ -18,7 +18,7 @@ export default class FollowsList implements Enhancer {
 
     const container = <ul class={classes.list} />;
 
-    const table = document.getElementById("gui_table1i")?.parentElement;
+    const table = document.getElementById("gui_table1")?.parentElement;
     if (!table) {
       return;
     }
