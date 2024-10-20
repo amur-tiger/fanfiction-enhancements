@@ -1,6 +1,6 @@
 # FanFiction Enhancements
 
-## unreleased
+## 0.8.5
 
 * Fixed: Parse and enhance follows list ([#127](https://github.com/amur-tiger/fanfiction-enhancements/issues/127))
 
