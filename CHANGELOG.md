@@ -1,5 +1,9 @@
 # FanFiction Enhancements
 
+## unreleased
+
+* Fixed: Parse and enhance follows list ([#127](https://github.com/amur-tiger/fanfiction-enhancements/issues/127))
+
 ## 0.8.4
 
 * Feature: Add spin to sync icon when sync is in progress
