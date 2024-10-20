@@ -11,14 +11,16 @@ export default class FollowsList implements Enhancer {
   }
 
   public async enhance(): Promise<void> {
+    console.log("enhancing follows");
     const list = await parseFollows(document);
     if (!list) {
+      console.warn("no follows list found");
       return;
     }
 
     const container = <ul class={classes.list} />;
 
-    const table = document.getElementById("gui_table1i")?.parentElement;
+    const table = document.getElementById("gui_table1")?.parentElement;
     if (!table) {
       return;
     }

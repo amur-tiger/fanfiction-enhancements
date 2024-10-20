@@ -48,7 +48,7 @@ describe("Api", () => {
       const page1 = `<!--suppress HtmlUnknownTarget, HtmlDeprecatedTag -->
     		<div id="content_wrapper_inner">
     			<form>
-    				<table id="gui_table1i">
+    				<table id="gui_table1">
     					<tbody>
     						<tr>
     							<td><a href="/s/123/story-1">Story 1</a></td>
@@ -70,7 +70,7 @@ describe("Api", () => {
     		</div>`;
       const page2 = `<!--suppress HtmlUnknownTarget -->
     		<form>
-    			<table id="gui_table1i">
+    			<table id="gui_table1">
     				<tbody>
     					<tr>
     						<td><a href="/s/125/story-2">Story 2</a></td>
@@ -156,7 +156,7 @@ describe("Api", () => {
       const page1 = `<!--suppress HtmlUnknownTarget, HtmlDeprecatedTag -->
     		<div id="content_wrapper_inner">
     			<form>
-    				<table id="gui_table1i">
+    				<table id="gui_table1">
     					<tbody>
     						<tr>
     							<td><a href="/s/123/story-1">Story 1</a></td>
@@ -178,7 +178,7 @@ describe("Api", () => {
     		</div>`;
       const page2 = `<!--suppress HtmlUnknownTarget -->
     		<form>
-    			<table id="gui_table1i">
+    			<table id="gui_table1">
     				<tbody>
     					<tr>
     						<td><a href="/s/125/story-2">Story 2</a></td>
